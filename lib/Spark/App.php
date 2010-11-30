@@ -12,10 +12,14 @@
  * @license    MIT License
  */
 
-namespace Spark;
-use Spark\Router\SimpleRouter as Router;
+autoload('Spark\Event', realpath(__DIR__ . "Event.php"));
 
-class Application
+require_once("Controller.php");
+require_once("Router.php");
+
+namespace Spark;
+
+class App
 {
 	public $routes;
 	
@@ -25,10 +29,14 @@ class Application
 	}
 	
 	public function __invoke(
-		\Zend_Controller_Request_Abstract  $request, 
-		\Zend_Controller_Response_Abstract $response
+		Controller\HttpRequest  $request, 
+		Controller\HttpResponse $response
 	)
 	{
-		// trigger route matching and handle request
+		$callback = $this->routes->match($request);
+		
+		$callback($request, $response);
+		
+		$response->send();
 	}
 }

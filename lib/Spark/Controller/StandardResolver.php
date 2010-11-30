@@ -15,8 +15,8 @@
 
 namespace Spark\Controller;
 
-use Spark\Options     as Options;
-use Spark\Util\String as String;
+use Spark\Options           as Options;
+use Spark\Util\StringObject as StringObject;
 
 /**
  * @category   Spark
@@ -36,11 +36,9 @@ class StandardResolver implements Resolver
 
 	protected $_moduleControllerDirectory = "controllers";
 
-	public function __construct(array $options = array())
+	public function __construct(Array $options = array())
 	{
-		if(!is_null($options)) {
-			$this->setOptions($options);
-		}
+		if ($options) $this->setOptions($options);
 	}
 
 	public function setOptions(array $options)
@@ -51,11 +49,11 @@ class StandardResolver implements Resolver
 
 	public function getInstance(\Zend_Controller_Request_Abstract $request)
 	{ 
-		if(!is_null($request->getModuleName())) {
+		if (null !== $request->getParam("module")) {
 			$controller = $this->_loadCommand($request->getControllerName(), $request->getModuleName());
 			return $controller;
 
-		} elseif(!is_null($request->getControllerName())) {
+		} else if (null !== $request->getParam("controller")) {
 			$controller = $this->_loadCommand($request->getControllerName());
 			return $controller;
 
@@ -71,7 +69,7 @@ class StandardResolver implements Resolver
 
 	protected function _loadCommand($controllerName, $moduleName = null)
 	{
-		$className = String\camelize($controllerName) . $this->getControllerSuffix();
+		$className = string_camelize($controllerName) . $this->getControllerSuffix();
 
 		if($moduleName) {
 			$path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
@@ -161,6 +159,6 @@ class StandardResolver implements Resolver
 
 	public function getControllerPrefix($module)
 	{
-		return String\camelize($module) . "_";
+		return string_camelize($module) . "_";
 	}
 }

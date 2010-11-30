@@ -29,5 +29,5 @@ interface Resolver
 	 * @param  Spark_Controller_RequestInterface $request The routed Request
 	 * @return Spark_Controller_CommandInterface
 	 */
-	public function getInstance(\Zend_Controller_Request_Abstract $request);
+	public function getInstance(HttpRequest $request);
 }

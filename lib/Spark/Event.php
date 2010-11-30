@@ -13,6 +13,8 @@
  * @license    MIT License
  */
 
+require_once "Event/Handler.php";
+
 namespace Spark;
 
 class Event

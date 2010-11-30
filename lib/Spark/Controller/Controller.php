@@ -21,8 +21,5 @@ namespace Spark\Controller;
  */
 interface Controller
 {
-    public function __invoke(
-        \Zend_Controller_Request_Abstract  $request,
-        \Zend_Controller_Response_Abstract $response
-    );
+    public function __invoke(HttpRequest $request, HttpResponse $response);
 }

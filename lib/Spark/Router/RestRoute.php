@@ -26,7 +26,7 @@ class RestRoute
         $this->options   = $options;
     }    
     
-    public function match(\Zend_Controller_Request_Abstract $request)
+    public function match(\Spark\Controller\HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;

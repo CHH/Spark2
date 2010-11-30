@@ -30,14 +30,11 @@ abstract class ActionController implements Controller
 	/**
 	 * Gets called by the Front Controller on dispatch
 	 *
-	 * @param  Spark_Controller_RequestInterface $request
-	 * @param  Zend_Controller_Response_Abstract $response
+	 * @param  \Spark\Controller\HttpRequest  $request
+	 * @param  \Spark\Controller\HttpResponse $response
 	 * @return void
 	 */
-	public function __invoke(
-		\Zend_Controller_Request_Abstract  $request,
-		\Zend_Controller_Response_Abstract $response
-	)
+	public function __invoke(HttpRequest $request, HttpResponse $response)
 	{
 		$this->beforeFilter($request, $response);
 

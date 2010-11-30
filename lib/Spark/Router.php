@@ -11,10 +11,12 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
-namespace Spark\Router;
-use Spark\Options as Options;
+require_once('Router/RestRoute.php');
 
-class SimpleRouter
+namespace Spark;
+use Router\RestRoute as RestRoute;
+
+class Router
 {
     protected $routes = array();
     
@@ -29,7 +31,7 @@ class SimpleRouter
         return $this;
     }
     
-    public function route(\Zend_Controller_Request_Abstract $request)
+    public function route(Controller\HttpRequest $request)
     {
         $matched = false;
         
