@@ -12,12 +12,12 @@
  * @license    MIT License
  */
 
-autoload('Spark\Event', realpath(__DIR__ . "Event.php"));
+namespace Spark;
+
+autoload('Spark\Event', __DIR__ . "/Event.php");
 
 require_once("Controller.php");
 require_once("Router.php");
-
-namespace Spark;
 
 class App
 {
@@ -33,8 +33,9 @@ class App
 		Controller\HttpResponse $response
 	)
 	{
-		$callback = $this->routes->match($request);
+		$this->routes->match($request);
 		
+		$callback = $request->getCallback();
 		$callback($request, $response);
 		
 		$response->send();

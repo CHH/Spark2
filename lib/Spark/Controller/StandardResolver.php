@@ -15,8 +15,7 @@
 
 namespace Spark\Controller;
 
-use Spark\Options           as Options;
-use Spark\Util\StringObject as StringObject;
+use Spark\Options as Options;
 
 /**
  * @category   Spark
@@ -47,7 +46,7 @@ class StandardResolver implements Resolver
 		return $this;
 	}
 
-	public function getInstance(\Zend_Controller_Request_Abstract $request)
+	public function getInstance(HttpRequest $request)
 	{ 
 		if (null !== $request->getParam("module")) {
 			$controller = $this->_loadCommand($request->getControllerName(), $request->getModuleName());

@@ -13,19 +13,47 @@
  * @license    MIT License
  */
 
-require_once "Event/Handler.php";
-
 namespace Spark;
+
+require_once "Event/Handler.php";
 
 class Event
 {
 	protected static $handlers = array();
 	
-	public static function observe($subject, $event, $handler)
+	public static function observe($subject, $event, $callback = null)
 	{
+	    $key     = static::key($subject);
+	    $handler = new Event\Handler($event, $subject, $callback);
+	    
+	    static::$handlers[$key][] = $handler;
 	}
 	
 	public static function trigger($subject, $event, $memo = null)
 	{
+	    $key    = static::key($subject);
+	    $return = null;
+        
+	    foreach (static::$handlers[$key] as $handler) {
+	        $return = $handler($event, $memo);
+	        
+	        if (false === $return) break;
+	    }
+	    
+	    return $return;
+	}
+	
+	protected static function key($input)
+	{
+	    if (is_object($input)) {
+	        $key = spl_object_hash($input);
+	    } else if (is_string($input) and !empty($input)) {
+	        $key = $input;
+	    } else {
+	        throw new \InvalidArgumentException(
+	            "Input must be a object or string"
+	        );
+	    }
+	    return $key;
 	}
 }

@@ -11,9 +11,10 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
-require_once('Router/RestRoute.php');
-
+ 
 namespace Spark;
+
+require_once('Router/RestRoute.php');
 use Router\RestRoute as RestRoute;
 
 class Router

@@ -48,9 +48,7 @@ class StringObject implements Countable
     
     public function camelize($string)
     {
-	    $string = str_replace(array("-", "_"), " ", strtolower($this->value));
-	    $string = ucwords($string);
-	    $this->value = str_replace(" ", null, $string);
+	    $this->value = string_camelize($string);
 	    return $this;
     }
     

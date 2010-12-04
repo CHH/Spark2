@@ -13,8 +13,7 @@ class HttpRequest
     protected $params = array();
     
     public function __construct()
-    {
-    }
+    {}
     
     public function setParam($param, $value)
     {
@@ -32,6 +31,12 @@ class HttpRequest
         return $default;
     }
     
+    public function setMethod($method)
+    {
+        $this->method = $method;
+        return $this;
+    }
+    
     public function getMethod()
     {
         if ($this->method) return $this->method;
@@ -42,6 +47,12 @@ class HttpRequest
             $this->method = $this->getServer("REQUEST_METHOD");
         }
         return $this->method;
+    }
+    
+    public function setRequestUri($requestUri)
+    {
+        $this->requestUri = $requestUri;
+        return $this;
     }
     
     /**
@@ -89,11 +100,35 @@ class HttpRequest
         return $this->requestUri;
     }
     
+    public function setQuery($spec, $value = null)
+    {
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->setQuery($key, $value);
+            }
+            return $this;
+        }
+        $_GET[$spec] = $value;
+        return $this;
+    }
+    
     public function getQuery($key = null, $default = null)
     {
         if (null === $key) return $_GET;
         
         return isset($_GET[$key]) ? $_GET[$key] : $default;
+    }
+    
+    public function setPost($spec, $value = null)
+    {
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->setPost($key, $value);
+            }
+            return $this;
+        }
+        $_POST[$key] = $value;
+        return $this;
     }
     
     public function getPost($key = null, $default = null)
