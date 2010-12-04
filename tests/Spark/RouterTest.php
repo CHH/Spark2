@@ -4,18 +4,21 @@ namespace Spark;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
+    public function setUp()
+    {
+        $this->router   = new Router;
+        $this->request  = new Controller\HttpRequest;
+        $this->response = new Controller\HttpResponse;
+    }    
+    
     public function test()
     {
-        $router   = new Router;
-        $request  = new Controller\HttpRequest;
-        $response = new Controller\HttpResponse;
+        $router   = $this->router;
+        $request  = $this->request;
+        $response = $this->response;
         $self     = $this;
         
-        $request->setRequestUri("/");
-        
-        $router->get("/", function($request, $response) {
-            echo "Root matched";
-        });
+        $request->setRequestUri("/users/23");
         
         $getHandler = function($request, $response) use ($self) {
             $self->assertEquals("GET", strtoupper($request->getMethod()));
@@ -37,7 +40,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             $self->assertEquals(23, (int) $request->getParam("id"));
         };
         
-        $router->get("users/:id",    $getHandler, array("id" => 23));
+        $router->get("users/:id",    $getHandler);
         $router->post("users/:id",   $postHandler);
         $router->put("users/:id",    $putHandler);
         $router->delete("users/:id", $deleteHandler);
@@ -48,5 +51,20 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             $callback = $request->getUserParam("callback");
             $callback($request, $response);
         }
+    }
+    
+    /**
+     * @expectedException Spark\Controller\Exception
+     */
+    public function testNoMatchException()
+    {
+        $router = new Router;
+        
+        $request = $this->request;
+        $request->setRequestUri("foo/bar")->setMethod("GET");
+        
+        $router->get("foo", function() {});
+        
+        $router->route($request);
     }
 }

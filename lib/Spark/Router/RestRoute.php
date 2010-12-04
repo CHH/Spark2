@@ -48,10 +48,11 @@ class RestRoute implements Route
                     continue;
                 }
                 if (isset($this->parts[$pos])) {
-                    if ($this->parts[$pos] == $pathPart) {
-                        $staticCount++;
+                    if ($this->parts[$pos] != $pathPart) {
+                        return false;
                     }
                 }
+                $staticCount++;
             }
         }
         

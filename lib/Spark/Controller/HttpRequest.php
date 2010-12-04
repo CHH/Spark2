@@ -49,7 +49,7 @@ class HttpRequest
     {
         if ($this->method) return $this->method;
         
-        if ($method = $this->getParams("_method")) {
+        if ($method = $this->getParam("_method")) {
             $this->method = strtoupper($method);
         } else {
             $this->method = $this->getServer("REQUEST_METHOD");
