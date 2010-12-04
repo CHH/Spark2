@@ -46,6 +46,35 @@ function array_delete($value, &$array)
 }
 
 /**
+ * Wrap a function in another function
+ *
+ * @param  callback $fn      The function to wrap
+ * @param  callback $wrapper A wrapper function, receives the wrapped function as
+ *                           first argument and the arguments passed to the wrapped 
+ *                           function as subsequent arguments
+ * @return Closure
+ */
+function func_wrap($fn, $wrapper)
+{
+    // Unify calling of the wrapped function
+    if(is_array($fn) or is_string($fn)) {
+        $original = function() use ($fn) {
+            return call_user_func_array($fn, func_get_args());
+        };
+    } else {
+        $original = $fn;
+    }
+    
+    $wrapped = function() use ($original, $wrapper) {
+        $args = func_get_args();
+        array_unshift($args, $original);
+        return call_user_func_array($wrapper, $args);
+    };
+    
+    return $wrapped;
+}
+
+/**
  * Camelizes a dash or underscore separated string
  *
  * @param  string $string

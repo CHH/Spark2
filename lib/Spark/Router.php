@@ -14,8 +14,9 @@
  
 namespace Spark;
 
+require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
-use Router\RestRoute as RestRoute;
+use Spark\Router\RestRoute as RestRoute;
 
 class Router
 {

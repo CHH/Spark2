@@ -33,9 +33,13 @@ class App
 		Controller\HttpResponse $response
 	)
 	{
-		$this->routes->match($request);
+		$this->routes->route($request);
+		$callback = $request->getUserParam("callback", false);
 		
-		$callback = $request->getCallback();
+		if (false === $callback) {
+		    // throw exception
+		}
+		
 		$callback($request, $response);
 		
 		$response->send();

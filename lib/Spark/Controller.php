@@ -1,6 +1,6 @@
 <?php
 
-autoload('Spark\Controller\Exception', realpath(__DIR__ . '/Controller/Exception'));
+autoload('Spark\Controller\Exception', __DIR__ . '/Controller/Exception.php');
 
 require_once('Controller/HttpRequest.php');
 require_once('Controller/HttpResponse.php');

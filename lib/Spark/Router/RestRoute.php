@@ -2,11 +2,11 @@
 
 namespace Spark\Router;
 
-class RestRoute
+class RestRoute implements Route
 {
     protected $method;
     protected $routeSpec;
-    protected $options;
+    protected $defaults;
     protected $callback;    
     
     protected $urlDelimiter = "/";
@@ -18,12 +18,12 @@ class RestRoute
     
     protected $wildcardData = array();
     
-    public function __construct($method = "GET", $routeSpec, $callback, Array $options = array())
+    public function __construct($method = "GET", $routeSpec, $callback, Array $defaults = array())
     {
         $this->method    = $method;
         $this->routeSpec = trim($routeSpec, $this->urlDelimiter);
         $this->callback  = $callback;
-        $this->options   = $options;
+        $this->defaults  = $defaults;
     }    
     
     public function match(\Spark\Controller\HttpRequest $request)
@@ -31,22 +31,41 @@ class RestRoute
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
         }
+        
         $this->parseSpec();
-        $path = trim($request->getRequestUri(), $this->urlDelimiter);
+        
+        $path   = trim($request->getRequestUri(), $this->urlDelimiter);
+        $params = array();
+        
+        $staticCount = 0;
         
         if ($path !== '') {
             $path = explode($this->urlDelimiter, $path);
+            
             foreach ($path as $pos => $pathPart) {
-                if ($this->parts[$pos] == '*') {
-                    // Get wildcard params and stop matching
-                    
-                    break;
+                if (isset($this->params[$pos])) {
+                    $params[$this->params[$pos]] = $pathPart;
+                    continue;
                 }
-                
+                if (isset($this->parts[$pos])) {
+                    if ($this->parts[$pos] == $pathPart) {
+                        $staticCount++;
+                    }
+                }
             }
-            
-            
         }
+        
+        $params = $params + $this->defaults;
+        
+        if (sizeof($params) < sizeof($this->params)) {
+            return false;
+        }
+        if ($staticCount !== $this->staticCount) {
+            return false;
+        }
+        
+        $params["callback"] = $this->callback;
+        return $params;
     }
     
     protected function parseSpec()
@@ -54,26 +73,23 @@ class RestRoute
         if ($this->params and $this->parts) {
             return;
         }
-        if (!is_string($this->routeSpec) or empty($this->routeSpec)) {
-            throw new \UnexpectedValueException("Route spec can not be empty");
-        }
+        $parts = explode($this->urlDelimiter, $this->routeSpec);
         
-        foreach (explode($this->urlDelimiter, $this->routeSpec) as $pos => $part) {
+        foreach ($parts as $pos => $part) {
             if (substr($part, 0, 1) == $this->urlParam and substr($part, 1, 1) != $this->urlParam) {
                 $part = substr($part, 1);
                 $this->params[$pos] = $part;
                 continue;
             }
             
-            if (substr($part, 0, 1) == $this->_urlVariable) {
+            if (substr($part, 0, 1) == $this->urlParam) {
                 $part = substr($part, 1);
             }
-
-            $this->parts[$pos] = $part;
-
-            if ($part !== '*') {
-                $this->staticCount++;
+            if (empty($part)) {
+                continue;
             }
+            $this->parts[$pos] = $part;
+            $this->staticCount++;
         }
     }
 }

@@ -50,8 +50,8 @@ function autoload($symbol, $require)
 /*
  * Default includes
  */
-autoload('Spark\Exception', 'Spark/Exception.php');
-autoload('Spark\Options',   'Spark/Options.php');
+autoload('Spark\Exception', __DIR__ . '/Spark/Exception.php');
+autoload('Spark\Options',   __DIR__ . '/Spark/Options.php');
 
 require('Spark/Util.php');
 require('Spark/App.php');

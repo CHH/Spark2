@@ -20,5 +20,5 @@ namespace Spark\Controller;
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
-class Exception implements \Spark\Exception
+class Exception extends \Exception implements \Spark\Exception
 {}

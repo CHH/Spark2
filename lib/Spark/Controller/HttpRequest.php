@@ -21,6 +21,14 @@ class HttpRequest
         return $this;
     }
     
+    public function getUserParam($param, $default = null)
+    {
+        if (!isset($this->params[$param])) {
+            return $default;
+        }
+        return $this->params[$param];
+    }
+    
     public function getParam($param, $default = null)
     {
         if (isset($this->params[$param])) {

@@ -2,9 +2,9 @@
 
 namespace Spark;
 
-class EventTest extends \PHPUnit_Framework_Testcase
+class EventTest extends \PHPUnit_Framework_TestCase
 {
-    public function testObjectObserve()
+    public function test()
     {
         $object = new \StdClass();
         
