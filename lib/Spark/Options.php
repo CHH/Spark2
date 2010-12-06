@@ -65,6 +65,6 @@ class Options
 	 * @return string         The Name of the Setter Method
 	 */
 	static protected function _getSetterName($option) {
-		return "set" . string_camelize($option);
+		return "set" . str_camelize($option);
 	}
 }

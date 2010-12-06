@@ -48,7 +48,7 @@ class StringObject implements Countable
     
     public function camelize($string)
     {
-	    $this->value = string_camelize($string);
+	    $this->value = str_camelize($string);
 	    return $this;
     }
     

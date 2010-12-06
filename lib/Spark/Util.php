@@ -75,6 +75,45 @@ function func_wrap($fn, $wrapper)
 }
 
 /**
+ * Prefills the arguments of a given function
+ *
+ * @param  callback $fn        Function to curry
+ * @param  mixed    $value,... Arguments for currying the function
+ * @return Closure
+ */
+function func_curry($fn)
+{
+    $curry = array_slice(func_get_args(), 1);
+    
+    return function() use ($fn, $curry) {
+        $args = array_merge($curry, func_get_args());
+        return call_user_func_array($fn, $args);
+    };
+}
+
+/**
+ * Composes multiple callback functions into one by passing each function's
+ * return value as argument into the next function. The arguments passed to
+ * the composed function get passed to the first (most inner) function.
+ *
+ * @param  callback $fn,... Functions to compose
+ * @return Closure
+ */
+function func_compose()
+{
+    $fns = func_get_args();
+    
+    return function() use ($fns) {
+        $input = func_get_args();
+        foreach ($fns as $fn) {
+            $returnValue = call_user_func_array($fn, $input);
+            $input = array($returnValue);
+        }
+        return $returnValue;
+    };
+}
+
+/**
  * Looks by default at the end of an argument list for a block (Closure)
  *
  * @param  Array $fnArgs Argument list
@@ -98,7 +137,7 @@ function block_given(Array $fnArgs, $offset = null)
  * @param  string $string
  * @return string
  */
-function string_camelize($string)
+function str_camelize($string)
 {
     $string = str_replace(array("-", "_"), " ", strtolower($string));
     $string = ucwords($string);

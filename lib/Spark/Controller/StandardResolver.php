@@ -68,7 +68,7 @@ class StandardResolver implements Resolver
 
 	protected function _loadCommand($controllerName, $moduleName = null)
 	{
-		$className = string_camelize($controllerName) . $this->getControllerSuffix();
+		$className = str_camelize($controllerName) . $this->getControllerSuffix();
 
 		if($moduleName) {
 			$path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
@@ -158,6 +158,6 @@ class StandardResolver implements Resolver
 
 	public function getControllerPrefix($module)
 	{
-		return string_camelize($module) . "_";
+		return str_camelize($module) . "_";
 	}
 }

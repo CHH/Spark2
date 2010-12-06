@@ -2,7 +2,7 @@
 
 namespace Spark;
 
-class UtilTest extends \PHPUnit_Framework_TestCase
+class UtilFunctionsTest extends \PHPUnit_Framework_TestCase
 {
     function testCamelize()
     {
@@ -11,8 +11,8 @@ class UtilTest extends \PHPUnit_Framework_TestCase
         
         $expect  = "FooBarBaz";
         
-        $this->assertEquals($expect, string_camelize($string1));
-        $this->assertEquals($expect, string_camelize($string2));
+        $this->assertEquals($expect, str_camelize($string1));
+        $this->assertEquals($expect, str_camelize($string2));
     }
     
     function testWordsToArray()
@@ -45,9 +45,53 @@ class UtilTest extends \PHPUnit_Framework_TestCase
         $wrapper = function($original, $string) {
             return strtoupper($original($string));
         };
-        $newFn = func_wrap("string_camelize", $wrapper);
+        $newFn = func_wrap("str_camelize", $wrapper);
         
         $this->assertEquals("FOOBARBAZ", $newFn("foo_bar_baz"));
+    }
+    
+    function testCurry()
+    {
+        $multiply = function($x, $y) {
+            return $x * $y;
+        };
+        
+        $double = func_curry($multiply, 2);
+        
+        $this->assertEquals(2, $double(1));
+    }
+    
+    function testCompose()
+    {
+        $greet = function($name) {
+            return "Hello $name";
+        };
+        
+        $exclaim = function($statement) {
+            return $statement . "!";
+        };
+        
+        $greetAndExclaim = func_compose($greet, $exclaim);
+        
+        $this->assertEquals("Hello World!", $greetAndExclaim("World"));
+    }
+    
+    function testBlockGiven()
+    {
+        $fn = function($block) {
+            return block_given(func_get_args());
+        };
+        
+        $this->assertTrue($fn(function() {}));
+    }
+    
+    function testBlockGivenAtOffset()
+    {
+        $fn = function($a, $block, $c) {
+            return block_given(func_get_args(), 1);
+        };
+        
+        $this->assertTrue($fn("a", function() {}, "b"));
     }
     
     /**
