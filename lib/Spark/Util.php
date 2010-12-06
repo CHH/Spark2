@@ -75,6 +75,24 @@ function func_wrap($fn, $wrapper)
 }
 
 /**
+ * Looks by default at the end of an argument list for a block (Closure)
+ *
+ * @param  Array $fnArgs Argument list
+ * @param  mixed $offset Optional offset if block is not expected on the 
+ *                       end of the argument list
+ * @return bool
+ */
+function block_given(Array $fnArgs, $offset = null)
+{
+    if (null === $offset) {
+        $block = array_pop($fnArgs);
+    } else {
+        $block = $fnArgs[$offset];
+    }
+    return $block instanceof Closure;
+}
+
+/**
  * Camelizes a dash or underscore separated string
  *
  * @param  string $string

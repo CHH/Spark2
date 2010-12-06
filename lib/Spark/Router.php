@@ -14,6 +14,8 @@
  
 namespace Spark;
 
+autoload('Spark\Router\Scope', __DIR__ . '/Router/Scope.php');
+
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
 
@@ -56,6 +58,35 @@ class Router
         }
         
         return $request;
+    }
+    
+    public function scope($scope, $block)
+    {
+        if (!block_given(func_get_args())) {
+            throw new \InvalidArgumentException("Second argument must be "
+                . " a lambda expression");
+        }
+        $block(new Router\Scope($scope, $this));
+        return $this;
+    }
+    
+    public function resource($resource, $callback, Array $options = array())
+    {
+        $resource = trim($resource, '/');
+        $new      = $resource . '/new';
+        $route    = $resource . '/:id';
+        $edit     = $route    . '/edit';
+        
+        $this->get($new, $callback, $options);
+        $this->get($edit, $callback, $options);
+        
+        $this->post($resource, $callback, $options);
+        
+        $this->get($route, $callback, $options);
+        $this->put($route, $callback, $options);
+        $this->delete($route, $callback, $options);
+        
+        return $this;
     }
     
     public function map($routeSpec, $callback, Array $options = array())
