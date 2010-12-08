@@ -18,7 +18,7 @@ class RestRoute implements Route
     
     protected $wildcardData = array();
     
-    public function __construct($method = "GET", $routeSpec, $callback, Array $defaults = array())
+    function __construct($method = "GET", $routeSpec, $callback, Array $defaults = array())
     {
         $this->method    = $method;
         $this->routeSpec = trim($routeSpec, $this->urlDelimiter);
@@ -26,10 +26,14 @@ class RestRoute implements Route
         $this->defaults  = $defaults;
     }    
     
-    public function match(\Spark\Controller\HttpRequest $request)
+    function match(\Spark\Controller\HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
+        }
+        
+        if (!empty($this->method)) {
+            $request->setParam("action", strtolower($this->method));
         }
         
         $this->parseSpec();
@@ -65,8 +69,30 @@ class RestRoute implements Route
             return false;
         }
         
-        $params["callback"] = $this->callback;
+        $params["__callback"] = $this->getCallback($params);
         return $params;
+    }
+    
+    protected function getCallback(Array $params = array())
+    {
+        $callback = $this->callback;
+        if (is_callable($callback)) {
+            return $callback;
+        }
+        if (is_array($callback)) {
+            // Allow overriding of controller and module params from route
+            if ($controller = array_delete_key("controller", $params)) {
+                $callback["controller"] = $controller;
+            }
+            if ($module = array_delete_key("module", $params)) {
+                $callback["module"] = $module;
+            }
+            return $callback;
+        }
+        throw new \UnexpectedValueException(sprintf(
+            "%s is not a valid callback",
+            print_r($callback, true)
+        ));
     }
     
     protected function parseSpec()

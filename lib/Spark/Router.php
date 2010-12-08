@@ -11,7 +11,7 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
- 
+
 namespace Spark;
 
 autoload('Spark\Router\Scope', __DIR__ . '/Router/Scope.php');
@@ -70,6 +70,12 @@ class Router
         return $this;
     }
     
+    public function addRoute(Router\Route $route)
+    {
+        $this->routes[] = $route;
+        return $this;
+    }
+    
     public function resource($resource, $callback, Array $options = array())
     {
         $resource = trim($resource, '/');
@@ -77,57 +83,45 @@ class Router
         $route    = $resource . '/:id';
         $edit     = $route    . '/edit';
         
-        $this->get($new, $callback, $options);
-        $this->get($edit, $callback, $options);
+        $this->get($new,  $callback, array_merge($options, array('action' => 'new')));
+        $this->get($edit, $callback, array_merge($options, array('action' => 'edit')));
         
         $this->post($resource, $callback, $options);
         
-        $this->get($route, $callback, $options);
-        $this->put($route, $callback, $options);
-        $this->delete($route, $callback, $options);
+        $this->get    ($route, $callback, $options);
+        $this->put    ($route, $callback, $options);
+        $this->delete ($route, $callback, $options);
         
         return $this;
     }
     
     public function map($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute(null, $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute(null, $routeSpec, $callback, $options));
     }
     
     public function head($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute("HEAD", $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute("HEAD", $routeSpec, $callback, $options));
     }
     
     public function get($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute("GET", $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute("GET", $routeSpec, $callback, $options));
     }
     
     public function post($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute("POST", $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute("POST", $routeSpec, $callback, $options));
     }
     
     public function put($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute("PUT", $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute("PUT", $routeSpec, $callback, $options));
     }
     
     public function delete($routeSpec, $callback, Array $options = array())
     {
-        $route = new RestRoute("DELETE", $routeSpec, $callback, $options);
-        $this->routes[] = $route;
-        return $this;
+        return $this->addRoute(new RestRoute("DELETE", $routeSpec, $callback, $options));
     }
 }

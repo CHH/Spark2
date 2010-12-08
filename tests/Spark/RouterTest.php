@@ -4,14 +4,14 @@ namespace Spark;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
-    public function setUp()
+    function setUp()
     {
         $this->router   = new Router;
         $this->request  = new Controller\HttpRequest;
         $this->response = new Controller\HttpResponse;
     }    
     
-    public function test()
+    function test()
     {
         $router   = $this->router;
         $request  = $this->request;
@@ -48,15 +48,38 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         foreach (words("GET POST PUT DELETE") as $method) {
             $request->setMethod($method);
             $router->route($request);
-            $callback = $request->getUserParam("callback");
+            $callback = $request->getUserParam("__callback");
             $callback($request, $response);
         }
+    }
+    
+    function testRouteScoping()
+    {
+        $router   = $this->router;
+        $request  = $this->request->setRequestUri("/admin/users/23")->setMethod("GET");
+        $response = $this->response;
+        
+        $self = $this;
+        
+        $router->scope("admin", function($admin) use ($self) {
+            $admin->get("users/:id", function($request, $response) use ($self) {
+                $self->assertEquals(23, (int) $request->getParam("id"));
+            });
+            
+            $admin->get("posts/:id", function() use ($self) {
+                $self->fail();
+            });
+        });
+        
+        $router->route($request);
+        $callback = $request->getUserParam("__callback");
+        $callback($request, $response);
     }
     
     /**
      * @expectedException Spark\Controller\Exception
      */
-    public function testNoMatchException()
+    function testNoMatchException()
     {
         $router = new Router;
         

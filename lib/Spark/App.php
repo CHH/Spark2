@@ -6,7 +6,7 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Controller
+ * @package    Spark_App
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
@@ -34,7 +34,7 @@ class App
 	)
 	{
 		$this->routes->route($request);
-		$callback = $request->getUserParam("callback", false);
+		$callback = $request->getUserParam("__callback", false);
 		
 		if (false === $callback) {
 		    // throw exception

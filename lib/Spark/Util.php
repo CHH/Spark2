@@ -139,7 +139,7 @@ function block_given(Array $fnArgs, $offset = null)
  */
 function str_camelize($string)
 {
-    $string = str_replace(array("-", "_"), " ", strtolower($string));
+    $string = str_replace(array("-", "_"), " ", $string);
     $string = ucwords($string);
     $string = str_replace(" ", null, $string);
     return $string;

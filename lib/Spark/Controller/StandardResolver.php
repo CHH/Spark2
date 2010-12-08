@@ -28,7 +28,8 @@ class StandardResolver implements Resolver
 	protected $_controllerDirectory;
 
 	protected $_defaultControllerName = "Default";
-
+    protected $_defaultModuleName     = null;
+    
 	protected $_controllerSuffix = "Controller";
 
 	protected $_moduleDirectory;
@@ -60,16 +61,19 @@ class StandardResolver implements Resolver
 			return $this->_loadCommand($this->getDefaultControllerName());
 		}
 	}
-
-	public function getControllerByName($controllerName, $moduleName = null)
+    
+	public function getControllerByName($controllerName = null, $moduleName = null)
 	{
 		return $this->_loadCommand($controllerName, $moduleName);
 	}
 
-	protected function _loadCommand($controllerName, $moduleName = null)
+	protected function _loadCommand($controllerName = null, $moduleName = null)
 	{
+	    $controllerName = $controllerName ?: $this->_defaultControllerName;
+		$moduleName     = $moduleName     ?: $this->_defaultModuleName;
+		
 		$className = str_camelize($controllerName) . $this->getControllerSuffix();
-
+        
 		if($moduleName) {
 			$path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
 				  . $moduleName . DIRECTORY_SEPARATOR
@@ -133,7 +137,13 @@ class StandardResolver implements Resolver
 		$this->_defaultControllerName = $controllerName;
 		return $this;
 	}
-
+    
+    public function setDefaultModuleName($moduleName)
+    {
+        $this->_defaultModuleName = $moduleName;
+        return $this;
+    }
+    
 	public function getModuleDirectory()
 	{
 		return $this->_moduleDirectory;

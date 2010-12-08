@@ -11,6 +11,7 @@ class HttpRequest
     
     protected $method;
     protected $params = array();
+    protected $dispatched = false;
     
     public function __construct()
     {}
@@ -178,6 +179,17 @@ class HttpRequest
         }
 
         return false;
+    }
+    
+    public function setDispatched($dispatched = true)
+    {
+        $this->isDispatched = $dispatched;
+        return $this;
+    }
+    
+    public function isDispatched()
+    {
+        return $this->isDispatched ? true : false;
     }
     
     public function isGet()

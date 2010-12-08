@@ -1,4 +1,17 @@
 <?php
+/**
+ * Route scope, gets passed to block of Spark\Router::scope()
+ * 
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.txt.
+ *
+ * @see        Spark\Router::scope()
+ * @category   Spark
+ * @package    Spark_Controller
+ * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
+ * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @license    MIT License
+ */
 
 namespace Spark\Router;
 
