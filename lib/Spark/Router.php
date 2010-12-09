@@ -14,7 +14,8 @@
 
 namespace Spark;
 
-autoload('Spark\Router\Scope', __DIR__ . '/Router/Scope.php');
+autoload('Spark\Router\Scope',  __DIR__ . '/Router/Scope.php');
+autoload('Spark\Router\Filter', __DIR__ . '/Router/Filter.php');
 
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
@@ -24,26 +25,28 @@ use Spark\Router\RestRoute as RestRoute;
 class Router
 {
     protected $routes = array();
+    protected $filters = array();
     
-    public function __construct(Array $options = array())
+    function __construct(Array $options = array())
     {
         $this->setOptions($options);
+        $this->registerStandardFilter();
     }
     
-    public function setOptions(Array $options)
+    function setOptions(Array $options)
     {
         Options::setOptions($this, $options);
         return $this;
     }
     
-    public function route(Controller\HttpRequest $request)
+    function route(Controller\HttpRequest $request)
     {
         $matched = false;
         
         foreach (array_reverse($this->routes) as $key => $route) {
             $params = $route->match($request);
             
-            if ($params) {
+            if (false !== $params) {
                 $matched = true;
                 break;
             }
@@ -57,10 +60,15 @@ class Router
             $request->setParam($param, $value);
         }
         
-        return $request;
+        foreach (array_reverse($this->filters) as $filter) {
+            $filter($request);
+        }
+        
+        $callback = $request->getUserParam("__callback");
+        return $callback;
     }
     
-    public function scope($scope, $block)
+    function scope($scope, $block)
     {
         if (!block_given(func_get_args())) {
             throw new \InvalidArgumentException("Second argument must be "
@@ -70,13 +78,25 @@ class Router
         return $this;
     }
     
-    public function addRoute(Router\Route $route)
+    function addFilter($filter)
+    {
+        if (!$filter instanceof \Closure and !$filter instanceof Router\Filter) {
+            throw new \InvalidArgumentException(sprintf(
+                "Filter must be either a closure or a class implementing \Spark\Router\Filter, %s given",
+                gettype($filter)
+            ));
+        }
+        $this->filters[] = $filter;
+        return $this;
+    }
+    
+    function addRoute(Router\Route $route)
     {
         $this->routes[] = $route;
         return $this;
     }
     
-    public function resource($resource, $callback, Array $options = array())
+    function resource($resource, $callback, Array $options = array())
     {
         $resource = trim($resource, '/');
         $new      = $resource . '/new';
@@ -95,33 +115,52 @@ class Router
         return $this;
     }
     
-    public function map($routeSpec, $callback, Array $options = array())
+    function map($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute(null, $routeSpec, $callback, $options));
     }
     
-    public function head($routeSpec, $callback, Array $options = array())
+    function head($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("HEAD", $routeSpec, $callback, $options));
     }
     
-    public function get($routeSpec, $callback, Array $options = array())
+    function get($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("GET", $routeSpec, $callback, $options));
     }
     
-    public function post($routeSpec, $callback, Array $options = array())
+    function post($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("POST", $routeSpec, $callback, $options));
     }
     
-    public function put($routeSpec, $callback, Array $options = array())
+    function put($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("PUT", $routeSpec, $callback, $options));
     }
     
-    public function delete($routeSpec, $callback, Array $options = array())
+    function delete($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("DELETE", $routeSpec, $callback, $options));
+    }
+    
+    protected function registerStandardFilter()
+    {
+        $filter = function($request) {
+            $callback = $request->getUserParam("__callback");
+            
+            if (!is_callable($callback)) {
+                throw new \RuntimeException("The callback is not valid");
+            }
+            if (is_array($callback) or is_string($callback)) {
+                return function($request, $response) use ($callback) {
+                    return call_user_func($callback, $request, $response);
+                };
+            }
+            return $callback;
+        };
+        
+        $this->addFilter($filter);
     }
 }

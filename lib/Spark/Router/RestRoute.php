@@ -69,7 +69,8 @@ class RestRoute implements Route
             return false;
         }
         
-        $params["__callback"] = $this->getCallback($params);
+        $params["__callback"] = $this->callback;
+        
         return $params;
     }
     

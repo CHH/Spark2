@@ -47,8 +47,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         foreach (words("GET POST PUT DELETE") as $method) {
             $request->setMethod($method);
-            $router->route($request);
-            $callback = $request->getUserParam("__callback");
+            $callback = $router->route($request);
             $callback($request, $response);
         }
     }

@@ -26,7 +26,9 @@ use Spark\Options as Options;
 class StandardResolver implements Resolver
 {
 	protected $_controllerDirectory;
-
+    
+    protected $_controllerNamespace = "\\Application\\Controllers\\";
+    
 	protected $_defaultControllerName = "Default";
     protected $_defaultModuleName     = null;
     
@@ -96,7 +98,8 @@ class StandardResolver implements Resolver
 		if(!class_exists($className, false)) {
 			return false;
 		}
-
+		
+        $className  = $this->_controllerNamespace . $className;
 		$controller = new $className;
 
 		if(!($controller instanceof Controller)) {
@@ -115,7 +118,16 @@ class StandardResolver implements Resolver
 		$this->_controllerDirectory = $controllerDirectory;
 		return $this;
 	}
-
+    
+    public function setControllerNamespace($namespace)
+    {
+		if (substr($namespace, 2, -2) != '\\') {
+		    $namespace .= '\\';
+		}
+        $this->_controllerNamespace = $namespace;
+        return $this;
+    }
+    
 	public function getControllerSuffix()
 	{
 		return $this->_controllerSuffix;
@@ -168,6 +180,6 @@ class StandardResolver implements Resolver
 
 	public function getControllerPrefix($module)
 	{
-		return str_camelize($module) . "_";
+		return str_camelize($module) . "\\";
 	}
 }

@@ -23,25 +23,64 @@ class App
 {
 	public $routes;
 	
-	public function __construct()
+	function __construct()
 	{
-		$this->routes = new Router();
+		$router = new Router();
+		$router->addFilter($this->getRouterFilter());
+		
+		$this->routes = $router;
 	}
 	
-	public function __invoke(
+	function __invoke(
 		Controller\HttpRequest  $request, 
 		Controller\HttpResponse $response
 	)
 	{
-		$this->routes->route($request);
-		$callback = $request->getUserParam("__callback", false);
-		
-		if (false === $callback) {
-		    // throw exception
+	    try {
+		    $callback = $this->routes->route($request);
+		    $callback($request, $response);
+		} catch (Exception $e) {
+		    // handle error
 		}
 		
-		$callback($request, $response);
-		
 		$response->send();
+	}
+	
+    function setResolver(Controller\Resolver $resolver)
+    {
+        $this->resolver = $resolver;
+        return $this;
+    }
+	
+	function getResolver()
+	{
+	    if (null === $this->resolver) {
+	        $this->resolver = new Controller\StandardResolver;
+	    }
+	    return $this->resolver;
+	}
+	
+	protected function getRouterFilter()
+	{
+	    $resolver = $this->getResolver();
+	    
+	    return function($request) use ($resolver) {
+	        $callback = $request->getUserParam("__callback");
+	        
+	        $controller = array_delete_key("controller", $callback) 
+	            ?: $request->getParam("controller");
+	        
+	        $module = array_delete_key("module", $callback)
+	            ?: $request->getParam("module");
+	        
+	        $callback = $resolver->getControllerByName($controller, $module);
+	        
+	        if (false === $callback) {
+	            throw new Controller\Exception(
+	                "$module::$controller is not a valid Controller"
+                );
+	        }
+	        $request->setParam("__callback", $callback);
+	    };
 	}
 }
