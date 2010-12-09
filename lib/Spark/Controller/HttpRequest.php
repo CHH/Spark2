@@ -121,7 +121,7 @@ class HttpRequest
         return $this;
     }
     
-    public function getQuery($key = null, $default = null)
+    public function query($key = null, $default = null)
     {
         if (null === $key) return $_GET;
         
@@ -140,28 +140,28 @@ class HttpRequest
         return $this;
     }
     
-    public function getPost($key = null, $default = null)
+    public function post($key = null, $default = null)
     {
         if (null === $key) return $_POST;
         
         return isset($_POST[$key]) ? $_POST[$key] : $default;
     }
     
-    public function getEnv($key = null)
+    public function env($key = null)
     {
         if (null === $key) return $_ENV;
         
         return isset($_ENV[$key]) ? $_ENV[$key] : null;
     }
     
-    public function getServer($key = null) 
+    public function server($key = null) 
     {
         if (null === $key) return $_SERVER;
         
         return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
     }
     
-    public function getHeader($header)
+    public function header($header)
     {
         // Try to get it from the $_SERVER array first
         $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $header));

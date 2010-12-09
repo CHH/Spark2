@@ -23,12 +23,27 @@ class App
 {
 	public $routes;
 	
-	function __construct()
+	protected $resolver;
+	protected $errorController = array();
+	
+	protected $filters = array();
+	
+	function __construct(Array $options = array())
 	{
+	    if ($options) {
+	        $this->setOptions();
+	    }
+	    
 		$router = new Router();
 		$router->addFilter($this->getRouterFilter());
 		
 		$this->routes = $router;
+	}
+	
+	function setOptions(Array $options = array())
+	{
+	    Options::setOptions($this, $options);
+	    return $this;
 	}
 	
 	function __invoke(
@@ -40,10 +55,31 @@ class App
 		    $callback = $this->routes->route($request);
 		    $callback($request, $response);
 		} catch (Exception $e) {
-		    // handle error
+		    if (!$this->errorController) {
+		        throw $e;
+		    }
+		    $callback = $this->getResolver()
+		        ->getControllerByName($this->errorController["controller"], $this->errorController["module"]);
+		    $callback($request, $response);
+		}
+		
+		foreach ($this->filters as $filter) {
+		    $filter($response);
 		}
 		
 		$response->send();
+	}
+	
+	function addFilter($filter)
+	{
+	    $this->filters[] = $filter;
+	    return $this;
+	}
+	
+	function setErrorController($controller)
+	{
+	    $this->errorController = $controller;
+	    return $this;
 	}
 	
     function setResolver(Controller\Resolver $resolver)

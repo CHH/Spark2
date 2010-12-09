@@ -137,11 +137,16 @@ function block_given(Array $fnArgs, $offset = null)
  * @param  string $string
  * @return string
  */
-function str_camelize($string)
+function str_camelize($string, $uppercaseFirst = true)
 {
     $string = str_replace(array("-", "_"), " ", $string);
     $string = ucwords($string);
     $string = str_replace(" ", null, $string);
+    
+    if (!$uppercaseFirst) {
+        return lcfirst($string);
+    }
+    
     return $string;
 }
 

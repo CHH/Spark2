@@ -68,16 +68,6 @@ class Router
         return $callback;
     }
     
-    function scope($scope, $block)
-    {
-        if (!block_given(func_get_args())) {
-            throw new \InvalidArgumentException("Second argument must be "
-                . " a lambda expression");
-        }
-        $block(new Router\Scope($scope, $this));
-        return $this;
-    }
-    
     function addFilter($filter)
     {
         if (!$filter instanceof \Closure and !$filter instanceof Router\Filter) {
@@ -93,6 +83,16 @@ class Router
     function addRoute(Router\Route $route)
     {
         $this->routes[] = $route;
+        return $this;
+    }
+    
+    function scope($scope, $block)
+    {
+        if (!block_given(func_get_args())) {
+            throw new \InvalidArgumentException("Second argument must be "
+                . " a lambda expression");
+        }
+        $block(new Router\Scope($scope, $this));
         return $this;
     }
     

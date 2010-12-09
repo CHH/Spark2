@@ -9,43 +9,129 @@ class HttpResponse
     
     protected $code = 200;
     
-    public function setCode($code)
+    function setCode($code)
     {
+        $this->code = $code;
     }
     
-    public function header($header, $value)
+    function header($header, $value, $replace = false)
     {
+        $name  = $this->normalizeHeader($header);
+        $value = (string) $value;
+        
+        if ($replace) {
+            foreach ($this->headers as $header => $options) {
+                if ($header == $name) {
+                    unset($this->headers[$header]);
+                }
+            }
+        }
+        
+        $this->headers[] = array(
+            "name"  => $name,
+            "value" => $value,
+            "replace" => $replace
+        );
+        
+        return $this;
     }
     
-    public function prepend($body)
+    function clearHeaders()
+    {
+        $this->headers = array();
+        return $this;
+    }
+    
+    function sendHeaders()
+    {
+        $ok = headers_sent($file, $line);
+        
+        if (!$ok) {
+            return $this;
+        }
+        
+        $httpCodeSent = false;
+        
+        foreach ($headers as $header) {
+            if (!$httpCodeSent and $this->code) {
+                header($header["name"] . ": " . $header["value"], $header["replace"], $this->code);
+                $httpCodeSent = true;
+            } else {
+                header($header["name"] . ": " . $header["value"], $header["replace"]);
+            }
+        }
+        
+        if (!$httpCodeSent) {
+            header("HTTP/1.1" . $this->code);
+            $httpCodeSent = true;
+        }
+        return $this;
+    }
+    
+    function prepend($body)
     {
         $this->body = $body . $this->body;
         return $this;
     }
     
-    public function append($body)
+    function append($body)
     {
         $this->body .= $body;
         return $this;
     }
     
-    public function send()
+    function clearBody()
     {
-        foreach ($headers as $header) {
-            // Output header
-        }
+        $this->body = "";
+    }
+    
+    function getBody()
+    {
+        return $this->body;
+    }
+    
+    function setBody($body)
+    {
+        $this->body = $body;
+        return $this;
+    }
+    
+    function sendBody()
+    {
         print $this->body;
     }
     
-    public function toString()
+    function send()
+    {
+        $this->sendHeaders();
+        $this->sendBody();
+    }
+    
+    function toString()
     {
         ob_start();
         $this->send();
         return ob_get_clean();
     }
     
-    public function __toString()
+    function __toString()
     {
         return $this->toString();
+    }
+    
+    /**
+     * Normalize a header name
+     *
+     * Normalizes a header name to X-Capitalized-Names
+     *
+     * @param  string $name
+     * @return string
+     */
+    protected function normalizeHeader($name)
+    {
+        $filtered = str_replace(array('-', '_'), ' ', (string) $name);
+        $filtered = ucwords(strtolower($filtered));
+        $filtered = str_replace(' ', '-', $filtered);
+        return $filtered;
     }
 }

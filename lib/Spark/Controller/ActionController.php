@@ -26,7 +26,15 @@ abstract class ActionController implements Controller
 {
 	protected $request;
 	protected $response;
-
+    
+    final function __construct()
+    {
+        $this->init();
+    }
+    
+    function init()
+    {}
+    
 	/**
 	 * Gets called by the Front Controller on dispatch
 	 *
@@ -34,9 +42,9 @@ abstract class ActionController implements Controller
 	 * @param  \Spark\Controller\HttpResponse $response
 	 * @return void
 	 */
-	public function __invoke(HttpRequest $request, HttpResponse $response)
+	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
-		$this->beforeFilter($request, $response);
+		$this->before($request, $response);
 
 		$action = $request->getActionName();
 
@@ -47,29 +55,23 @@ abstract class ActionController implements Controller
 		$this->request = $request;
 		$this->response = $response;
 
-		$method = str_replace(" ", "", ucwords(str_replace("_", " ", str_replace("-", " ", strtolower($action)))));
-		$method[0] = strtolower($method[0]);
-
-		$method = $action . "Action";
+        $method = str_camelize($action, false) . "Action";
 
 		if(!method_exists($this, $method)) {
 			$controller = get_class($this);
-			throw new Exception("The action {$action} was not found in
-				the controller {$controller}. Please make sure the method {$method} exists.", 404);
+			throw new Exception(sprintf(
+			    "The action %s was not found in the controller %s. Please make sure the method %s exists.",
+			    $action, get_class($this), $method
+			), 404);
 		}
 		
-		$this->$method($request, $response);
-		$this->afterFilter($request, $response);
+		$this->{$method}($request, $response);
+		$this->after($request, $response);
 	}
 
-	public function beforeFilter($request, $response)
+	function before($request, $response)
 	{}
 	
-	public function afterFilter($request, $response)
+	function after($request, $response)
 	{}
-	
-	protected function forward(\Zend_Controller_Request_Abstract $request)
-	{
-		$request->setDispatched(false);
-	}
 }
