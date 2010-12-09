@@ -135,6 +135,7 @@ function block_given(Array $fnArgs, $offset = null)
  * Camelizes a dash or underscore separated string
  *
  * @param  string $string
+ * @param  bool   $uppercaseFirst By default the first letter is uppercase
  * @return string
  */
 function str_camelize($string, $uppercaseFirst = true)
