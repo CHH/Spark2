@@ -8,11 +8,24 @@ class HttpResponse
     protected $body = "";    
     
     protected $code = 200;
+
+	protected $exceptions = array();
     
     function setCode($code)
     {
         $this->code = $code;
     }
+
+	function addException(\Exception $e) 
+	{
+		$this->exceptions[] = $e;
+		return $this;
+	}
+	
+	function getExceptions()
+	{
+		return $this->exceptions;
+	}
     
     function header($header, $value, $replace = false)
     {

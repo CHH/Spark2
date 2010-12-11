@@ -24,7 +24,6 @@ class App
 	public $routes;
 	
 	protected $resolver;
-	protected $errorController = array();
 	
 	protected $filters = array();
 	
@@ -51,17 +50,8 @@ class App
 		Controller\HttpResponse $response
 	)
 	{
-	    try {
-		    $callback = $this->routes->route($request);
-		    $callback($request, $response);
-		} catch (Exception $e) {
-		    if (!$this->errorController) {
-		        throw $e;
-		    }
-		    $callback = $this->getResolver()
-		        ->getControllerByName($this->errorController["controller"], $this->errorController["module"]);
-		    $callback($request, $response);
-		}
+	    $callback = $this->routes->route($request);
+	    $callback($request, $response);
 		
 		foreach ($this->filters as $filter) {
 		    $filter($response);
@@ -73,12 +63,6 @@ class App
 	function addFilter($filter)
 	{
 	    $this->filters[] = $filter;
-	    return $this;
-	}
-	
-	function setErrorController($controller)
-	{
-	    $this->errorController = $controller;
 	    return $this;
 	}
 	
