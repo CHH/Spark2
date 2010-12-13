@@ -1,4 +1,8 @@
 <?php
+
+autoload('Spark\Util\ArrayObject',  __DIR__ . '/Util/ArrayObject.php');
+autoload('Spark\Util\StringObject', __DIR__ . '/Util/StringObject.php');
+
 /**
  * Splits the string on spaces and returns the array
  * 
@@ -150,6 +154,3 @@ function str_camelize($string, $uppercaseFirst = true)
     
     return $string;
 }
-
-autoload('Spark\Util\ArrayObject',  __DIR__ . '/Util/ArrayObject.php');
-autoload('Spark\Util\StringObject', __DIR__ . '/Util/StringObject.php');
