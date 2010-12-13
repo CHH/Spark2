@@ -21,7 +21,7 @@ class Event
 {
 	protected static $handlers = array();
 	
-	public static function observe($subject, $event, $callback = null)
+	static function observe($subject, $event, $callback = null)
 	{
 	    $key     = static::key($subject);
 	    $handler = new Event\Handler($event, $subject, $callback);
@@ -29,7 +29,7 @@ class Event
 	    static::$handlers[$key][] = $handler;
 	}
 	
-	public static function trigger($subject, $event, $memo = null)
+	static function trigger($subject, $event, $memo = null)
 	{
 	    $key    = static::key($subject);
 	    $return = null;
@@ -46,14 +46,11 @@ class Event
 	protected static function key($input)
 	{
 	    if (is_object($input)) {
-	        $key = spl_object_hash($input);
+	        return spl_object_hash($input);
 	    } else if (is_string($input) and !empty($input)) {
-	        $key = $input;
+	        return $input;
 	    } else {
-	        throw new \InvalidArgumentException(
-	            "Input must be a object or string"
-	        );
+	        throw new \InvalidArgumentException("Input must be a object or string");
 	    }
-	    return $key;
 	}
 }
