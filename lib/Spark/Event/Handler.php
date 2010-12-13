@@ -8,14 +8,14 @@ class Handler
     protected $subject;
     protected $callback;    
     
-	public function __construct($event, $subject, $callback)
+	function __construct($event, $subject, $callback)
 	{
 	    $this->event    = $event;
 	    $this->subject  = $subject;
 	    $this->callback = $callback;
 	}
 	
-	public function __invoke($event, $memo = null)
+	function __invoke($event, $memo = null)
 	{
 	    if ($event !== $this->event) return true;
 	    
@@ -23,7 +23,7 @@ class Handler
 	    return $callback($this->subject, $memo);
 	}
 	
-	public function getCallback()
+	function getCallback()
 	{
 	    $callback = $this->callback;
 	    if (!is_callable($callback)) {
