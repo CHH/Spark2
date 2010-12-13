@@ -32,8 +32,8 @@ class Handler
 	    if ($callback instanceof Closure) {
 	        return $callback;
 	    }
-	    return function() use ($callback) {
-	        return call_user_func_array($callback, func_get_args());
+	    return function($subject, $memo = null) use ($callback) {
+	        return call_user_func($callback, $subject, $memo);
 	    };
 	}
 }
