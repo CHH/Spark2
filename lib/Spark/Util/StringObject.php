@@ -17,7 +17,7 @@ class StringObject implements Countable
 {
     protected $value = "";
     
-    public function __construct($input)
+    function __construct($input)
     {
         if (!is_string($input)) {
             throw new \InvalidArgumentException("No String given as input for StringObject");
@@ -25,34 +25,34 @@ class StringObject implements Countable
         $this->value = $input;
     }
     
-    public function count()
+    function count()
     {
         return $this->getLength();
     }
     
-    public function getLength()
+    function getLength()
     {
         return strlen($this->value);
     }
     
-    public function toLower()
+    function toLower()
     {
         $this->value = strtolower($this->value);
     }
     
-    public function toUpper()
+    function toUpper()
     {
         $this->value = strtoupper($this->value);
         return $this;
     }
     
-    public function camelize($string)
+    function camelize($string)
     {
 	    $this->value = str_camelize($string);
 	    return $this;
     }
     
-    public function exchangeString($otherString)
+    function exchangeString($otherString)
     {
         if (!is_string($otherString)) {
             throw new \InvalidArgumentException("No String given as input for StringObject");
@@ -61,12 +61,12 @@ class StringObject implements Countable
         return $this;
     }
     
-    public function getStringCopy()
+    function getStringCopy()
     {
         return $this->value;
     }
     
-    public function __toString()
+    function __toString()
     {
         return $this->value;
     }
