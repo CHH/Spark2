@@ -17,7 +17,7 @@ class Spark
 {
     protected $autoloadable = array();
     
-    public function autoloader($symbol)
+    function autoloader($symbol)
     {
         if (!isset($this->autoloadable[$symbol])) {
             return false;
@@ -25,7 +25,7 @@ class Spark
         require($this->autoloadable[$symbol]);
     }
     
-    public function autoload($symbol, $fromFile)
+    function autoload($symbol, $fromFile)
     {
         $this->autoloadable[$symbol] = $fromFile;
         return $this;
