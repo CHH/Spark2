@@ -29,10 +29,9 @@ class Event
 	    $handler = new Event\Handler($event, $subject, $callback);
 	    
 	    if (!isset(static::$handlers[$key])) {
-	        static::$handlers[$key] = new SplStack;
+	        static::$handlers[$key] = new SplQueue;
 	    }
-	    
-	    static::$handlers[$key]->push($handler);
+	    static::$handlers[$key]->enqueue($handler);
 	}
 	
 	static function trigger($subject, $event)

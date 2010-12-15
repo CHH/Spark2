@@ -20,15 +20,19 @@ autoload('Spark\Router\Filter', __DIR__ . '/Router/Filter.php');
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
 
-use Spark\Router\RestRoute as RestRoute;
+use Spark\Router\RestRoute,
+    SplStack;
 
 class Router
 {
-    protected $routes = array();
-    protected $filters = array();
+    protected $routes;
+    protected $filters;
     
     function __construct(Array $options = array())
     {
+        $this->routes  = new SplStack;
+        $this->filters = new SplStack;
+        
         $this->setOptions($options);
         $this->registerStandardFilter();
     }
@@ -43,7 +47,7 @@ class Router
     {
         $matched = false;
         
-        foreach (array_reverse($this->routes) as $key => $route) {
+        foreach ($this->routes as $route) {
             $params = $route->match($request);
             
             if (false !== $params) {
@@ -60,7 +64,7 @@ class Router
             $request->setParam($param, $value);
         }
         
-        foreach (array_reverse($this->filters) as $filter) {
+        foreach ($this->filters as $filter) {
             $filter($request);
         }
         
@@ -68,7 +72,7 @@ class Router
         return $callback;
     }
     
-    function addFilter($filter)
+    function filter($filter)
     {
         if (!$filter instanceof \Closure and !$filter instanceof Router\Filter) {
             throw new \InvalidArgumentException(sprintf(
@@ -76,13 +80,13 @@ class Router
                 gettype($filter)
             ));
         }
-        $this->filters[] = $filter;
+        $this->filters->push($filter);
         return $this;
     }
     
     function addRoute(Router\Route $route)
     {
-        $this->routes[] = $route;
+        $this->routes->push($route);
         return $this;
     }
     
@@ -162,6 +166,6 @@ class Router
             $request->setParam("__callback", $callback);
         };
         
-        $this->addFilter($filter);
+        $this->filter($filter);
     }
 }

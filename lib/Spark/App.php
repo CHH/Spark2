@@ -19,13 +19,14 @@ autoload('Spark\Event', __DIR__ . "/Event.php");
 require_once("Controller.php");
 require_once("Router.php");
 
-use Spark\Event;
+use SplStack, Spark\Event;
 
 class App
 {
 	public $routes;
 	
 	protected $resolver;
+	protected $filters;
 	
 	function __construct(Array $options = array())
 	{
@@ -33,10 +34,12 @@ class App
 	        $this->setOptions();
 	    }
 	    
+	    $this->filters = new SplStack;
+	    
 		$router = new Router();
-		$router->addFilter($this->getRouterFilter());
-		
 		$this->routes = $router;
+		
+		$this->registerControllerFilter();
 	}
 	
 	function setOptions(Array $options = array())
@@ -59,7 +62,9 @@ class App
 		}
 		$response->append(ob_get_clean());
 		
-		Event::trigger($this, "post_dispatch", $request, $response);
+		foreach ($this->filters as $filter) {
+		    $filter($request, $response);
+		}
 		
 		$response->send();
 	}
@@ -78,11 +83,17 @@ class App
 	    return $this->resolver;
 	}
 	
-	protected function getRouterFilter()
+	function filter($filter)
+	{
+	    $this->filters->push($filter);
+	    return $this;
+	}
+	
+	protected function registerControllerFilter()
 	{
 	    $resolver = $this->getResolver();
 	    
-	    return function($request) use ($resolver) {
+	    $filter = function($request) use ($resolver) {
 	        $callback = $request->getUserParam("__callback");
 	        
 	        $controller = array_delete_key("controller", $callback) 
@@ -98,5 +109,7 @@ class App
 	        }
 	        $request->setParam("__callback", $callback);
 	    };
+	    
+	    $this->routes->filter($filter);
 	}
 }
