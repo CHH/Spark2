@@ -17,6 +17,8 @@ namespace Spark;
 
 require_once "Event/Handler.php";
 
+use SplStack;
+
 class Event
 {
 	protected static $handlers = array();
@@ -26,16 +28,21 @@ class Event
 	    $key     = static::key($subject);
 	    $handler = new Event\Handler($event, $subject, $callback);
 	    
-	    static::$handlers[$key][] = $handler;
+	    if (!isset(static::$handlers[$key])) {
+	        static::$handlers[$key] = new SplStack;
+	    }
+	    
+	    static::$handlers[$key]->push($handler);
 	}
 	
-	static function trigger($subject, $event, $memo = null)
+	static function trigger($subject, $event)
 	{
 	    $key    = static::key($subject);
 	    $return = null;
+	    $memos  = array_slice(func_get_args(), 2);
         
 	    foreach (static::$handlers[$key] as $handler) {
-	        $return = $handler($event, $memo);
+	        $return = $handler($event, $memos);
 	        
 	        if (false === $return) break;
 	    }

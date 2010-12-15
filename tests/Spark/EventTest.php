@@ -13,9 +13,8 @@ class EventTest extends \PHPUnit_Framework_TestCase
         
         $self = $this; 
         
-        $handler = function($subject, $memo) use ($self, $assertedMemo, $object) {
+        $handler = function($memo) use ($self, $assertedMemo) {
             $self->assertEquals($assertedMemo, $memo);
-            $self->assertEquals($object, $subject);
         };
         
         Event::observe($object, "test:trigger", $handler);

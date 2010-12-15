@@ -15,25 +15,22 @@ class Handler
 	    $this->callback = $callback;
 	}
 	
-	function __invoke($event, $memo = null)
+	function __invoke($event, Array $memos = array())
 	{
 	    if ($event !== $this->event) return true;
 	    
 	    $callback = $this->getCallback();
-	    return $callback($this->subject, $memo);
+	    return $callback($memos);
 	}
 	
-	function getCallback()
+	protected function getCallback()
 	{
 	    $callback = $this->callback;
 	    if (!is_callable($callback)) {
 	        throw new \UnexpectedValueException("No valid Callback");
 	    }
-	    if ($callback instanceof Closure) {
-	        return $callback;
-	    }
-	    return function($subject, $memo = null) use ($callback) {
-	        return call_user_func($callback, $subject, $memo);
+	    return function(Array $args = array()) use ($callback) {
+	        return call_user_func_array($callback, $args);
 	    };
 	}
 }
