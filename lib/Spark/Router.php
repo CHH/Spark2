@@ -153,12 +153,13 @@ class Router
             if (!is_callable($callback)) {
                 throw new \RuntimeException("The callback is not valid");
             }
+            
             if (is_array($callback) or is_string($callback)) {
-                return function($request, $response) use ($callback) {
+                $callback = function($request, $response) use ($callback) {
                     return call_user_func($callback, $request, $response);
                 };
             }
-            return $callback;
+            $request->setParam("__callback", $callback);
         };
         
         $this->addFilter($filter);

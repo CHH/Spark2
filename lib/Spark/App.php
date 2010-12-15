@@ -19,13 +19,13 @@ autoload('Spark\Event', __DIR__ . "/Event.php");
 require_once("Controller.php");
 require_once("Router.php");
 
+use Spark\Event;
+
 class App
 {
 	public $routes;
 	
 	protected $resolver;
-	
-	protected $filters = array();
 	
 	function __construct(Array $options = array())
 	{
@@ -50,20 +50,18 @@ class App
 		Controller\HttpResponse $response
 	)
 	{
-	    $callback = $this->routes->route($request);
-	    $callback($request, $response);
-		
-		foreach ($this->filters as $filter) {
-		    $filter($response);
+	    ob_start();
+	    try {
+	        $callback = $this->routes->route($request);
+	        $callback($request, $response);
+		} catch (\Exception $e) {
+		    $response->addException($e);
 		}
+		$response->append(ob_get_clean());
+		
+		Event::trigger($this, "post_dispatch", $request, $response);
 		
 		$response->send();
-	}
-	
-	function addFilter($filter)
-	{
-	    $this->filters[] = $filter;
-	    return $this;
 	}
 	
     function setResolver(Controller\Resolver $resolver)
@@ -96,9 +94,7 @@ class App
 	        $callback = $resolver->getControllerByName($controller, $module);
 	        
 	        if (false === $callback) {
-	            throw new Controller\Exception(
-	                "$module::$controller is not a valid Controller"
-                );
+	            return false;
 	        }
 	        $request->setParam("__callback", $callback);
 	    };

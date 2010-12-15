@@ -6,10 +6,9 @@ class HttpResponse
 {
     protected $headers = array();
     protected $body = "";    
-    
     protected $code = 200;
-
 	protected $exceptions = array();
+    protected $renderExceptions = true;
     
     function setCode($code)
     {
@@ -20,6 +19,17 @@ class HttpResponse
 	{
 		$this->exceptions[] = $e;
 		return $this;
+	}
+	
+	function renderExceptions($enabled = true)
+	{
+	    $this->renderExceptions = $enabled;
+	    return $this;
+	}
+	
+	function hasExceptions()
+	{
+	    return (bool) $this->exceptions;
 	}
 	
 	function getExceptions()
@@ -117,6 +127,11 @@ class HttpResponse
     function send()
     {
         $this->sendHeaders();
+        
+        if ($this->renderExceptions and $this->exceptions) {
+            $this->prepend(join($this->exceptions, "<br>"));
+        }
+        
         $this->sendBody();
     }
     

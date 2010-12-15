@@ -9,9 +9,14 @@ class HttpRequest
     const HTTP_PUT    = "PUT";
     const HTTP_DELETE = "DELETE";    
     
+    const SCHEME_HTTP  = 'http';
+    const SCHEME_HTTPS = 'https';
+    
     protected $method;
     protected $params = array();
     protected $dispatched = false;
+    
+    protected $requestUri;
     
     public function __construct()
     {}
@@ -53,7 +58,7 @@ class HttpRequest
         if ($method = $this->getParam("_method")) {
             $this->method = strtoupper($method);
         } else {
-            $this->method = $this->getServer("REQUEST_METHOD");
+            $this->method = $this->server("REQUEST_METHOD");
         }
         return $this->method;
     }
@@ -107,6 +112,32 @@ class HttpRequest
             }
         }
         return $this->requestUri;
+    }
+    
+    function getHttpHost()
+    {
+        $host = $this->server('HTTP_HOST');
+        if (!empty($host)) {
+            return $host;
+        }
+
+        $scheme = $this->getScheme();
+        $name   = $this->server('SERVER_NAME');
+        $port   = $this->server('SERVER_PORT');
+
+        if(null === $name) {
+            return '';
+        }
+        elseif (($scheme == self::SCHEME_HTTP && $port == 80) || ($scheme == self::SCHEME_HTTPS && $port == 443)) {
+            return $name;
+        } else {
+            return $name . ':' . $port;
+        }
+    }
+    
+    function getScheme()
+    {
+        return ($this->server('HTTPS') == 'on') ? self::SCHEME_HTTPS : self::SCHEME_HTTP;
     }
     
     public function setQuery($spec, $value = null)
