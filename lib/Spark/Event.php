@@ -17,7 +17,7 @@ namespace Spark;
 
 require_once "Event/Handler.php";
 
-use SplStack;
+use SplQueue;
 
 class Event
 {
