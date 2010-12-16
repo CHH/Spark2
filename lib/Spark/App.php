@@ -19,7 +19,10 @@ autoload('Spark\Event', __DIR__ . "/Event.php");
 require_once("Controller.php");
 require_once("Router.php");
 
-use SplStack, Spark\Event;
+use SplStack, 
+    Spark\Event, 
+    Spark\Controller\HttpRequest, 
+    Spark\Controller\HttpResponse;
 
 class App
 {
@@ -48,10 +51,7 @@ class App
 	    return $this;
 	}
 	
-	function __invoke(
-		Controller\HttpRequest  $request, 
-		Controller\HttpResponse $response
-	)
+	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
 	    ob_start();
 	    try {
@@ -83,7 +83,7 @@ class App
 	    return $this->resolver;
 	}
 	
-	function filter($filter)
+	function postDispatch($filter)
 	{
 	    $this->filters->push($filter);
 	    return $this;
