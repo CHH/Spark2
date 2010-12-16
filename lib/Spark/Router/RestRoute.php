@@ -26,7 +26,7 @@ class RestRoute implements Route
         $this->defaults  = $defaults;
     }    
     
-    function match(\Spark\Controller\HttpRequest $request)
+    function match(\Spark\HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;

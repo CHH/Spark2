@@ -16,13 +16,15 @@ namespace Spark;
 
 autoload('Spark\Event', __DIR__ . "/Event.php");
 
+require_once("HttpRequest.php");
+require_once("HttpResponse.php");
 require_once("Controller.php");
 require_once("Router.php");
 
 use SplStack, 
     Spark\Event, 
-    Spark\Controller\HttpRequest, 
-    Spark\Controller\HttpResponse;
+    Spark\HttpRequest, 
+    Spark\HttpResponse;
 
 class App
 {

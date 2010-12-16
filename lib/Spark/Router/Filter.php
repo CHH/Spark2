@@ -2,9 +2,9 @@
 
 namespace Spark\Router;
 
-use \Spark\Controller;
+use \Spark\HttpRequest;
 
 interface Filter
 {
-    function __invoke(Controller\HttpRequest $request);
+    function __invoke(HttpRequest $request);
 }

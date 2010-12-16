@@ -2,13 +2,15 @@
 
 namespace Spark;
 
+use Spark\HttpRequest, Spark\HttpResponse;
+
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
         $this->router   = new Router;
-        $this->request  = new Controller\HttpRequest;
-        $this->response = new Controller\HttpResponse;
+        $this->request  = new HttpRequest;
+        $this->response = new HttpResponse;
     }    
     
     function test()

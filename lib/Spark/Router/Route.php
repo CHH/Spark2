@@ -4,5 +4,5 @@ namespace Spark\Router;
 
 interface Route
 {
-    public function match(\Spark\Controller\HttpRequest $request);
+    public function match(\Spark\HttpRequest $request);
 }

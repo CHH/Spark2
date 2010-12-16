@@ -20,7 +20,8 @@ autoload('Spark\Router\Filter', __DIR__ . '/Router/Filter.php');
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
 
-use Spark\Router\RestRoute,
+use Spark\Router\RestRoute, 
+    Spark\HttpRequest,
     SplStack;
 
 class Router
@@ -43,7 +44,7 @@ class Router
         return $this;
     }
     
-    function route(Controller\HttpRequest $request)
+    function route(HttpRequest $request)
     {
         $matched = false;
         

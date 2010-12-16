@@ -1,6 +1,6 @@
 <?php
 
-namespace Spark\Controller;
+namespace Spark;
 
 class HttpResponse
 {
