@@ -96,6 +96,10 @@ class App
 	    $filter = function($request) use ($resolver) {
 	        $callback = $request->getUserParam("__callback");
 	        
+	        if (!is_array($callback)) {
+	            return;
+	        }
+	        
 	        $controller = array_delete_key("controller", $callback) 
 	            ?: $request->getParam("controller");
 	        
