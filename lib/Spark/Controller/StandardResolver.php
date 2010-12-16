@@ -25,17 +25,13 @@ use Spark\Options as Options;
  */
 class StandardResolver implements Resolver
 {
-	protected $_controllerDirectory;
+    protected $_namingSpec = '\\{{module}}\\Application\\Controllers\\{{controller}}Controller';
     
-    protected $_controllerNamespace = "\\Application\\Controllers\\";
-    
-	protected $_defaultControllerName = "Default";
+	protected $_defaultControllerName = "Index";
     protected $_defaultModuleName     = null;
     
-	protected $_controllerSuffix = "Controller";
-
+	protected $_controllerDirectory;
 	protected $_moduleDirectory;
-
 	protected $_moduleControllerDirectory = "controllers";
 
 	public function __construct(Array $options = array())
@@ -71,43 +67,48 @@ class StandardResolver implements Resolver
 
 	protected function _loadCommand($controllerName = null, $moduleName = null)
 	{
-	    $controllerName = $controllerName ?: $this->_defaultControllerName;
-		$moduleName     = $moduleName     ?: $this->_defaultModuleName;
+	    $controllerName = str_camelize($controllerName ?: $this->_defaultControllerName);
+		$moduleName     = $moduleName ?: $this->_defaultModuleName;
 		
-		$className = str_camelize($controllerName) . $this->getControllerSuffix();
+		$className = $this->getClassName($controllerName, $moduleName);
         
-		if($moduleName) {
+		if ($moduleName) {
 			$path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
-				  . $moduleName . DIRECTORY_SEPARATOR
+				  . str_camelize($moduleName) . DIRECTORY_SEPARATOR
 				  . $this->getModuleControllerDirectory() . DIRECTORY_SEPARATOR 
-				  . $className . ".php";
-
-			$className = $this->getControllerPrefix($moduleName) . $className;
-		
+				  . $controllerName . "Controller.php";
+            
 		} else {
 			$path = $this->getControllerDirectory() . DIRECTORY_SEPARATOR
-		  		  . $className . ".php";
+		  		  . $controllerName . "Controller.php";
 		}
-
-		if(!file_exists($path)) {
+        
+        $path = realpath($path);
+        
+		if (!$path) {
 			return false;
 		}
 		
 		include_once $path;
-
-		if(!class_exists($className, false)) {
-			return false;
-		}
-		
-        $className  = $this->_controllerNamespace . $className;
+        
+        if (!class_exists($className)) {
+            throw new Exception("Class $className was not found in $path");
+        }
+        
 		$controller = new $className;
 
-		if(!($controller instanceof Controller)) {
+		if (!$controller instanceof Controller) {
 			return false;
 		}
 		return $controller;
 	}
-
+    
+    public function setNamingSpec($namingSpec)
+    {
+        $this->_namingSpec = $namingSpec;
+        return $this;
+    }
+    
 	public function getControllerDirectory()
 	{
 		return $this->_controllerDirectory;
@@ -116,26 +117,6 @@ class StandardResolver implements Resolver
 	public function setControllerDirectory($controllerDirectory)
 	{
 		$this->_controllerDirectory = $controllerDirectory;
-		return $this;
-	}
-    
-    public function setControllerNamespace($namespace)
-    {
-		if (substr($namespace, 2, -2) != '\\') {
-		    $namespace .= '\\';
-		}
-        $this->_controllerNamespace = $namespace;
-        return $this;
-    }
-    
-	public function getControllerSuffix()
-	{
-		return $this->_controllerSuffix;
-	}
-
-	public function setControllerSuffix($suffix)
-	{
-		$this->_controllerSuffix = $suffix;
 		return $this;
 	}
 
@@ -177,9 +158,12 @@ class StandardResolver implements Resolver
 		$this->_moduleControllerDirectory = $directory;
 		return $this;
 	}
-
-	public function getControllerPrefix($module)
+    
+	protected function getClassName($controllerName, $moduleName = null)
 	{
-		return str_camelize($module) . "\\";
+	    $search  = array("{{module}}", "{{controller}}");
+	    $replace = array($moduleName, $controllerName);
+	    
+	    return str_replace($search, $replace, $this->_namingSpec);
 	}
 }
