@@ -23,11 +23,11 @@ namespace Spark\Controller;
 interface Resolver
 {
   
-	/**
-	 * Should resolve the request to a valid instance of CommandInterface
-	 *
-	 * @param  Spark_Controller_RequestInterface $request The routed Request
-	 * @return Spark_Controller_CommandInterface
-	 */
-	public function getInstance(HttpRequest $request);
+    /**
+     * Should resolve the request to a valid instance of CommandInterface
+     *
+     * @param  Spark_Controller_RequestInterface $request The routed Request
+     * @return Spark_Controller_CommandInterface
+     */
+    public function getInstance(HttpRequest $request);
 }

@@ -7,7 +7,7 @@ class HttpResponse
     protected $headers = array();
     protected $body = "";    
     protected $code = 200;
-	protected $exceptions = array();
+    protected $exceptions = array();
     protected $renderExceptions = true;
     
     function setCode($code)
@@ -15,27 +15,27 @@ class HttpResponse
         $this->code = $code;
     }
 
-	function addException(\Exception $e) 
-	{
-		$this->exceptions[] = $e;
-		return $this;
-	}
-	
-	function renderExceptions($enabled = true)
-	{
-	    $this->renderExceptions = $enabled;
-	    return $this;
-	}
-	
-	function hasExceptions()
-	{
-	    return (bool) $this->exceptions;
-	}
-	
-	function getExceptions()
-	{
-		return $this->exceptions;
-	}
+    function addException(\Exception $e) 
+    {
+        $this->exceptions[] = $e;
+        return $this;
+    }
+
+    function renderExceptions($enabled = true)
+    {
+        $this->renderExceptions = $enabled;
+        return $this;
+    }
+
+    function hasExceptions()
+    {
+        return (bool) $this->exceptions;
+    }
+
+    function getExceptions()
+    {
+        return $this->exceptions;
+    }
     
     function header($header, $value, $replace = false)
     {

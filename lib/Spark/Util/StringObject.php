@@ -48,8 +48,8 @@ class StringObject implements Countable
     
     function camelize($string)
     {
-	    $this->value = str_camelize($string);
-	    return $this;
+        $this->value = str_camelize($string);
+        return $this;
     }
     
     function exchangeString($otherString)

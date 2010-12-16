@@ -18,7 +18,7 @@ class ArrayObject extends \ArrayObject
     public function deleteKey($key)
     {
         if (!isset($this[$key])) {
-	        return null;
+            return null;
         }
         $value = $this[$key];
         unset($this[$key]);
@@ -29,7 +29,7 @@ class ArrayObject extends \ArrayObject
     {
         $offset = array_search($value, (array) $this);
         if (false === $offset) {
-	        return null;
+            return null;
         }
         unset($this[$offset]);
         return $value;

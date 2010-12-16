@@ -24,8 +24,8 @@ namespace Spark\Controller;
  */
 abstract class ActionController implements Controller
 {
-	protected $request;
-	protected $response;
+    protected $request;
+    protected $response;
     
     final function __construct()
     {
@@ -35,43 +35,43 @@ abstract class ActionController implements Controller
     function init()
     {}
     
-	/**
-	 * Gets called by the Front Controller on dispatch
-	 *
-	 * @param  \Spark\Controller\HttpRequest  $request
-	 * @param  \Spark\Controller\HttpResponse $response
-	 * @return void
-	 */
-	function __invoke(HttpRequest $request, HttpResponse $response)
-	{
-		$this->before($request, $response);
+    /**
+     * Gets called by the Front Controller on dispatch
+     *
+     * @param  \Spark\Controller\HttpRequest  $request
+     * @param  \Spark\Controller\HttpResponse $response
+     * @return void
+     */
+    function __invoke(HttpRequest $request, HttpResponse $response)
+    {
+        $this->before($request, $response);
 
-		$action = $request->getActionName();
+        $action = $request->getActionName();
 
-		if($action == null) {
-			$action = "index";
-		}
+        if($action == null) {
+            $action = "index";
+        }
 
-		$this->request = $request;
-		$this->response = $response;
+        $this->request = $request;
+        $this->response = $response;
 
         $method = str_camelize($action, false) . "Action";
 
-		if(!method_exists($this, $method)) {
-			$controller = get_class($this);
-			throw new Exception(sprintf(
-			    "The action %s was not found in the controller %s. Please make sure the method %s exists.",
-			    $action, get_class($this), $method
-			), 404);
-		}
-		
-		$this->{$method}($request, $response);
-		$this->after($request, $response);
-	}
+        if(!method_exists($this, $method)) {
+            $controller = get_class($this);
+            throw new Exception(sprintf(
+                "The action %s was not found in the controller %s. Please make sure the method %s exists.",
+                $action, get_class($this), $method
+            ), 404);
+        }
 
-	function before($request, $response)
-	{}
-	
-	function after($request, $response)
-	{}
+        $this->{$method}($request, $response);
+        $this->after($request, $response);
+    }
+    
+    function before($request, $response)
+    {}
+
+    function after($request, $response)
+    {}
 }
