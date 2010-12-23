@@ -24,6 +24,8 @@ class RestRoute implements Route
         $this->routeSpec = trim($routeSpec, $this->urlDelimiter);
         $this->callback  = $callback;
         $this->defaults  = $defaults;
+
+        $this->parseSpec();
     }    
     
     function match(\Spark\HttpRequest $request)
@@ -33,10 +35,8 @@ class RestRoute implements Route
         }
         
         if (!empty($this->method)) {
-            $request->setParam("action", strtolower($this->method));
+            $request->setMetadata("action", strtolower($this->method));
         }
-        
-        $this->parseSpec();
         
         $path   = trim($request->getRequestUri(), $this->urlDelimiter);
         $params = array();
@@ -69,7 +69,7 @@ class RestRoute implements Route
             return false;
         }
         
-        $params["__callback"] = $this->callback;
+        $params["callback"] = $this->callback;
         
         return $params;
     }
@@ -80,6 +80,7 @@ class RestRoute implements Route
         if (is_callable($callback)) {
             return $callback;
         }
+        
         if (is_array($callback)) {
             // Allow overriding of controller and module params from route
             if ($controller = array_delete_key("controller", $params)) {
@@ -90,6 +91,7 @@ class RestRoute implements Route
             }
             return $callback;
         }
+        
         throw new \UnexpectedValueException(sprintf(
             "%s is not a valid callback",
             print_r($callback, true)

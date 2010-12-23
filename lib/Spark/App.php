@@ -14,23 +14,26 @@
 
 namespace Spark;
 
-autoload('Spark\Event', __DIR__ . "/Event.php");
-
+require_once('Util.php');
 require_once("HttpRequest.php");
 require_once("HttpResponse.php");
 require_once("Controller.php");
 require_once("Router.php");
 
-use SplStack, 
-    Spark\Event, 
+use SplStack,
     Spark\HttpRequest, 
-    Spark\HttpResponse;
+    Spark\HttpResponse,
+    Spark\Util\Options;
 
 class App
 {
+    /** @var Spark\Router */
 	public $routes;
-	
+    
+	/** @var Spark\Controller\Resolver */
 	protected $resolver;
+
+	/** @var SplStack */
 	protected $filters;
 	
 	function __construct(Array $options = array())
@@ -38,12 +41,10 @@ class App
 	    if ($options) {
 	        $this->setOptions();
 	    }
+
+        $this->routes = new Router;
 	    
 	    $this->filters = new SplStack;
-	    
-		$router = new Router();
-		$this->routes = $router;
-		
 		$this->registerControllerFilter();
 	}
 	
@@ -56,12 +57,14 @@ class App
 	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
 	    ob_start();
+	    
 	    try {
 	        $callback = $this->routes->route($request);
 	        $callback($request, $response);
 		} catch (\Exception $e) {
 		    $response->addException($e);
 		}
+		
 		$response->append(ob_get_clean());
 		
 		foreach ($this->filters as $filter) {
@@ -70,7 +73,7 @@ class App
 		
 		$response->send();
 	}
-	
+    
     function setResolver(Controller\Resolver $resolver)
     {
         $this->resolver = $resolver;
@@ -96,7 +99,7 @@ class App
 	    $resolver = $this->getResolver();
 	    
 	    $filter = function($request) use ($resolver) {
-	        $callback = $request->getUserParam("__callback");
+	        $callback = $request->getMetadata("callback");
 	        
 	        if (!is_array($callback)) {
 	            return;
@@ -113,7 +116,7 @@ class App
 	        if (false === $callback) {
 	            return false;
 	        }
-	        $request->setParam("__callback", $callback);
+	        $request->setMetadata("callback", $callback);
 	    };
 	    
 	    $this->routes->filter($filter);

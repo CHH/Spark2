@@ -14,6 +14,8 @@
 
 namespace Spark;
 
+require_once('Util.php');
+
 autoload('Spark\Controller\Exception', __DIR__ . '/Controller/Exception.php');
 
 require_once('Controller/Controller.php');

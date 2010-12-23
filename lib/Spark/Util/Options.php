@@ -11,7 +11,7 @@
  * @license    MIT License
  */
 
-namespace Spark;
+namespace Spark\Util;
 
 /**
  * @category   Spark

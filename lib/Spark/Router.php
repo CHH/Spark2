@@ -11,8 +11,9 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
-
 namespace Spark;
+
+require_once('Util.php');
 
 autoload('Spark\Router\Scope',  __DIR__ . '/Router/Scope.php');
 autoload('Spark\Router\Filter', __DIR__ . '/Router/Filter.php');
@@ -40,7 +41,7 @@ class Router
     
     function setOptions(Array $options)
     {
-        Options::setOptions($this, $options);
+        Util\Options::setOptions($this, $options);
         return $this;
     }
     
@@ -62,14 +63,14 @@ class Router
         }
         
         foreach ($params as $param => $value) {
-            $request->setParam($param, $value);
+            $request->setMetadata($param, $value);
         }
         
         foreach ($this->filters as $filter) {
             $filter($request);
         }
         
-        $callback = $request->getUserParam("__callback");
+        $callback = $request->getMetadata("callback");
         return $callback;
     }
     
@@ -85,12 +86,6 @@ class Router
         return $this;
     }
     
-    function addRoute(Router\Route $route)
-    {
-        $this->routes->push($route);
-        return $this;
-    }
-    
     function scope($scope, $block)
     {
         if (!block_given(func_get_args())) {
@@ -98,6 +93,12 @@ class Router
                 . " a lambda expression");
         }
         $block(new Router\Scope($scope, $this));
+        return $this;
+    }
+    
+    function addRoute(Router\Route $route)
+    {
+        $this->routes->push($route);
         return $this;
     }
     
@@ -153,7 +154,7 @@ class Router
     protected function registerStandardFilter()
     {
         $filter = function($request) {
-            $callback = $request->getUserParam("__callback");
+            $callback = $request->getMetadata("callback");
             
             if (!is_callable($callback)) {
                 throw new \RuntimeException("The callback is not valid");
@@ -164,7 +165,7 @@ class Router
                     return call_user_func($callback, $request, $response);
                 };
             }
-            $request->setParam("__callback", $callback);
+            $request->setMetadata("callback", $callback);
         };
         
         $this->filter($filter);

@@ -13,7 +13,7 @@ class HttpRequest
     const SCHEME_HTTPS = 'https';
     
     protected $method;
-    protected $params = array();
+    protected $meta = array();
     protected $dispatched = false;
     
     protected $requestUri;
@@ -21,21 +21,27 @@ class HttpRequest
     public function __construct()
     {}
     
-    public function setParam($param, $value)
+    function setMetadata($spec, $value = null)
     {
-        $this->params[$param] = $value;
+    	if (null === $value and is_array($spec)) {
+			foreach ($spec as $key => $value) {
+				$this->setMetadata($key, $value);
+				return $this;
+			}
+    	}
+        $this->meta[$spec] = $value;
         return $this;
     }
     
-    public function getUserParam($param, $default = null)
+    function getMetadata($key)
     {
-        if (!isset($this->params[$param])) {
-            return $default;
+        if (!isset($this->meta[$key])) {
+            return null;
         }
-        return $this->params[$param];
+        return $this->meta[$key];
     }
     
-    public function getParam($param, $default = null)
+    function getParam($param, $default = null)
     {
         if (isset($this->params[$param])) {
             return $this->params[$param];
@@ -45,13 +51,13 @@ class HttpRequest
         return $default;
     }
     
-    public function setMethod($method)
+    function setMethod($method)
     {
         $this->method = $method;
         return $this;
     }
     
-    public function getMethod()
+    function getMethod()
     {
         if ($this->method) return $this->method;
         
@@ -63,7 +69,7 @@ class HttpRequest
         return $this->method;
     }
     
-    public function setRequestUri($requestUri)
+    function setRequestUri($requestUri)
     {
         $this->requestUri = $requestUri;
         return $this;
@@ -72,7 +78,7 @@ class HttpRequest
     /**
      * Borrowed by Zend_Controller_Request_Http, thanks
      */
-    public function getRequestUri()
+    function getRequestUri()
     {
         if ($this->requestUri === null) {
             if (isset($_SERVER['HTTP_X_REWRITE_URL'])) { // check this first so IIS will catch

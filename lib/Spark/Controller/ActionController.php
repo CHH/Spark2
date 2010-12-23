@@ -48,7 +48,7 @@ abstract class ActionController implements Controller
     {
         $this->before($request, $response);
 
-        $action = $request->getActionName();
+        $action = $request->getMetadata("action");
 
         if($action == null) {
             $action = "index";
