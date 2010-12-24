@@ -15,8 +15,9 @@ namespace Spark;
 
 require_once('Util.php');
 
-autoload('Spark\Router\Scope',  __DIR__ . '/Router/Scope.php');
-autoload('Spark\Router\Filter', __DIR__ . '/Router/Filter.php');
+autoload('Spark\Router\Scope',     __DIR__ . '/Router/Scope.php');
+autoload('Spark\Router\Filter',    __DIR__ . '/Router/Filter.php');
+autoload('Spark\Router\Exception', __DIR__ . '/Router/Exception.php');
 
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
