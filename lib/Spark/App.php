@@ -106,10 +106,10 @@ class App
 	        }
 	        
 	        $controller = array_delete_key("controller", $callback) 
-	            ?: $request->getParam("controller");
+	            ?: $request->getMetadata("controller");
 	        
 	        $module = array_delete_key("module", $callback)
-	            ?: $request->getParam("module");
+	            ?: $request->getMetadata("module");
 	        
 	        $callback = $resolver->getControllerByName($controller, $module);
 	        

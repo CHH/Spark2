@@ -18,7 +18,7 @@ class HttpRequest
     
     protected $requestUri;
     
-    public function __construct()
+    function __construct()
     {}
     
     function setMetadata($spec, $value = null)
@@ -39,16 +39,6 @@ class HttpRequest
             return null;
         }
         return $this->meta[$key];
-    }
-    
-    function getParam($param, $default = null)
-    {
-        if (isset($this->params[$param])) {
-            return $this->params[$param];
-        } else if (isset($_REQUEST[$param])) {
-            return $_REQUEST[$param];
-        }
-        return $default;
     }
     
     function setMethod($method)
@@ -146,7 +136,7 @@ class HttpRequest
         return ($this->server('HTTPS') == 'on') ? self::SCHEME_HTTPS : self::SCHEME_HTTP;
     }
     
-    public function setQuery($spec, $value = null)
+    function setQuery($spec, $value = null)
     {
         if (is_array($spec)) {
             foreach ($spec as $key => $value) {
@@ -158,14 +148,7 @@ class HttpRequest
         return $this;
     }
     
-    public function query($key = null, $default = null)
-    {
-        if (null === $key) return $_GET;
-        
-        return isset($_GET[$key]) ? $_GET[$key] : $default;
-    }
-    
-    public function setPost($spec, $value = null)
+    function setPost($spec, $value = null)
     {
         if (is_array($spec)) {
             foreach ($spec as $key => $value) {
@@ -177,28 +160,46 @@ class HttpRequest
         return $this;
     }
     
-    public function post($key = null, $default = null)
+    function setDispatched($dispatched = true)
+    {
+        $this->isDispatched = $dispatched;
+        return $this;
+    }
+    
+    function isDispatched()
+    {
+        return $this->isDispatched ? true : false;
+    }
+    
+    function query($key = null, $default = null)
+    {
+        if (null === $key) return $_GET;
+        
+        return isset($_GET[$key]) ? $_GET[$key] : $default;
+    }
+    
+    function post($key = null, $default = null)
     {
         if (null === $key) return $_POST;
         
         return isset($_POST[$key]) ? $_POST[$key] : $default;
     }
     
-    public function env($key = null)
+    function env($key = null)
     {
         if (null === $key) return $_ENV;
         
         return isset($_ENV[$key]) ? $_ENV[$key] : null;
     }
     
-    public function server($key = null) 
+    function server($key = null) 
     {
         if (null === $key) return $_SERVER;
         
         return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
     }
     
-    public function header($header)
+    function header($header)
     {
         // Try to get it from the $_SERVER array first
         $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $header));
@@ -218,38 +219,27 @@ class HttpRequest
         return false;
     }
     
-    public function setDispatched($dispatched = true)
-    {
-        $this->isDispatched = $dispatched;
-        return $this;
-    }
-    
-    public function isDispatched()
-    {
-        return $this->isDispatched ? true : false;
-    }
-    
-    public function isGet()
+    function isGet()
     {
         return self::HTTP_GET == $this->getMethod();
     }
     
-    public function isPost()
+    function isPost()
     {
         return self::HTTP_POST == $this->getMethod();
     }
     
-    public function isPut()
+    function isPut()
     {
         return self::HTTP_PUT == $this->getMethod();
     }
     
-    public function isDelete()
+    function isDelete()
     {
         return self::HTTP_DELETE == $this->getMethod();
     }
     
-    public function isXmlHttpRequest()
+    function isXmlHttpRequest()
     {
         return $this->getHeader('X_REQUESTED_WITH') == 'XMLHttpRequest';
     }
