@@ -51,12 +51,11 @@ class HttpRequest
     {
         if ($this->method) return $this->method;
         
-        if ($method = $this->getParam("_method")) {
-            $this->method = strtoupper($method);
-        } else {
-            $this->method = $this->server("REQUEST_METHOD");
-        }
-        return $this->method;
+        $method = isset($_REQUEST["_method"]) 
+            ? $_REQUEST["_method"] 
+            : $this->server("REQUEST_METHOD");
+        
+        return $this->method = strtoupper($method);
     }
     
     function setRequestUri($requestUri)
