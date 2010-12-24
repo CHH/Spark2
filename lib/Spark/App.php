@@ -17,7 +17,6 @@ namespace Spark;
 require_once('Util.php');
 require_once("HttpRequest.php");
 require_once("HttpResponse.php");
-require_once("Controller.php");
 require_once("Router.php");
 
 use SplStack,
@@ -30,9 +29,6 @@ class App
     /** @var Spark\Router */
 	public $routes;
     
-	/** @var Spark\Controller\Resolver */
-	protected $resolver;
-
 	/** @var SplStack */
 	protected $filters;
 	
@@ -42,10 +38,8 @@ class App
 	        $this->setOptions();
 	    }
 
-        $this->routes = new Router;
-	    
+        $this->routes  = new Router;
 	    $this->filters = new SplStack;
-		$this->registerControllerFilter();
 	}
 	
 	function setOptions(Array $options = array())
@@ -73,52 +67,10 @@ class App
 		
 		$response->send();
 	}
-    
-    function setResolver(Controller\Resolver $resolver)
-    {
-        $this->resolver = $resolver;
-        return $this;
-    }
-	
-	function getResolver()
-	{
-	    if (null === $this->resolver) {
-	        $this->resolver = new Controller\StandardResolver;
-	    }
-	    return $this->resolver;
-	}
 	
 	function postDispatch($filter)
 	{
 	    $this->filters->push($filter);
 	    return $this;
-	}
-	
-	protected function registerControllerFilter()
-	{
-	    $resolver = $this->getResolver();
-	    
-	    $filter = function($request) use ($resolver) {
-	        $callback = $request->getMetadata("callback");
-	        
-	        if (!is_array($callback)) {
-	            return;
-	        }
-	        
-	        $controller = array_delete_key("controller", $callback) 
-	            ?: $request->getMetadata("controller");
-	        
-	        $module = array_delete_key("module", $callback)
-	            ?: $request->getMetadata("module");
-	        
-	        $callback = $resolver->getControllerByName($controller, $module);
-	        
-	        if (false === $callback) {
-	            return false;
-	        }
-	        $request->setMetadata("callback", $callback);
-	    };
-	    
-	    $this->routes->filter($filter);
 	}
 }
