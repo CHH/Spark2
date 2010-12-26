@@ -2,10 +2,9 @@
 
 namespace Spark\Controller;
 
-use Spark\Router\Filter as RouterFilter, 
-    Spark\HttpRequest;
+use Spark\HttpRequest;
 
-class CallbackFilter implements RouterFilter
+class CallbackFilter
 {
     /** @var Resolver */
     protected $resolver;
