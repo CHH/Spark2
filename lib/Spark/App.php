@@ -30,7 +30,10 @@ class App
 	public $routes;
     
 	/** @var SplStack */
-	protected $filters;
+	protected $postDispatch;
+
+    /** @var SplStack */
+    protected $preDispatch;
 	
 	function __construct(Array $options = array())
 	{
@@ -39,8 +42,9 @@ class App
 	    }
 
         $this->routes  = new Router;
-	    $this->filters = new SplStack;
-	}
+        $this->preDispatch  = new SplStack;
+        $this->postDispatch = new SplStack;	
+    }
 	
 	function setOptions(Array $options = array())
 	{
@@ -54,23 +58,50 @@ class App
 	    
 	    try {
 	        $callback = $this->routes->route($request);
+            
+            foreach ($this->preDispatch as $filter) {
+                $filter($request, $response);
+            }
+
+            $callback = $this->validateCallback($callback);
 	        $callback($request, $response);
+	        
 		} catch (\Exception $e) {
 		    $response->addException($e);
 		}
 		
 		$response->append(ob_get_clean());
 		
-		foreach ($this->filters as $filter) {
+		foreach ($this->postDispatch as $filter) {
 		    $filter($request, $response);
 		}
 		
 		$response->send();
 	}
+    
+    function preDispatch($filter)
+    {
+        $this->preDispatch->push($filter);
+        return $this;
+    }
 	
 	function postDispatch($filter)
 	{
-	    $this->filters->push($filter);
+	    $this->postDispatch->push($filter);
 	    return $this;
+	}
+
+	protected function validateCallback($callback)
+	{
+        if (!is_callable($callback)) {
+            throw new \RuntimeException("The callback is not valid");
+        }
+        
+        if (is_array($callback) or is_string($callback)) {
+            $callback = function($request, $response) use ($callback) {
+                return call_user_func($callback, $request, $response);
+            };
+        }
+        return $callback;
 	}
 }

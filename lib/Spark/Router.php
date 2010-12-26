@@ -16,7 +16,6 @@ namespace Spark;
 require_once('Util.php');
 
 autoload('Spark\Router\Scope',     __DIR__ . '/Router/Scope.php');
-autoload('Spark\Router\Filter',    __DIR__ . '/Router/Filter.php');
 autoload('Spark\Router\Exception', __DIR__ . '/Router/Exception.php');
 
 require_once('Router/Route.php');
@@ -29,15 +28,11 @@ use Spark\Router\RestRoute,
 class Router
 {
     protected $routes;
-    protected $filters;
     
     function __construct(Array $options = array())
     {
         $this->routes  = new SplStack;
-        $this->filters = new SplStack;
-        
         $this->setOptions($options);
-        $this->registerStandardFilter();
     }
     
     function setOptions(Array $options)
@@ -66,25 +61,7 @@ class Router
         foreach ($params as $param => $value) {
             $request->setMetadata($param, $value);
         }
-        
-        foreach ($this->filters as $filter) {
-            $filter($request);
-        }
-        
-        $callback = $request->getMetadata("callback");
-        return $callback;
-    }
-    
-    function filter($filter)
-    {
-        if (!$filter instanceof \Closure and !$filter instanceof Router\Filter) {
-            throw new \InvalidArgumentException(sprintf(
-                "Filter must be either a closure or a class implementing \Spark\Router\Filter, %s given",
-                gettype($filter)
-            ));
-        }
-        $this->filters->push($filter);
-        return $this;
+        return $request->getMetadata("callback");
     }
     
     function scope($scope, $block)
@@ -150,25 +127,5 @@ class Router
     function delete($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute("DELETE", $routeSpec, $callback, $options));
-    }
-    
-    protected function registerStandardFilter()
-    {
-        $filter = function($request) {
-            $callback = $request->getMetadata("callback");
-            
-            if (!is_callable($callback)) {
-                throw new \RuntimeException("The callback is not valid");
-            }
-            
-            if (is_array($callback) or is_string($callback)) {
-                $callback = function($request, $response) use ($callback) {
-                    return call_user_func($callback, $request, $response);
-                };
-            }
-            $request->setMetadata("callback", $callback);
-        };
-        
-        $this->filter($filter);
     }
 }
