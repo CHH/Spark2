@@ -34,7 +34,7 @@ class Event
 	    static::$handlers[$key]->enqueue($handler);
 	}
 	
-	static function trigger($subject, $event)
+	static function fire($subject, $event)
 	{
 	    $key    = static::key($subject);
 	    $return = null;

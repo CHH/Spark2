@@ -18,6 +18,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
         };
         
         Event::observe($object, "test:trigger", $handler);
-        Event::trigger($object, "test:trigger", $assertedMemo);
+        Event::fire($object, "test:trigger", $assertedMemo);
     }
 }
