@@ -70,7 +70,8 @@ function array_delete($value, &$array)
 }
 
 /**
- * Wrap a function in another function
+ * Wrap a function in another function and avoid a recursion by passing 
+ * the wrapped function as argument to the wrapper
  *
  * @param  callback $fn      The function to wrap
  * @param  callback $wrapper A wrapper function, receives the wrapped function as
