@@ -55,7 +55,7 @@ class Router
         }
         
         if (!$matched) {
-            throw new Controller\Exception("No Route matched");
+            throw new Controller\Exception("No Route matched", 404);
         }
         
         foreach ($params as $param => $value) {
@@ -92,9 +92,9 @@ class Router
         
         $this->post($resource, $callback, $options);
         
-        $this->get    ($route, $callback, $options);
-        $this->put    ($route, $callback, $options);
-        $this->delete ($route, $callback, $options);
+        $this->get($route, $callback, array_merge($options, array("id" => null)));
+        $this->put($route, $callback, $options);
+        $this->delete($route, $callback, $options);
         
         return $this;
     }
