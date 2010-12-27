@@ -46,27 +46,26 @@ abstract class ActionController implements Controller
      */
     function __invoke(HttpRequest $request, HttpResponse $response)
     {
+        $this->request = $request;
+        $this->response = $response;
+        
         $this->before($request, $response);
-
+        
         $action = $request->getMetadata("action");
 
         if($action == null) {
             $action = "index";
         }
-
-        $this->request = $request;
-        $this->response = $response;
-
+        
         $method = str_camelize($action, false) . "Action";
 
-        if(!method_exists($this, $method)) {
-            $controller = get_class($this);
+        if(!is_callable(array($this, $method))) {
             throw new Exception(sprintf(
                 "The action %s was not found in the controller %s. Please make sure the method %s exists.",
                 $action, get_class($this), $method
             ), 404);
         }
-
+        
         $this->{$method}($request, $response);
         $this->after($request, $response);
     }
