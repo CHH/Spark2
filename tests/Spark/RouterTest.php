@@ -24,22 +24,22 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $getHandler = function($request, $response) use ($self) {
             $self->assertEquals("GET", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getParam("id"));
+            $self->assertEquals(23, (int) $request->getMetadata("id"));
         };
         
         $postHandler = function($request, $response) use ($self) {
             $self->assertEquals("POST", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getParam("id"));
+            $self->assertEquals(23, (int) $request->getMetadata("id"));
         };
         
         $putHandler = function($request, $response) use ($self) {
             $self->assertEquals("PUT", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getParam("id"));
+            $self->assertEquals(23, (int) $request->getMetadata("id"));
         };
         
         $deleteHandler = function($request, $response) use ($self) {
             $self->assertEquals("DELETE", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getParam("id"));
+            $self->assertEquals(23, (int) $request->getMetadata("id"));
         };
         
         $router->get("users/:id",    $getHandler);
@@ -64,7 +64,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $router->scope("admin", function($admin) use ($self) {
             $admin->get("users/:id", function($request, $response) use ($self) {
-                $self->assertEquals(23, (int) $request->getParam("id"));
+                $self->assertEquals(23, (int) $request->getMetadata("id"));
             });
             
             $admin->get("posts/:id", function() use ($self) {
@@ -73,7 +73,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         });
         
         $router->route($request);
-        $callback = $request->getUserParam("__callback");
+        $callback = $request->getMetadata("callback");
         $callback($request, $response);
     }
     

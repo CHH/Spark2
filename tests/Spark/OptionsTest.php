@@ -28,7 +28,7 @@ class OptionsTest extends \PHPUnit_Framework_TestCase
             "bar"     => "baz"
         );
         
-        Options::setOptions($sample, $options);
+        Util\Options::setOptions($sample, $options);
         
         $this->assertEquals($options["foo_bar"], $sample->fooBar);
         $this->assertEquals($options["bar"], $sample->bar);
