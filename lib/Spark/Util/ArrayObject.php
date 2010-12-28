@@ -15,7 +15,7 @@ namespace Spark\Util;
 
 class ArrayObject extends \ArrayObject
 {
-    public function deleteKey($key)
+    function deleteKey($key)
     {
         if (!isset($this[$key])) {
             return null;
@@ -25,7 +25,7 @@ class ArrayObject extends \ArrayObject
         return $value;
     }
 
-    public function delete($value)
+    function delete($value)
     {
         $offset = array_search($value, (array) $this);
         if (false === $offset) {
@@ -33,5 +33,14 @@ class ArrayObject extends \ArrayObject
         }
         unset($this[$offset]);
         return $value;
+    }
+    
+    function slice($length, $start = 0)
+    {
+        if (!is_numeric($length)) {
+            throw new \InvalidArgumentException("Length must be a valid number");
+        }
+        $array = $this->getArrayCopy();
+        return new self(array_slice($array, $start, $length));
     }
 }
