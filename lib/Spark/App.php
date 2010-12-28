@@ -40,8 +40,9 @@ class App
 	    if ($options) {
 	        $this->setOptions();
 	    }
-
-        $this->routes  = new Router;
+        
+        $this->routes = new Router;
+        
         $this->preDispatch  = new SplStack;
         $this->postDispatch = new SplStack;	
     }
@@ -62,7 +63,7 @@ class App
             foreach ($this->preDispatch as $filter) {
                 $filter($request, $response);
             }
-
+            
             $callback = $this->validateCallback($callback);
 	        $callback($request, $response);
 	        
