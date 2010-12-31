@@ -4,5 +4,3 @@ Spark ist ein MVC Framework für PHP 5.3+. Es ist bewusst einfach gehalten, ganz
 Es ist Open-Source und steht unter der MIT Lizenz.
 
 Mehr (z.B. das Hello World Tutorial) gibts im Wiki.
-
-Viel Spaß!
