@@ -40,7 +40,7 @@ class ArrayObject extends \ArrayObject
         if (!is_numeric($length)) {
             throw new \InvalidArgumentException("Length must be a valid number");
         }
-        $array = $this->getArrayCopy();
-        return new self(array_slice($array, $start, $length));
+        $this->exchangeArray(array_slice($this->getArrayCopy(), $start, $length));
+        return $this;
     }
 }

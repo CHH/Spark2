@@ -4,10 +4,10 @@ namespace Spark;
 
 class HttpRequest
 {
-    const HTTP_GET    = "GET";
-    const HTTP_POST   = "POST";
-    const HTTP_PUT    = "PUT";
-    const HTTP_DELETE = "DELETE";    
+    const GET    = "GET";
+    const POST   = "POST";
+    const PUT    = "PUT";
+    const DELETE = "DELETE";    
     
     const SCHEME_HTTP  = 'http';
     const SCHEME_HTTPS = 'https';
@@ -17,9 +17,6 @@ class HttpRequest
     protected $dispatched = false;
     
     protected $requestUri;
-    
-    function __construct()
-    {}
     
     function setMetadata($spec, $value = null)
     {
@@ -173,29 +170,25 @@ class HttpRequest
     function query($key = null, $default = null)
     {
         if (null === $key) return $_GET;
-        
-        return isset($_GET[$key]) ? $_GET[$key] : $default;
+        else return isset($_GET[$key]) ? $_GET[$key] : $default;
     }
     
     function post($key = null, $default = null)
     {
         if (null === $key) return $_POST;
-        
-        return isset($_POST[$key]) ? $_POST[$key] : $default;
+        else return isset($_POST[$key]) ? $_POST[$key] : $default;
     }
     
     function env($key = null)
     {
         if (null === $key) return $_ENV;
-        
-        return isset($_ENV[$key]) ? $_ENV[$key] : null;
+        else return isset($_ENV[$key]) ? $_ENV[$key] : null;
     }
     
     function server($key = null) 
     {
         if (null === $key) return $_SERVER;
-        
-        return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
+        else return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
     }
     
     function header($header)
@@ -220,26 +213,26 @@ class HttpRequest
     
     function isGet()
     {
-        return self::HTTP_GET == $this->getMethod();
+        return self::GET == $this->getMethod();
     }
     
     function isPost()
     {
-        return self::HTTP_POST == $this->getMethod();
+        return self::POST == $this->getMethod();
     }
     
     function isPut()
     {
-        return self::HTTP_PUT == $this->getMethod();
+        return self::PUT == $this->getMethod();
     }
     
     function isDelete()
     {
-        return self::HTTP_DELETE == $this->getMethod();
+        return self::DELETE == $this->getMethod();
     }
     
     function isXmlHttpRequest()
     {
-        return $this->getHeader('X_REQUESTED_WITH') == 'XMLHttpRequest';
+        return $this->header('X_REQUESTED_WITH') == 'XMLHttpRequest';
     }
 }
