@@ -24,7 +24,7 @@ RewriteRule ^.*$ index.php/$1 [NC,L]
 
 use Spark\App, Spark\HttpRequest, Spark\HttpResponse;
 
-require_once "lib/Spark/Spark.php";
+require_once "lib/Spark.php";
 
 $app = new App;
 $app
