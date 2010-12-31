@@ -9,7 +9,7 @@ Es ist Open-Source und steht unter der MIT Lizenz.
 
 2) Erzeuge einen Virtual Host für deine App (z.B. hello_world.local).
 
-2) Gib das in "/hello_world/.htaccess"
+3) Gib das in "/hello_world/.htaccess"
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} -s [OR]
 RewriteCond %{REQUEST_FILENAME} -l [OR]
@@ -17,9 +17,9 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^.*$ - [NC,L]
 RewriteRule ^.*$ index.php/$1 [NC,L]
 
-3) Kopiere den Ordner "lib" aus dem heruntergeladenen Archiv nach "hello_world"
+4) Kopiere den Ordner "lib" aus dem heruntergeladenen Archiv nach "hello_world"
 
-4) Schreib das in "/hello_world/index.php"
+5) Schreib das in "/hello_world/index.php"
 <?php
 
 use Spark\App, Spark\HttpRequest, Spark\HttpResponse;
@@ -39,4 +39,3 @@ $app(new HttpRequest, new HttpResponse);
 Schau ins Wiki wenn du mehr erfahren willst.
 
 Viel Spaß!
-
