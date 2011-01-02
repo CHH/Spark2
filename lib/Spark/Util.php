@@ -1,7 +1,7 @@
 <?php
 
-require_once('Util\ClassLoader.php');
-require_once('Util\Functions.php');
+require_once('Util/ClassLoader.php');
+require_once('Util/Functions.php');
 
 use Spark\Util;
 
