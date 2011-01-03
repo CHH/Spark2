@@ -93,15 +93,17 @@ class HttpRequest
                 return;
             }
             
-            $this->requestUri = $requestUri;
-            
             // Set GET items, if available
             if (false !== ($pos = strpos($requestUri, '?'))) {
                 // Get key => value pairs and set $_GET
                 $query = substr($requestUri, $pos + 1);
                 parse_str($query, $vars);
                 $_GET = array_merge($_GET, $vars);
+                
+                $requestUri = substr($requestUri, 0, $pos);
             }
+            
+            $this->requestUri = $requestUri;
         }
         return $this->requestUri;
     }
