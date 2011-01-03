@@ -16,7 +16,7 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
     {
         $instance1 = Util\ClassLoader();
         $instance2 = Util\ClassLoader();
-        $this->assertEquals($instance1, $instance2);
+        $this->assertSame($instance1, $instance2);
     }
     
     function testClassLoaderRegistersOnSplAutoloadStack()
