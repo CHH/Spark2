@@ -23,6 +23,7 @@ require_once('Router/RestRoute.php');
 
 use Spark\Router\RestRoute, 
     Spark\HttpRequest,
+    Spark\Util\Options,
     SplStack;
 
 class Router
@@ -37,7 +38,7 @@ class Router
     
     function setOptions(Array $options)
     {
-        Util\Options::setOptions($this, $options);
+        Options::setOptions($this, $options);
         return $this;
     }
     
