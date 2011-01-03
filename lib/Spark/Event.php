@@ -7,9 +7,9 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Controller
+ * @package    Spark_Event
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) 2011 Christoph Hochstrasser
  * @license    MIT License
  */
 

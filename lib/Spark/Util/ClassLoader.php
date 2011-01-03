@@ -6,8 +6,11 @@
  * autoload(). This satisfies the needs for easy understandable class dependencies
  * and Lazy loading.
  *
- * @category Spark
- * @package  Spark_Util
+ * @category  Spark
+ * @package   Spark_Util
+ * @author    Christoph Hochstrasser
+ * @copyright (c) 2011 Christoph Hochstrasser
+ * @license   MIT License
  */
 namespace Spark\Util;
 

@@ -7,7 +7,7 @@
  *
  * @category   Spark
  * @package    Spark_Object
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) 2011 Christoph Hochstrasser
  * @license    MIT License
  */
 
@@ -16,7 +16,7 @@ namespace Spark\Util;
 /**
  * @category   Spark
  * @package    Spark_Object
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) 2011 Christoph Hochstrasser
  * @license    MIT License
  */
 class Options 
