@@ -74,30 +74,6 @@ class RestRoute implements Route
         return $params;
     }
     
-    protected function getCallback(Array $params = array())
-    {
-        $callback = $this->callback;
-        if (is_callable($callback)) {
-            return $callback;
-        }
-        
-        if (is_array($callback)) {
-            // Allow overriding of controller and module params from route
-            if ($controller = array_delete_key("controller", $params)) {
-                $callback["controller"] = $controller;
-            }
-            if ($module = array_delete_key("module", $params)) {
-                $callback["module"] = $module;
-            }
-            return $callback;
-        }
-        
-        throw new \UnexpectedValueException(sprintf(
-            "%s is not a valid callback",
-            print_r($callback, true)
-        ));
-    }
-    
     protected function parseSpec()
     {
         if ($this->params and $this->parts) {
