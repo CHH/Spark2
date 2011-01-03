@@ -46,20 +46,23 @@ class Router
         $matched = false;
         
         foreach ($this->routes as $route) {
-            $params = $route->match($request);
-            
-            if (false !== $params) {
+            try {
+                $meta = $route->match($request);
+            } catch (\Exception $e) {
+                $meta = false;
+            }
+            if (false !== $meta) {
                 $matched = true;
                 break;
             }
         }
-        
         if (!$matched) {
             throw new Controller\Exception("No Route matched", 404);
         }
-        
-        foreach ($params as $param => $value) {
-            $request->setMetadata($param, $value);
+        if (is_array($meta)) {
+            foreach ($meta as $key => $value) {
+                $request->setMetadata($key, $value);
+            }
         }
         return $request->getMetadata("callback");
     }
@@ -84,6 +87,7 @@ class Router
     {
         $resource = trim($resource, '/');
         $new      = $resource . '/new';
+        
         $route    = $resource . '/:id';
         $edit     = $route    . '/edit';
         
