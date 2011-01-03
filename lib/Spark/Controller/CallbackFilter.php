@@ -4,6 +4,14 @@ namespace Spark\Controller;
 
 use Spark\HttpRequest;
 
+/**
+ * Filter for use with Spark\App, which takes an callback of the form 
+ * array("controller" => "foo", "module" => "bar") and looks up controllers 
+ * through the attached Resolver
+ *
+ * @category Spark
+ * @package  Spark_Controller
+ */
 class CallbackFilter
 {
     /** @var Resolver */

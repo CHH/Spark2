@@ -15,7 +15,7 @@
 
 namespace Spark\Controller;
 
-use Spark\Options, Spark\HttpRequest;
+use Spark\Util\Options, Spark\HttpRequest;
 
 /**
  * @category   Spark
@@ -59,7 +59,7 @@ class StandardResolver implements Resolver
             return $this->_loadCommand($this->getDefaultControllerName());
         }
     }
-
+    
     public function getControllerByName($controllerName = null, $moduleName = null)
     {
         return $this->_loadCommand($controllerName, $moduleName);

@@ -24,12 +24,19 @@ use Spark\HttpRequest;
  */
 interface Resolver
 {
-  
+    /**
+     * Sets options
+     *
+     * @param  array $options Key value pairs
+     * @return Resolver
+     */
+    function setOptions(Array $options);
+    
     /**
      * Should resolve the request to a valid instance of CommandInterface
      *
-     * @param  Spark_Controller_RequestInterface $request The routed Request
-     * @return Spark_Controller_CommandInterface
+     * @param  Spark_HttpRequest $request The routed Request
+     * @return Spark_Controller_Controller
      */
-    public function getInstance(HttpRequest $request);
+    function getInstance(HttpRequest $request);
 }
