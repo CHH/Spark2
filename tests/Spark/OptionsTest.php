@@ -1,6 +1,8 @@
 <?php
 
-namespace Spark;
+namespace Spark\Test;
+
+use Spark\Util\Options;
 
 class SampleClass
 {
@@ -28,7 +30,7 @@ class OptionsTest extends \PHPUnit_Framework_TestCase
             "bar"     => "baz"
         );
         
-        Util\Options::setOptions($sample, $options);
+        Options::setOptions($sample, $options);
         
         $this->assertEquals($options["foo_bar"], $sample->fooBar);
         $this->assertEquals($options["bar"], $sample->bar);

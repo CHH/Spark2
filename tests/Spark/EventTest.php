@@ -1,6 +1,8 @@
 <?php
 
-namespace Spark;
+namespace Spark\Test;
+
+use Spark\Event;
 
 class EventTest extends \PHPUnit_Framework_TestCase
 {

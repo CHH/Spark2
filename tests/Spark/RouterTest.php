@@ -1,8 +1,8 @@
 <?php
 
-namespace Spark;
+namespace Spark\Test;
 
-use Spark\HttpRequest, Spark\HttpResponse;
+use Spark\HttpRequest, Spark\HttpResponse, Spark\Router;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {

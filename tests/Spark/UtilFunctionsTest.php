@@ -1,6 +1,6 @@
 <?php
 
-namespace Spark;
+namespace Spark\Test;
 
 class UtilFunctionsTest extends \PHPUnit_Framework_TestCase
 {
