@@ -35,36 +35,67 @@ class App
     /** @var SplStack */
     protected $preDispatch;
 	
-	function __construct(Array $options = array())
+	/** @var array */
+	protected $metadata = array();
+	
+	function __construct()
 	{
-	    if ($options) {
-	        $this->setOptions();
-	    }
-        
         $this->routes = new Router;
         
         $this->preDispatch  = new SplStack;
         $this->postDispatch = new SplStack;	
     }
 	
-	function setOptions(Array $options = array())
+	/**
+	 * Sets metadata which can be retrieved by modules extending the app 
+	 *
+	 * @param  mixed $spec  Either array of key value pairs or single key
+	 * @param  mixed $value Optional value, if key is a scalar
+	 * @return App
+	 */
+	function setMetadata($spec, $value = null)
 	{
-	    Options::setOptions($this, $options);
+	    if (is_array($spec)) {
+	        foreach ($spec as $option => $value) {
+	            $this->setMetadata($option, $value);
+	        }
+	        return $this;
+	    }
+	    $this->metadata[$spec] = $value;
 	    return $this;
 	}
 	
+	function getMetadata($key = null) 
+	{
+	    if (null === $key) {
+	        return $this->metadata;
+	    }
+	    if (!isset($this->metadata[$spec])) {
+	        return null;
+	    }
+	    return $this->metadata[$spec];
+	}
+	
+	/**
+	 * Routes the request, dispatch the callback, captures all output and sends
+	 * back the response
+	 *
+	 * @param  HttpRequest  $request
+	 * @param  HttpResponse $response
+	 * @return void
+	 */
 	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
 	    ob_start();
 	    
 	    try {
-	        $callback = $this->routes->route($request);
+	        $this->routes->route($request);
             
             foreach ($this->preDispatch as $filter) {
                 $filter($request, $response);
             }
             
-            $callback = $this->validateCallback($callback);
+            $callback = $this->validateCallback($request->getMetadata("callback"));
 	        $callback($request, $response);
 	        
 		} catch (\Exception $e) {
@@ -80,18 +111,37 @@ class App
 		$response->send();
 	}
     
+    /**
+     * Attaches a filter to the filters run before dispatching
+     *
+     * @param  object $filter Callable object (Closure or Object implementing __invoke)
+     * @return App
+     */
     function preDispatch($filter)
     {
         $this->preDispatch->push($filter);
         return $this;
     }
 	
+	/**
+     * Attaches a filter to the filters run after dispatching
+     *
+     * @param  object $filter Callable object (Closure or Object implementing __invoke)
+     * @return App
+     */
 	function postDispatch($filter)
 	{
 	    $this->postDispatch->push($filter);
 	    return $this;
 	}
-
+    
+    /**
+     * Validates if the callback is callable and wraps array style callbacks
+     * in a closure to unify calling
+     *
+     * @param  mixed $callback
+     * @return Closure
+     */
 	protected function validateCallback($callback)
 	{
         if (!is_callable($callback)) {
