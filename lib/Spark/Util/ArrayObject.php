@@ -27,7 +27,7 @@ class ArrayObject extends \ArrayObject
 
     function delete($value)
     {
-        $offset = array_search($value, (array) $this);
+        $offset = array_search($value, $this->getArrayCopy());
         if (false === $offset) {
             return null;
         }

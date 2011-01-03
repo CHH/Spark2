@@ -20,7 +20,7 @@
  */
 function words($string)
 {
-    return explode(" ", $string);
+    return explode(" ", (string) $string);
 }
 
 /**

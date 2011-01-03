@@ -13,6 +13,8 @@
  */
 namespace Spark\Util;
 
+use Countable;
+
 class StringObject implements Countable
 {
     protected $value = "";
@@ -27,17 +29,13 @@ class StringObject implements Countable
     
     function count()
     {
-        return $this->getLength();
-    }
-    
-    function getLength()
-    {
         return strlen($this->value);
     }
     
     function toLower()
     {
         $this->value = strtolower($this->value);
+        return $this;
     }
     
     function toUpper()
@@ -46,9 +44,9 @@ class StringObject implements Countable
         return $this;
     }
     
-    function camelize($string)
+    function camelize()
     {
-        $this->value = str_camelize($string);
+        $this->value = str_camelize($this->value);
         return $this;
     }
     
