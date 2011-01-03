@@ -1,8 +1,8 @@
 <?php
 
-namespace Spark\Test;
+namespace Spark\Test\Util;
 
-class UtilFunctionsTest extends \PHPUnit_Framework_TestCase
+class FunctionsTest extends \PHPUnit_Framework_TestCase
 {
     function testCamelize()
     {

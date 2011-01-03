@@ -36,6 +36,7 @@ function ClassLoader()
 class ClassLoader 
 {
 	protected $autoloadable = array();
+    protected $isRegistered = false;
 
 	function __invoke($symbol)
 	{
@@ -48,12 +49,20 @@ class ClassLoader
 	function register()
 	{
 	    spl_autoload_register($this);
+	    $this->isRegistered = true;
 	    return $this;
 	}
 	
 	function unregister()
 	{
+	    $this->isRegistered = false;
 		spl_autoload_unregister($this);
+		return $this;
+	}
+	
+	function isRegistered()
+	{
+	    return $this->isRegistered;
 	}
 	
 	function registerSymbol($symbol, $fromFile)
