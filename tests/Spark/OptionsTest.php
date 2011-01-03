@@ -2,22 +2,9 @@
 
 namespace Spark\Test;
 
-use Spark\Util\Options;
+require_once "_data/SampleClass.php";
 
-class SampleClass
-{
-    public $fooBar, $bar;
-    
-    function setFooBar($foo)
-    {
-        $this->fooBar = $foo;
-    }
-    
-    function setBar($bar)
-    {
-        $this->bar = $bar;
-    }
-}
+use Spark\Util\Options;
 
 class OptionsTest extends \PHPUnit_Framework_TestCase
 {
