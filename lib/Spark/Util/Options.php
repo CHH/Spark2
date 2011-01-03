@@ -52,8 +52,7 @@ class Options
 			$setterName = self::_getSetterName($key);
 			
 			if (!is_callable(array($context, $setterName))) continue;
-			
-			$context->$setterName($value);
+			else $context->{$setterName}($value);
 		}
 		return true;
 	}
