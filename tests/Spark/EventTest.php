@@ -6,7 +6,7 @@ use Spark\Event;
 
 class EventTest extends \PHPUnit_Framework_TestCase
 {
-    public function test()
+    function testScopesEventsToObjects()
     {
         $object = new \StdClass();
         

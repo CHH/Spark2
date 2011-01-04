@@ -29,7 +29,7 @@ class Handler
 
     function __invoke($event, Array $memos = array())
     {
-        if ($event !== $this->event) return true;
+        if ($event !== $this->event) return;
 
         $callback = $this->getCallback();
         return $callback($memos);
