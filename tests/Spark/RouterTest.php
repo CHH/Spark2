@@ -72,8 +72,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             });
         });
         
-        $router->route($request);
-        $callback = $request->getMetadata("callback");
+        $callback = $router->route($request);
         $callback($request, $response);
     }
     

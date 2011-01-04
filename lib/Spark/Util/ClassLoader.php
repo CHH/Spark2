@@ -3,7 +3,10 @@
  * Implementation of explicit Autoloading pattern (similar to Ruby's autoload())
  *
  * Every class which should be autoloaded must be registered by a call to
- * autoload(). This satisfies the needs for easy understandable class dependencies
+ * Classloader()->registerSymbol(), which gets usually done by the autoload() function
+ * defined in the Util Package.
+ * 
+ * This satisfies the needs for easy understandable class dependencies
  * and Lazy loading.
  *
  * @category  Spark
@@ -16,7 +19,6 @@ namespace Spark\Util;
 
 /**
  * Stores and returns a single instance of the class loader
- *
  * @return ClassLoader
  */
 function ClassLoader()

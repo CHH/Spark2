@@ -28,6 +28,7 @@ class HttpRequest
     protected $dispatched = false;
     
     protected $requestUri;
+    protected $callback;
     
     function setMetadata($spec, $value = null)
     {
@@ -47,6 +48,17 @@ class HttpRequest
             return null;
         }
         return $this->meta[$key];
+    }
+    
+    function setCallback($callback)
+    {
+        $this->callback = $callback;
+        return $this;
+    }
+    
+    function getCallback()
+    {
+        return $this->callback;
     }
     
     function setMethod($method)

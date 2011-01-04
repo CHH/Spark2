@@ -1,10 +1,11 @@
 <?php
 
-namespace Spark\Test;
+namespace Spark\Test\Util;
 
-require_once "_data/SampleClass.php";
+require_once TESTS . "/Spark/_data/SampleClass.php";
 
-use Spark\Util\Options;
+use Spark\Util\Options,
+    Spark\Test\SampleClass;
 
 class OptionsTest extends \PHPUnit_Framework_TestCase
 {

@@ -74,16 +74,17 @@ class RestRoute implements Route
         
         $params = $params + $this->defaults;
         
+        foreach ($params as $key => $value) {
+            $request->setMetadata($key, $value);
+        }
+        
         if (sizeof($params) < sizeof($this->params)) {
             return false;
         }
         if ($staticCount !== $this->staticCount) {
             return false;
         }
-        
-        $params["callback"] = $this->callback;
-        
-        return $params;
+        return $this->callback;
     }
     
     protected function parseSpec()

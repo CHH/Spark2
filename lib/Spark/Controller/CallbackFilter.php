@@ -1,4 +1,17 @@
 <?php
+/**
+ * Filter which maps module/controller callbacks to Instances of the controllers
+ * via the Resolver
+ * 
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.txt.
+ *
+ * @category   Spark
+ * @package    Spark_Controller
+ * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
+ * @copyright  Copyright (c) 2011 Christoph Hochstrasser
+ * @license    MIT License
+ */
 
 namespace Spark\Controller;
 
@@ -20,7 +33,7 @@ class CallbackFilter
     function __invoke(HttpRequest $request)
     {
         $resolver = $this->getResolver();
-        $callback = $request->getMetadata("callback");
+        $callback = $request->getCallback();
         
         if (!is_array($callback)) {
             return false;
@@ -37,7 +50,7 @@ class CallbackFilter
         if (false === $callback) {
             return false;
         }
-        $request->setMetadata("callback", $callback);
+        $request->setCallback($callback);
     }
 
     function setResolver(Resolver $resolver)

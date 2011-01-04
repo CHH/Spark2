@@ -48,11 +48,11 @@ class Router
         
         foreach ($this->routes as $route) {
             try {
-                $meta = $route->match($request);
+                $callback = $route->match($request);
             } catch (\Exception $e) {
-                $meta = false;
+                $callback = false;
             }
-            if (false !== $meta) {
+            if (false !== $callback) {
                 $matched = true;
                 break;
             }
@@ -60,12 +60,8 @@ class Router
         if (!$matched) {
             throw new Controller\Exception("No Route matched", 404);
         }
-        if (is_array($meta)) {
-            foreach ($meta as $key => $value) {
-                $request->setMetadata($key, $value);
-            }
-        }
-        return $request->getMetadata("callback");
+        $request->setCallback($callback);
+        return $callback;
     }
     
     function scope($scope, $block)

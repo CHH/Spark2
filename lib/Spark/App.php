@@ -14,25 +14,24 @@
 
 namespace Spark;
 
-require_once('Util.php');
+require_once("Util.php");
 require_once("HttpRequest.php");
 require_once("HttpResponse.php");
 require_once("Router.php");
 
-use SplStack,
+use SplQueue,
     Spark\HttpRequest, 
-    Spark\HttpResponse,
-    Spark\Util\Options;
+    Spark\HttpResponse;
 
 class App
 {
     /** @var Spark\Router */
 	public $routes;
     
-	/** @var SplStack */
+	/** @var SplQueue */
 	protected $postDispatch;
 
-    /** @var SplStack */
+    /** @var SplQueue */
     protected $preDispatch;
 	
 	/** @var array */
@@ -42,8 +41,8 @@ class App
 	{
         $this->routes = new Router;
         
-        $this->preDispatch  = new SplStack;
-        $this->postDispatch = new SplStack;	
+        $this->preDispatch  = new SplQueue;
+        $this->postDispatch = new SplQueue;	
     }
 	
 	/**
@@ -95,7 +94,7 @@ class App
                 $filter($request, $response);
             }
             
-            $callback = $this->validateCallback($request->getMetadata("callback"));
+            $callback = $this->validateCallback($request->getCallback());
 	        $callback($request, $response);
 	        
 		} catch (\Exception $e) {
@@ -119,7 +118,7 @@ class App
      */
     function preDispatch($filter)
     {
-        $this->preDispatch->push($filter);
+        $this->preDispatch->enqueue($filter);
         return $this;
     }
 	
@@ -131,13 +130,13 @@ class App
      */
 	function postDispatch($filter)
 	{
-	    $this->postDispatch->push($filter);
+	    $this->postDispatch->enqueue($filter);
 	    return $this;
 	}
     
     /**
      * Validates if the callback is callable and wraps array style callbacks
-     * in a closure to unify calling
+     * in a closure to allow closure-style calling
      *
      * @param  mixed $callback
      * @return Closure
