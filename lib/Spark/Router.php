@@ -21,7 +21,8 @@ autoload('Spark\Router\Exception', __DIR__ . '/Router/Exception.php');
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
 
-use Spark\Router\RestRoute, 
+use Spark\Router\RestRoute,
+	Spark\Router\Exception,
     Spark\HttpRequest,
     Spark\Util\Options,
     SplStack;
@@ -58,7 +59,7 @@ class Router
             }
         }
         if (!$matched) {
-            throw new Controller\Exception("No Route matched", 404);
+            throw new Exception("No Route matched", 404);
         }
         $request->setCallback($callback);
         return $callback;

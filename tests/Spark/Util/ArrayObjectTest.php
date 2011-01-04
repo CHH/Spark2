@@ -33,14 +33,14 @@ class ArrayObjectTest extends PHPUnit_Framework_TestCase
         $this->assertNull($array->delete("foo"));
     }
     
-    function testSliceAltersTheArray()
+    function testSlicingAltersTheArray()
     {
         $array = new ArrayObject(array("foo", "bar", "baz"));
         $array->slice(2);
         $this->assertEquals(2, count($array));
     }
     
-    function testSliceWithOffset()
+    function testSlicesWithOffset()
     {
         $array = new ArrayObject(array("foo", "bar", "baz"));
         $array->slice(2, 1);

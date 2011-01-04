@@ -13,7 +13,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->response = new HttpResponse;
     }    
     
-    function test()
+    function testProvidesMethodsToHandleHttpVerbs()
     {
         $router   = $this->router;
         $request  = $this->request;
@@ -54,7 +54,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         }
     }
     
-    function testRouteScoping()
+    function testRoutesCanBeScoped()
     {
         $router   = $this->router;
         $request  = $this->request->setRequestUri("/admin/users/23")->setMethod("GET");
@@ -77,9 +77,9 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException Spark\Controller\Exception
+     * @expectedException Spark\Router\Exception
      */
-    function testNoMatchException()
+    function testThrowsRouterExceptionIfNoRouteMatched()
     {
         $router = new Router;
         
