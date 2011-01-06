@@ -52,7 +52,6 @@ class RestRoute implements Route
         
         $path   = trim($request->getRequestUri(), $this->urlDelimiter);
         $params = array();
-        
         $staticCount = 0;
         
         if ($path !== '') {

@@ -25,7 +25,7 @@ use Spark\Util\Options, Spark\HttpRequest;
  */
 class StandardResolver implements Resolver
 {
-    protected $_namingSpec = '\\{{module}}\\Application\\Controllers\\{{controller}}Controller';
+    protected $_namingSpec = '\{{module}}\Application\Controllers\{{controller}}Controller';
     
     protected $_defaultControllerName = "Index";
     protected $_defaultModuleName     = null;
@@ -71,7 +71,11 @@ class StandardResolver implements Resolver
         $moduleName     = $moduleName ?: $this->_defaultModuleName;
 
         $className = $this->getClassName($controllerName, $moduleName);
-        
+
+        if (null === $moduleName) {
+            $className = ltrim($className, "\\");
+        }
+
         if ($moduleName) {
             $path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
                   . str_camelize($moduleName) . DIRECTORY_SEPARATOR
