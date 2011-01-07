@@ -19,51 +19,54 @@ class Scope
 {
     protected $name;
     protected $router;
+    protected $options;
     
-    public function __construct($name, \Spark\Router $router)
+    function __construct($name, \Spark\Router $router)
     {
-        $this->name   = $name;
-        $this->router = $router;
+        $this->name    = $name;
+        $this->router  = $router;
+        $this->options = array("scope" => $name);
     }
     
-    public function resource($resource, $callback, Array $options = array())
+    function match($route, $callback, Array $options = array())
     {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->resource($resource, $callback, $options);
-    }
-    
-    public function head($resource, $callback, Array $options = array())
-    {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->head($resource, $callback, $options);
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->match($route, $callback, array_merge($this->options, $options));
         return $this;
     }
     
-    public function get($resource, $callback, Array $options = array())
+    function head($route, $callback, Array $options = array())
     {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->get($resource, $callback, $options);
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->head($route, $callback, array_merge($this->options, $options));
         return $this;
     }
     
-    public function post($resource, $callback, Array $options = array())
+    function get($route, $callback, Array $options = array())
     {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->post($resource, $callback, $options);
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->get($route, $callback, array_merge($this->options, $options));
         return $this;
     }
     
-    public function put($resource, $callback, Array $options = array())
+    function post($route, $callback, Array $options = array())
     {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->put($resource, $callback, $options);
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->post($route, $callback, array_merge($this->options, $options));
         return $this;
     }
     
-    public function delete($resource, $callback, Array $options = array())
+    function put($route, $callback, Array $options = array())
     {
-        $resource = $this->name . '/' . ltrim($resource, '/');
-        $this->router->delete($resource, $callback, $options);
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->put($route, $callback, array_merge($this->options, $options));
+        return $this;
+    }
+    
+    function delete($route, $callback, Array $options = array())
+    {
+        $route = $this->name . '/' . ltrim($route, '/');
+        $this->router->delete($route, $callback, array_merge($this->options, $options));
         return $this;
     }
 }

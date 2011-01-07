@@ -73,9 +73,6 @@ class RestRoute implements Route
         
         $params = $params + $this->defaults;
         
-        foreach ($params as $key => $value) {
-            $request->setMetadata($key, $value);
-        }
         
         if (sizeof($params) < sizeof($this->params)) {
             return false;
@@ -83,6 +80,11 @@ class RestRoute implements Route
         if ($staticCount !== $this->staticCount) {
             return false;
         }
+
+        foreach ($params as $key => $value) {
+            $request->setMetadata($key, $value);
+        }
+        
         return $this->callback;
     }
     

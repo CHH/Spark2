@@ -81,27 +81,7 @@ class Router
         return $this;
     }
     
-    function resource($resource, $callback, Array $options = array())
-    {
-        $resource = trim($resource, '/');
-        $new      = $resource . '/new';
-        
-        $route    = $resource . '/:id';
-        $edit     = $route    . '/edit';
-        
-        $this->get($new,  $callback, array_merge($options, array('action' => 'new')));
-        $this->get($edit, $callback, array_merge($options, array('action' => 'edit')));
-        
-        $this->post($resource, $callback, $options);
-        
-        $this->get($route, $callback, array_merge($options, array("id" => null)));
-        $this->put($route, $callback, $options);
-        $this->delete($route, $callback, $options);
-        
-        return $this;
-    }
-    
-    function map($routeSpec, $callback, Array $options = array())
+    function match($routeSpec, $callback, Array $options = array())
     {
         return $this->addRoute(new RestRoute(null, $routeSpec, $callback, $options));
     }

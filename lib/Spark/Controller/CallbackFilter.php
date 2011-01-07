@@ -34,17 +34,22 @@ class CallbackFilter
     {
         $resolver = $this->getResolver();
         $callback = $request->getCallback();
-        
-        if (!is_array($callback)) {
+
+        if (is_string($callback) and false !== strpos($callback, "#")) {
+            list($controller, $action) = explode("#", $callback);
+            
+        } else if (is_array($callback)) {
+            $controller = array_delete_key("controller", $callback);
+            $action     = array_delete_key("action", $callback);
+        } else {
             return false;
         }
         
-        $controller = array_delete_key("controller", $callback) 
-            ?: $request->getMetadata("controller");
+        $controller = $request->getMetadata("controller") ?: $controller;
+        $action     = $request->getMetadata("action")     ?: $action;
+        $module     = $request->getMetadata("scope");
         
-        $module = array_delete_key("module", $callback)
-            ?: $request->getMetadata("module");
-        
+        $request->setMetadata("action", $action);
         $callback = $resolver->getControllerByName($controller, $module);
         
         if (false === $callback) {

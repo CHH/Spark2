@@ -48,7 +48,7 @@ class Controller
     {
         $filter  = new Controller\CallbackFilter;
         $filter->getResolver()->setOptions($app->getMetadata());
-        
+
         return $app->preDispatch($filter);
     }
 }
