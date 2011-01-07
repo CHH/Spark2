@@ -49,12 +49,13 @@ class CallbackFilter
         $action     = $request->getMetadata("action")     ?: $action;
         $module     = $request->getMetadata("scope");
         
-        $request->setMetadata("action", $action);
         $callback = $resolver->getControllerByName($controller, $module);
         
         if (false === $callback) {
             return false;
         }
+        $request->setMetadata("action",     $action);
+        $request->setMetadata("controller", $controller);
         $request->setCallback($callback);
     }
 
