@@ -21,42 +21,42 @@ use SplQueue;
 
 class Event
 {
-	protected static $handlers = array();
-	
-	static function observe($subject, $event, $callback = null)
-	{
-	    $key     = static::key($subject);
-	    $handler = new Event\Handler($event, $subject, $callback);
-	    
-	    if (!isset(static::$handlers[$key])) {
-	        static::$handlers[$key] = new SplQueue;
-	    }
-	    static::$handlers[$key]->enqueue($handler);
-	}
-	
-	static function fire($subject, $event)
-	{
-	    $key    = static::key($subject);
-	    $return = null;
-	    $memos  = array_slice(func_get_args(), 2);
+    protected static $handlers = array();
+
+    static function observe($subject, $event, $callback = null)
+    {
+        $key     = static::key($subject);
+        $handler = new Event\Handler($event, $subject, $callback);
         
-	    foreach (static::$handlers[$key] as $handler) {
-	        $return = $handler($event, $memos);
-	        
-	        if (false === $return) break;
-	    }
-	    
-	    return $return;
-	}
-	
-	protected static function key($input)
-	{
-	    if (is_object($input)) {
-	        return spl_object_hash($input);
-	    } else if (is_string($input) and !empty($input)) {
-	        return $input;
-	    } else {
-	        throw new \InvalidArgumentException("Input must be a object or string");
-	    }
-	}
+        if (!isset(static::$handlers[$key])) {
+            static::$handlers[$key] = new SplQueue;
+        }
+        static::$handlers[$key]->enqueue($handler);
+    }
+
+    static function fire($subject, $event)
+    {
+        $key    = static::key($subject);
+        $return = null;
+        $memos  = array_slice(func_get_args(), 2);
+        
+        foreach (static::$handlers[$key] as $handler) {
+            $return = $handler($event, $memos);
+            
+            if (false === $return) break;
+        }
+        
+        return $return;
+    }
+
+    protected static function key($input)
+    {
+        if (is_object($input)) {
+            return spl_object_hash($input);
+        } else if (is_string($input) and !empty($input)) {
+            return $input;
+        } else {
+            throw new \InvalidArgumentException("Input must be a object or string");
+        }
+    }
 }
