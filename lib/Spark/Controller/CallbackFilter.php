@@ -47,7 +47,7 @@ class CallbackFilter
         
         $controller = $request->getMetadata("controller") ?: $controller;
         $action     = $request->getMetadata("action")     ?: $action;
-        $module     = $request->getMetadata("scope");
+        $module     = $request->getMetadata("module")     ?: $request->getMetadata("scope");
         
         $callback = $resolver->getControllerByName($controller, $module);
         

@@ -14,10 +14,13 @@
 
 namespace Spark\Router;
 
-class RestRoute implements Route
+class RestRoute implements NamedRoute
 {
+    protected $name;    
+    
     protected $method;
-    protected $routeSpec;
+    protected $route;
+    protected $parsedRoute;
     protected $defaults;
     protected $callback;    
     
@@ -30,14 +33,52 @@ class RestRoute implements Route
     
     protected $wildcardData = array();
     
-    function __construct($method = "GET", $routeSpec, $callback, Array $defaults = array())
+    /**
+     * Constructor
+     *
+     * The constructor takes an array of options as sole argument. The first element
+     * in the array is treated as the route. If this element has the index [0], then
+     * the value is treated as route. If the index of the first element is a string, 
+     * then the key is treated as route and the value as callback.
+     * 
+     * All other elements in the array are treated as options. These include:
+     *   - "to", callback for this route
+     *   - "as", route name
+     *   - "method", which HTTP method this route should match, if not given or NULL
+     *     then the method is not considered
+     *
+     * All other elements than these defined options are stored and set as metadata
+     * on the request if the route gets matched
+     *
+     * @param  Array $routeSpec
+     * @return RestRoute
+     */
+    function __construct(Array $routeSpec)
     {
-        $this->method    = $method;
-        $this->routeSpec = trim($routeSpec, $this->urlDelimiter);
+        $options = array_slice($routeSpec, 1) ?: array();
+        $route   = array_slice($routeSpec, 0, 1);
+        
+        // If first element of array is a $route => $callback pair
+        if (is_string(key($route))) {
+            $callback = current($route);
+            $route    = key($route);
+        } else {
+            $route = current($route);
+        }
+        
+        $callback = array_delete_key("to", $options) ?: $callback;
+        $name     = array_delete_key("as", $options);
+        
+        if ($method = array_delete_key("method", $options)) {
+            $this->method = strtoupper($method);
+        }
+        
+        $this->route     = trim($route, $this->urlDelimiter);
         $this->callback  = $callback;
-        $this->defaults  = $defaults;
-
-        $this->parseSpec();
+        $this->defaults  = $options;
+        $this->name      = $name;
+        
+        $this->parseRoute();
     }    
     
     function match(\Spark\HttpRequest $request)
@@ -73,7 +114,6 @@ class RestRoute implements Route
         
         $params = $params + $this->defaults;
         
-        
         if (sizeof($params) < sizeof($this->params)) {
             return false;
         }
@@ -88,12 +128,34 @@ class RestRoute implements Route
         return $this->callback;
     }
     
-    protected function parseSpec()
+    function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+    
+    function getName()
+    {
+        return $this->name;
+    }
+    
+    function assemble(Array $params)
+    {
+        $url = $this->route;
+        
+        foreach ($params as $key => $value) {
+            $url = str_replace(":$key", $value, $url);
+        }
+        
+        return "/" . $url;
+    }
+    
+    protected function parseRoute()
     {
         if ($this->params and $this->parts) {
             return;
         }
-        $parts = explode($this->urlDelimiter, $this->routeSpec);
+        $parts = explode($this->urlDelimiter, $this->route);
         
         foreach ($parts as $pos => $part) {
             if (substr($part, 0, 1) == $this->urlParam and substr($part, 1, 1) != $this->urlParam) {

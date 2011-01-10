@@ -15,8 +15,9 @@ namespace Spark;
 
 require_once('Util.php');
 
-autoload('Spark\Router\Scope',     __DIR__ . '/Router/Scope.php');
-autoload('Spark\Router\Exception', __DIR__ . '/Router/Exception.php');
+autoload('Spark\Router\Scope',      __DIR__ . '/Router/Scope.php');
+autoload('Spark\Router\Exception',  __DIR__ . '/Router/Exception.php');
+autoload('Spark\Router\NamedRoute', __DIR__ . '/Router/NamedRoute.php');
 
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
@@ -27,20 +28,22 @@ use Spark\Router\RestRoute,
     Spark\Util\Options,
     SplStack;
 
+/**
+ * TODO: Add support for named routes
+ */
 class Router
 {
     protected $routes;
+    protected $namedRoutes = array();
     
-    function __construct(Array $options = array())
+    function __construct()
     {
         $this->routes  = new SplStack;
-        $this->setOptions($options);
     }
     
-    function setOptions(Array $options)
+    function __invoke(HttpRequest $request)
     {
-        Options::setOptions($this, $options);
-        return $this;
+        return $this->route($request);
     }
     
     function route(HttpRequest $request)
@@ -65,6 +68,23 @@ class Router
         return $callback;
     }
     
+    function addRoute(Router\Route $route)
+    {
+        if ($route instanceof Router\NamedRoute and ($name = $route->getName())) {
+            $this->namedRoutes[$name] = $route;
+        }
+        $this->routes->push($route);
+        return $this;
+    }
+    
+    function getRoute($name)
+    {
+        if (!isset($this->namedRoutes[$name])) {
+            throw new \InvalidArgumentException("Route $route not registered");
+        }
+        return $this->namedRoutes[$name];
+    }
+    
     function scope($scope, $block)
     {
         if (!block_given(func_get_args())) {
@@ -75,39 +95,61 @@ class Router
         return $this;
     }
     
-    function addRoute(Router\Route $route)
+    function match($routeSpec, $callback = null)
     {
-        $this->routes->push($route);
-        return $this;
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function match($routeSpec, $callback, Array $options = array())
+    function head($routeSpec, $callback = null)
     {
-        return $this->addRoute(new RestRoute(null, $routeSpec, $callback, $options));
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        $routeSpec["method"] = "HEAD";
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function head($routeSpec, $callback, Array $options = array())
+    function get($routeSpec, $callback = null)
     {
-        return $this->addRoute(new RestRoute("HEAD", $routeSpec, $callback, $options));
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        $routeSpec["method"] = "GET";
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function get($routeSpec, $callback, Array $options = array())
+    function post($routeSpec, $callback = null)
     {
-        return $this->addRoute(new RestRoute("GET", $routeSpec, $callback, $options));
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        $routeSpec["method"] = "POST";
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function post($routeSpec, $callback, Array $options = array())
+    function put($routeSpec, $callback = null)
     {
-        return $this->addRoute(new RestRoute("POST", $routeSpec, $callback, $options));
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        $routeSpec["method"] = "PUT";
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function put($routeSpec, $callback, Array $options = array())
+    function delete($routeSpec, $callback = null)
     {
-        return $this->addRoute(new RestRoute("PUT", $routeSpec, $callback, $options));
+        if (is_string($routeSpec)) {
+            $routeSpec = array($routeSpec => $callback);
+        }
+        $routeSpec["method"] = "DELETE";
+        return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function delete($routeSpec, $callback, Array $options = array())
+    protected function createRoute(Array $routeSpec)
     {
-        return $this->addRoute(new RestRoute("DELETE", $routeSpec, $callback, $options));
+        return new RestRoute($routeSpec);
     }
 }

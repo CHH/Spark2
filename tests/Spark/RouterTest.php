@@ -2,7 +2,11 @@
 
 namespace Spark\Test;
 
-use Spark\HttpRequest, Spark\HttpResponse, Spark\Router;
+use Spark\HttpRequest, 
+    Spark\HttpResponse, 
+    Spark\Router,
+    Spark\Router\RestRoute,
+    PHPUnit_Framework_Assert;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
@@ -12,6 +16,33 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->request  = new HttpRequest;
         $this->response = new HttpResponse;
     }    
+    
+    function testRoutesCanBeAssembledToUrl()
+    {
+        $route  = new RestRoute(array("/:a/:b/:c" => "index#index"));
+        $params = array("a" => "say", "b" => "hello", "c" => "world");
+        
+        $this->assertEquals("/say/hello/world", $route->assemble($params));
+    }
+    
+    function testTakesOptionsArrayAsArgument()
+    {
+        $router   = $this->router;
+        $request  = $this->request;
+        $testcase = $this;
+        
+        $request->setRequestUri("/users/23");
+        
+        $callback = function($request, $response) use ($testcase) {
+            $testcase->assertEquals(23, $request->getMetadata("id"));
+            $testcase->assertEquals("bar", $request->getMetadata("foo"));
+        };
+        
+        $router->match(array("/users/:id" => $callback, "as" => "user_route", "foo" => "bar"));
+        
+        $result = $router($this->request);
+        $result($this->request, $this->response);
+    }
     
     function testProvidesMethodsToHandleHttpVerbs()
     {
