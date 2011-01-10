@@ -14,24 +14,21 @@
 
 namespace Spark\Router;
 
+
+/**
+ * TODO: Adapt regexes to enable optional params, ala "/users/(:id)"
+ */
 class RestRoute implements NamedRoute
 {
     protected $name;    
     
     protected $method;
     protected $route;
-    protected $parsedRoute;
+    protected $regex;
     protected $defaults;
     protected $callback;    
     
     protected $urlDelimiter = "/";
-    protected $urlParam     = ":";
-    
-    protected $params = array();
-    protected $parts  = array();
-    protected $staticCount = 0;
-    
-    protected $wildcardData = array();
     
     /**
      * Constructor
@@ -91,37 +88,26 @@ class RestRoute implements NamedRoute
             $request->setMetadata("action", strtolower($this->method));
         }
         
-        $path   = trim($request->getRequestUri(), $this->urlDelimiter);
-        $params = array();
-        $staticCount = 0;
+        $requestUri = trim($request->getRequestUri(), $this->urlDelimiter);
         
-        if ($path !== '') {
-            $path = explode($this->urlDelimiter, $path);
-            
-            foreach ($path as $pos => $pathPart) {
-                if (isset($this->params[$pos])) {
-                    $params[$this->params[$pos]] = $pathPart;
-                    continue;
-                }
-                if (isset($this->parts[$pos])) {
-                    if ($this->parts[$pos] != $pathPart) {
-                        return false;
-                    }
-                }
-                $staticCount++;
+        $regex  = $this->regex;
+        $result = preg_match_all($regex, $requestUri, $matches);
+        
+        if (!$result) {
+            return false;
+        }
+        
+        $meta = array();
+        
+        foreach ($matches as $param => $value) {
+            if (is_string($param)) {
+                $meta[$param] = current($value);
             }
         }
         
-        $params = $params + $this->defaults;
+        $meta = array_merge($this->defaults, $meta);
         
-        if (sizeof($params) < sizeof($this->params)) {
-            return false;
-        }
-        if ($staticCount !== $this->staticCount) {
-            return false;
-        }
-
-        foreach ($params as $key => $value) {
+        foreach ($meta as $key => $value) {
             $request->setMetadata($key, $value);
         }
         
@@ -152,26 +138,12 @@ class RestRoute implements NamedRoute
     
     protected function parseRoute()
     {
-        if ($this->params and $this->parts) {
-            return;
-        }
-        $parts = explode($this->urlDelimiter, $this->route);
+        $route   = $this->route;
+        $pattern = "/\:([[:alnum:]]+)/";
         
-        foreach ($parts as $pos => $part) {
-            if (substr($part, 0, 1) == $this->urlParam and substr($part, 1, 1) != $this->urlParam) {
-                $part = substr($part, 1);
-                $this->params[$pos] = $part;
-                continue;
-            }
-            
-            if (substr($part, 0, 1) == $this->urlParam) {
-                $part = substr($part, 1);
-            }
-            if (empty($part)) {
-                continue;
-            }
-            $this->parts[$pos] = $part;
-            $this->staticCount++;
-        }
+        $route = str_replace($this->urlDelimiter, "\/", $route);
+        $regex = preg_replace($pattern, '(?P<$1>[[:alnum:]]+)', $route);
+        
+        $this->regex = "/^" . $regex . "$/";
     }
 }

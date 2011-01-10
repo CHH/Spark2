@@ -25,6 +25,22 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("/say/hello/world", $route->assemble($params));
     }
     
+    function testRoutesCanContainOptionalParams()
+    {
+        $router  = $this->router;
+        $request = $this->request;
+        
+        $request->setRequestUri("/users/");
+        
+        $callback = function($request) {
+            var_dump($request);
+        };
+        
+        $router->match(array("/users/(:id)" => $callback));
+        $result = $router($request);
+        $result($request);
+    }
+    
     function testTakesOptionsArrayAsArgument()
     {
         $router   = $this->router;
