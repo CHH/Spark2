@@ -2,6 +2,8 @@
 
 namespace Spark\Test\Util;
 
+use Spark\Util;
+
 class FunctionsTest extends \PHPUnit_Framework_TestCase
 {
     function testCamelize()
@@ -11,14 +13,14 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
         
         $expect  = "FooBarBaz";
         
-        $this->assertEquals($expect, str_camelize($string1));
-        $this->assertEquals($expect, str_camelize($string2));
+        $this->assertEquals($expect, Util\str_camelize($string1));
+        $this->assertEquals($expect, Util\str_camelize($string2));
     }
     
     function testWordsToArray()
     {
         $string = "apple banana pear plum";
-        $words  = words($string);
+        $words  = Util\words($string);
         
         $this->assertEquals(4, sizeof($words));
     }
@@ -35,7 +37,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
             return $arg;
         };
         
-        $newFn = func_wrap($fn, $wrapper);
+        $newFn = Util\func_wrap($fn, $wrapper);
         
         $this->assertEquals($arg, $newFn($arg));
     }
@@ -45,7 +47,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
         $wrapper = function($original, $string) {
             return strtoupper($original($string));
         };
-        $newFn = func_wrap("str_camelize", $wrapper);
+        $newFn = Util\func_wrap("\Spark\Util\str_camelize", $wrapper);
         
         $this->assertEquals("FOOBARBAZ", $newFn("foo_bar_baz"));
     }
@@ -56,7 +58,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
             return $x * $y;
         };
         
-        $double = func_curry($multiply, 2);
+        $double = Util\func_curry($multiply, 2);
         
         $this->assertEquals(2, $double(1));
     }
@@ -71,7 +73,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
             return $statement . "!";
         };
         
-        $greetAndExclaim = func_compose($greet, $exclaim);
+        $greetAndExclaim = Util\func_compose($greet, $exclaim);
         
         $this->assertEquals("Hello World!", $greetAndExclaim("World"));
     }
@@ -79,7 +81,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
     function testBlockGiven()
     {
         $fn = function($block) {
-            return block_given(func_get_args());
+            return Util\block_given(func_get_args());
         };
         
         $this->assertTrue($fn(function() {}));
@@ -88,7 +90,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
     function testBlockGivenAtOffset()
     {
         $fn = function($a, $block, $c) {
-            return block_given(func_get_args(), 1);
+            return Util\block_given(func_get_args(), 1);
         };
         
         $this->assertTrue($fn("a", function() {}, "b"));
@@ -99,7 +101,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
      */
     function testArrayDeleteKey($array)
     {
-        $value = array_delete_key("foo", $array);
+        $value = Util\array_delete_key("foo", $array);
         
         $this->assertEquals("bar", $value);
         $this->assertEmpty($array);
@@ -110,7 +112,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
      */
     function testArrayDeleteValue($array)
     {
-        $value = array_delete("bar", $array);
+        $value = Util\array_delete("bar", $array);
         
         $this->assertEquals("bar", $value);
         $this->assertEmpty($array);
@@ -121,7 +123,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
      */
     function testArrayDeleteAndKeyNotFound($array)
     {
-        $value = array_delete_key("notexistingkey", $array);
+        $value = Util\array_delete_key("notexistingkey", $array);
         
         $this->assertNull($value);
     }
@@ -131,7 +133,7 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
      */
     function testArrayDeleteAndValueNotFound($array)
     {
-        $value = array_delete("notexistingvalue", $array);
+        $value = Util\array_delete("notexistingvalue", $array);
         
         $this->assertNull($value);
     }

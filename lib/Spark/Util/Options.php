@@ -49,9 +49,9 @@ class Options
 		}
 		
 		foreach ($options as $key => $value) {
-			$setterName = self::_getSetterName($key);
+			$setterName = self::getSetterName($key);
 			
-			if (!is_callable(array($context, $setterName))) continue;
+			if   (!is_callable(array($context, $setterName))) continue;
 			else $context->{$setterName}($value);
 		}
 		return true;
@@ -63,7 +63,7 @@ class Options
 	 * @param  string $option The Name of the Option which should be converted
 	 * @return string         The Name of the Setter Method
 	 */
-	static protected function _getSetterName($option) {
+	static protected function getSetterName($option) {
 		return "set" . str_camelize($option);
 	}
 }

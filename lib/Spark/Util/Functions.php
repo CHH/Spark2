@@ -12,6 +12,8 @@
  * @license    MIT License
  */
 
+namespace Spark\Util;
+
 /**
  * Splits the string on spaces and returns the parts
  * 
@@ -142,7 +144,7 @@ function block_given(Array $fnArgs, $offset = null)
     } else {
         $block = $fnArgs[$offset];
     }
-    return $block instanceof Closure;
+    return is_callable(array($block, "__invoke"));
 }
 
 /**

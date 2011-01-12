@@ -15,7 +15,8 @@
 
 namespace Spark\Controller;
 
-use Spark\HttpRequest;
+use Spark\HttpRequest,
+    Spark\Util;
 
 /**
  * Filter for use with Spark\App, which takes an callback of the form 
@@ -39,8 +40,8 @@ class CallbackFilter
             list($controller, $action) = explode("#", $callback);
             
         } else if (is_array($callback)) {
-            $controller = array_delete_key("controller", $callback);
-            $action     = array_delete_key("action", $callback);
+            $controller = Util\array_delete_key("controller", $callback);
+            $action     = Util\array_delete_key("action", $callback);
         } else {
             return false;
         }

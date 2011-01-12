@@ -14,7 +14,8 @@
 
 namespace Spark\Router;
 
-use InvalidArgumentException;
+use InvalidArgumentException,
+    Spark\Util;
 
 /**
  * TODO: Adapt regexes to enable optional params, ala "/users/(:id)"
@@ -68,10 +69,10 @@ class RestRoute implements NamedRoute
             $route = current($route);
         }
         
-        $callback = array_delete_key("to", $options) ?: $callback;
-        $name     = array_delete_key("as", $options);
+        $callback = Util\array_delete_key("to", $options) ?: $callback;
+        $name     = Util\array_delete_key("as", $options);
         
-        if ($method = array_delete_key("method", $options)) {
+        if ($method = Util\array_delete_key("method", $options)) {
             $this->method = strtoupper($method);
         }
         

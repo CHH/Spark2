@@ -6,7 +6,7 @@ use Spark\HttpRequest,
     Spark\HttpResponse, 
     Spark\Router,
     Spark\Router\RestRoute,
-    PHPUnit_Framework_Assert;
+    Spark\Util;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
@@ -97,7 +97,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router->put("users/:id",    $putHandler);
         $router->delete("users/:id", $deleteHandler);
         
-        foreach (words("GET POST PUT DELETE") as $method) {
+        foreach (Util\words("GET POST PUT DELETE") as $method) {
             $request->setMethod($method);
             $callback = $router->route($request);
             $callback($request, $response);
@@ -127,6 +127,19 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $callback = $router->route($request);
         $callback($request, $response);
+    }
+    
+    function testRegistersScopeNameAsMetadataWithRoute()
+    {
+        $router   = $this->router;
+        $request  = $this->request->setRequestUri("/admin/users")->setMethod("GET");
+        $testcase = $this;
+        
+        $router->scope("admin", function($admin) use ($testcase) {
+            $admin->get("users", function($request, $response) use ($testcase) {
+                $testcase->assertEquals("admin", $request->getMetadata("scope"));
+            });
+        });
     }
     
     /**

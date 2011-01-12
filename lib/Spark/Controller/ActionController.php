@@ -17,7 +17,9 @@
 
 namespace Spark\Controller;
 
-use Spark\HttpRequest, Spark\HttpResponse;
+use Spark\HttpRequest, 
+    Spark\HttpResponse,
+    Spark\Util;
 
 /**
  * @category   Spark
@@ -45,7 +47,7 @@ abstract class ActionController implements Controller
      * @param  \Spark\Controller\HttpResponse $response
      * @return void
      */
-    function __invoke(HttpRequest $request, HttpResponse $response)
+    final function __invoke(HttpRequest $request, HttpResponse $response)
     {
         $this->request = $request;
         $this->response = $response;
@@ -58,7 +60,7 @@ abstract class ActionController implements Controller
             $action = "index";
         }
         
-        $method = str_camelize($action, false) . "Action";
+        $method = Util\str_camelize($action, false) . "Action";
 
         if(!is_callable(array($this, $method))) {
             throw new Exception(sprintf(
@@ -71,9 +73,9 @@ abstract class ActionController implements Controller
         $this->after($request, $response);
     }
     
-    function before($request, $response)
+    function before(HttpRequest $request, HttpResponse $response)
     {}
 
-    function after($request, $response)
+    function after(HttpRequest $request, HttpResponse $response)
     {}
 }

@@ -15,7 +15,9 @@
 
 namespace Spark\Controller;
 
-use Spark\Util\Options, Spark\HttpRequest;
+use Spark\Util,
+    Spark\Util\Options, 
+    Spark\HttpRequest;
 
 /**
  * @category   Spark
@@ -67,7 +69,7 @@ class StandardResolver implements Resolver
 
     protected function _loadCommand($controllerName = null, $moduleName = null)
     {
-        $controllerName = str_camelize($controllerName ?: $this->_defaultControllerName);
+        $controllerName = Util\str_camelize($controllerName ?: $this->_defaultControllerName);
         $moduleName     = $moduleName ?: $this->_defaultModuleName;
 
         $className = $this->getClassName($controllerName, $moduleName);
@@ -78,7 +80,7 @@ class StandardResolver implements Resolver
 
         if ($moduleName) {
             $path = $this->getModuleDirectory() . DIRECTORY_SEPARATOR 
-                  . str_camelize($moduleName) . DIRECTORY_SEPARATOR
+                  . Util\str_camelize($moduleName) . DIRECTORY_SEPARATOR
                   . $this->getModuleControllerDirectory() . DIRECTORY_SEPARATOR 
                   . $controllerName . "Controller.php";
             

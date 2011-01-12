@@ -25,9 +25,11 @@ require_once('Router/RestRoute.php');
 use Spark\Router\RestRoute,
 	Spark\Router\Exception,
     Spark\HttpRequest,
+    Spark\Util,
     Spark\Util\Options,
     SplStack,
-    BadMethodCallException;
+    BadMethodCallException,
+    InvalidArgumentException;
 
 /**
  * TODO: Add support for named routes
@@ -81,15 +83,15 @@ class Router
     function getRoute($name)
     {
         if (!isset($this->namedRoutes[$name])) {
-            throw new \InvalidArgumentException("Route $route not registered");
+            throw new InvalidArgumentException("Route $route not registered");
         }
         return $this->namedRoutes[$name];
     }
     
     function scope($scope, $block)
     {
-        if (!block_given(func_get_args())) {
-            throw new \InvalidArgumentException("Second argument must be "
+        if (!Util\block_given(func_get_args())) {
+            throw new InvalidArgumentException("Second argument must be "
                 . " a lambda expression");
         }
         $block(new Router\Scope($scope, $this));
@@ -108,12 +110,12 @@ class Router
     {
         $httpMethod = strtoupper($httpMethod);
         
-        if (!in_array($httpMethod, words("GET POST PUT DELETE HEAD OPTIONS"))) {
+        if (!in_array($httpMethod, Util\words("GET POST PUT DELETE HEAD OPTIONS"))) {
             throw new BadMethodCallException("Method $httpMethod() does not exist.");
         }
         
-        $routeSpec  = isset($arguments[0]) ? $arguments[0] : null;
-        $callback   = isset($arguments[1]) ? $arguments[1] : null;
+        $routeSpec = isset($arguments[0]) ? $arguments[0] : null;
+        $callback  = isset($arguments[1]) ? $arguments[1] : null;
         
         if (is_string($routeSpec)) {
             $routeSpec = array($routeSpec => $callback);
