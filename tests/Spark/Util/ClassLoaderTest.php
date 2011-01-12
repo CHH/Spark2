@@ -12,20 +12,20 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
         $this->classLoader = Util\ClassLoader();
     }
     
-    function testClassLoaderActsAsSingleton()
+    function testActsAsSingleton()
     {
         $instance1 = Util\ClassLoader();
         $instance2 = Util\ClassLoader();
         $this->assertSame($instance1, $instance2);
     }
     
-    function testClassLoaderRegistersOnSplAutoloadStack()
+    function testCanBeRegisteredOnSplAutoloadStack()
     {
         $classLoader = $this->classLoader;
         $this->assertTrue(in_array($classLoader, spl_autoload_functions(), true));
     }
     
-    function testClassLoaderCanBeUnregisteredFromSplAutoloadStack()
+    function testCanBeUnregisteredFromSplAutoloadStack()
     {
         $classLoader = $this->classLoader;
         $classLoader->unregister();
@@ -34,7 +34,7 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
         $classLoader->register();
     }
     
-    function testAutoloadFunction()
+    function testAutoloadFunctionRegistersClassesWithClassLoader()
     {
         autoload("Spark\Test\SampleClass", TESTS . "/Spark/_data/SampleClass.php");
         $this->assertTrue(class_exists("Spark\Test\SampleClass"), "Sample Class is not loadable");

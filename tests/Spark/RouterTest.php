@@ -130,6 +130,15 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     }
     
     /**
+     * @expectedException \BadMethodCallException
+     */
+    function testBindingToInvalidHttpMethodThrowsException()
+    {
+        // There is no HTTP Method named "destroy"
+        $this->router->destroy(array("/foo/bar" => "foo#bar"));
+    }
+    
+    /**
      * @expectedException Spark\Router\Exception
      */
     function testThrowsRouterExceptionIfNoRouteMatched()
