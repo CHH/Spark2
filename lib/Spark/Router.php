@@ -26,7 +26,8 @@ use Spark\Router\RestRoute,
 	Spark\Router\Exception,
     Spark\HttpRequest,
     Spark\Util\Options,
-    SplStack;
+    SplStack,
+    BadMethodCallException;
 
 /**
  * TODO: Add support for named routes
@@ -103,49 +104,23 @@ class Router
         return $this->addRoute($this->createRoute($routeSpec));
     }
     
-    function head($routeSpec, $callback = null)
+    function __call($httpMethod, $arguments)
     {
+        $httpMethod = strtoupper($httpMethod);
+        
+        if (!in_array($httpMethod, words("GET POST PUT DELETE HEAD OPTIONS"))) {
+            throw new BadMethodCallException("Method $httpMethod() does not exist.");
+        }
+        
+        $routeSpec  = isset($arguments[0]) ? $arguments[0] : null;
+        $callback   = isset($arguments[1]) ? $arguments[1] : null;
+        
         if (is_string($routeSpec)) {
             $routeSpec = array($routeSpec => $callback);
         }
-        $routeSpec["method"] = "HEAD";
-        return $this->addRoute($this->createRoute($routeSpec));
-    }
-    
-    function get($routeSpec, $callback = null)
-    {
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
-        }
-        $routeSpec["method"] = "GET";
-        return $this->addRoute($this->createRoute($routeSpec));
-    }
-    
-    function post($routeSpec, $callback = null)
-    {
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
-        }
-        $routeSpec["method"] = "POST";
-        return $this->addRoute($this->createRoute($routeSpec));
-    }
-    
-    function put($routeSpec, $callback = null)
-    {
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
-        }
-        $routeSpec["method"] = "PUT";
-        return $this->addRoute($this->createRoute($routeSpec));
-    }
-    
-    function delete($routeSpec, $callback = null)
-    {
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
-        }
-        $routeSpec["method"] = "DELETE";
-        return $this->addRoute($this->createRoute($routeSpec));
+        $routeSpec = array_merge($routeSpec, array("method" => $httpMethod));
+        
+        return $this->match($routeSpec);
     }
     
     protected function createRoute(Array $routeSpec)

@@ -14,6 +14,7 @@
 
 namespace Spark\Router;
 
+use InvalidArgumentException;
 
 /**
  * TODO: Adapt regexes to enable optional params, ala "/users/(:id)"
@@ -52,6 +53,10 @@ class RestRoute implements NamedRoute
      */
     function __construct(Array $routeSpec)
     {
+        if (!$routeSpec) {
+            throw new InvalidArgumentException("Route Spec cannot be empty.");
+        }
+        
         $options = array_slice($routeSpec, 1) ?: array();
         $route   = array_slice($routeSpec, 0, 1);
         
