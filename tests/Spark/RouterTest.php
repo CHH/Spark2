@@ -110,18 +110,18 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $request  = $this->request->setRequestUri("/admin/users/23")->setMethod("GET");
         $response = $this->response;
         
-        $self = $this;
+        $testcase = $this;
         
-        $router->scope("admin", function($admin) use ($self) {
-            $admin->get("users/:id", function($request, $response) use ($self) {
-                $self->assertEquals(23, (int) $request->getMetadata("id"));
+        $router->scope("admin", function($admin) use ($testcase) {
+            $admin->get("users/:id", function($request, $response) use ($testcase) {
+                $testcase->assertEquals(23, (int) $request->getMetadata("id"));
                 
                 // Test set of scope name as metadata
-                $self->assertEquals("admin", $request->getMetadata("scope"));
+                $testcase->assertEquals("admin", $request->getMetadata("scope"));
             });
             
-            $admin->get("posts/:id", function() use ($self) {
-                $self->fail();
+            $admin->get("posts/:id", function() use ($testcase) {
+                $testcase->fail();
             });
         });
         
