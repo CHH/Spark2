@@ -25,11 +25,10 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("/say/hello/world", $route->assemble($params));
     }
     
-    /**
-     * TODO: Implement required logic in router
-     */
     function testRoutesCanContainOptionalParams()
     {
+        $this->markTestIncomplete("This has no been implemented yet");
+        
         $router  = $this->router;
         $request = $this->request;
         

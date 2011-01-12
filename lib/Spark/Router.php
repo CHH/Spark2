@@ -33,19 +33,32 @@ use Spark\Router\RestRoute,
 
 class Router
 {
+    /** @var SplStack */
     protected $routes;
+    
+    /** @var array */
     protected $namedRoutes = array();
     
     function __construct()
     {
-        $this->routes  = new SplStack;
+        $this->routes = new SplStack;
     }
     
+    /**
+     * @alias route()
+     */
     function __invoke(HttpRequest $request)
     {
         return $this->route($request);
     }
     
+    /**
+     * Routes the given request and returns the attached callback.
+     *
+     * @throws Spark\Router\Exception if no route matched
+     * @param  Spark\HttpRequest $request
+     * @return mixed Callback
+     */
     function route(HttpRequest $request)
     {
         $matched = false;
@@ -68,6 +81,14 @@ class Router
         return $callback;
     }
     
+    /**
+     * Registers a custom route instance with the router.
+     * If the route implements the NamedRoute interface and has a name, then it also
+     * gets registered with the named routes.
+     *
+     * @param  Spark\Router\Route $route
+     * @return Router
+     */
     function addRoute(Router\Route $route)
     {
         if ($route instanceof Router\NamedRoute and ($name = $route->getName())) {
@@ -77,6 +98,13 @@ class Router
         return $this;
     }
     
+    /**
+     * Returns a named route
+     *
+     * @throws InvalidArgumentException if no matching route was found
+     * @param  string $name
+     * @return Spark\Router\NamedRoute
+     */
     function getRoute($name)
     {
         if (!isset($this->namedRoutes[$name])) {
@@ -85,6 +113,16 @@ class Router
         return $this->namedRoutes[$name];
     }
     
+    /**
+     * Starts a routing scope
+     *
+     * @param  string $scope Prefix route
+     * @param  object $block A Lambda expression, the routing scope gets passed
+     *                       as first argument. This scope object behaves just like
+     *                       a router, with the difference that all routes get prefixed
+     *                       with the prefix specified in scope()
+     * @return Router
+     */
     function scope($scope, $block)
     {
         if (!Util\block_given(func_get_args())) {
@@ -95,6 +133,15 @@ class Router
         return $this;
     }
     
+    /**
+     * Binds a callback to the route and registers the route with the router
+     *
+     * @param  mixed $routeSpec Either Array of options or route as string
+     *                          For a complete list of options see 
+     *                          {@see \Spark\Router\RestRoute::__construct()}
+     * @param  mixed $callback  Optional Callback, mandatory if route is given as string
+     * @return Router
+     */
     function match($routeSpec, $callback = null)
     {
         if (is_string($routeSpec)) {
@@ -103,6 +150,15 @@ class Router
         return $this->addRoute($this->createRoute($routeSpec));
     }
     
+    /**
+     * Handle binding of routes to HTTP Methods such as GET, POST, PUT,...
+     *
+     * HTTP Method names can be directly called as methods on the router
+     *
+     * @param  string $httpMethod
+     * @param  array  $arguments  For argument list see {@see match()}
+     * @return Router
+     */
     function __call($httpMethod, $arguments)
     {
         $httpMethod = strtoupper($httpMethod);
@@ -122,6 +178,12 @@ class Router
         return $this->match($routeSpec);
     }
     
+    /**
+     * Creates an instance of the standard route
+     *
+     * @param  Array $routeSpec
+     * @return Spark\Router\RestRoute
+     */
     protected function createRoute(Array $routeSpec)
     {
         return new RestRoute($routeSpec);
