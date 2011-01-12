@@ -15,7 +15,6 @@ namespace Spark;
 
 require_once('Util.php');
 
-autoload('Spark\Router\Scope',      __DIR__ . '/Router/Scope.php');
 autoload('Spark\Router\Exception',  __DIR__ . '/Router/Exception.php');
 autoload('Spark\Router\NamedRoute', __DIR__ . '/Router/NamedRoute.php');
 autoload('Spark\Router\Redirect',   __DIR__ . '/Router/Redirect.php');
@@ -31,7 +30,7 @@ use Spark\Router\RestRoute,
     BadMethodCallException,
     InvalidArgumentException;
 
-class Router
+class Router implements Router\Route
 {
     /** @var SplStack */
     protected $routes;
@@ -39,8 +38,11 @@ class Router
     /** @var array */
     protected $namedRoutes = array();
     
-    function __construct()
+    protected $root;
+    
+    function __construct($root = null)
     {
+        $this->root   = $root;
         $this->routes = new SplStack;
     }
     
@@ -65,7 +67,7 @@ class Router
         
         foreach ($this->routes as $route) {
             try {
-                $callback = $route->match($request);
+                $callback = $route($request);
             } catch (\Exception $e) {
                 $callback = false;
             }
@@ -129,7 +131,9 @@ class Router
             throw new InvalidArgumentException("Second argument must be "
                 . " a lambda expression");
         }
-        $block(new Router\Scope($scope, $this));
+        $scope = new self($scope);
+        $block($scope);
+        $this->routes->push($scope);
         return $this;
     }
     
@@ -186,6 +190,7 @@ class Router
      */
     protected function createRoute(Array $routeSpec)
     {
+        $routeSpec = array_merge($routeSpec, array("root" => $this->root));
         return new RestRoute($routeSpec);
     }
 }

@@ -23,5 +23,5 @@ interface Route
      * @param  HttpRequest $request
      * @return mixed Callback
      */
-    public function match(\Spark\HttpRequest $request);
+    function __invoke(\Spark\HttpRequest $request);
 }

@@ -166,7 +166,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = new Router;
         
         $request = $this->request;
-        $request->setRequestUri("foo/bar")->setMethod("GET");
+        $request->setRequestUri("/foo/bar")->setMethod("GET");
         
         $router->get("foo", function() {});
         

@@ -71,12 +71,20 @@ class RestRoute implements NamedRoute
         
         $callback = Util\array_delete_key("to", $options) ?: $callback;
         $name     = Util\array_delete_key("as", $options);
+        $root     = Util\array_delete_key("root", $options);
+        
+        $options["scope"] = $root;
         
         if ($method = Util\array_delete_key("method", $options)) {
             $this->method = strtoupper($method);
         }
         
-        $this->route     = trim($route, $this->urlDelimiter);
+        $route = ($root ? $this->urlDelimiter : null) . trim($root, $this->urlDelimiter) 
+               . $this->urlDelimiter 
+               . trim($route, $this->urlDelimiter);
+        
+        $this->route = rtrim($route, $this->urlDelimiter);
+        
         $this->callback  = $callback;
         $this->defaults  = $options;
         $this->name      = $name;
@@ -84,7 +92,7 @@ class RestRoute implements NamedRoute
         $this->parseRoute();
     }    
     
-    function match(\Spark\HttpRequest $request)
+    function __invoke(\Spark\HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
@@ -94,7 +102,7 @@ class RestRoute implements NamedRoute
             $request->setMetadata("action", strtolower($this->method));
         }
         
-        $requestUri = trim($request->getRequestUri(), $this->urlDelimiter);
+        $requestUri = rtrim($request->getRequestUri(), $this->urlDelimiter);
         
         $regex  = $this->regex;
         $result = preg_match_all($regex, $requestUri, $matches);
@@ -139,7 +147,7 @@ class RestRoute implements NamedRoute
             $url = str_replace(":$key", $value, $url);
         }
         
-        return "/" . $url;
+        return $url;
     }
     
     protected function parseRoute()
