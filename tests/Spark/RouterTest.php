@@ -57,7 +57,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             $testcase->assertEquals("bar", $request->getMetadata("foo"));
         };
         
-        $router->match(array("/users/:id" => $callback, "as" => "user_route", "foo" => "bar"));
+        $router->match(array("/users/:id" => $callback, "as" => "users_route", "foo" => "bar"));
         
         $result = $router($this->request);
         $result($this->request, $this->response);
@@ -104,6 +104,14 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         }
     }
     
+    function testRoutesCanBeNamed()
+    {
+        $router = $this->router;
+        
+        $router->match(array("/users/:name" => "users#view", "as" => "users_route"));
+        $this->assertInstanceOf("\Spark\Router\RestRoute", $router->getRoute("users_route"));
+    }
+    
     function testRoutesCanBeScoped()
     {
         $router   = $this->router;
@@ -116,7 +124,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             $admin->get("users/:id", function($request, $response) use ($testcase) {
                 $testcase->assertEquals(23, (int) $request->getMetadata("id"));
                 
-                // Test set of scope name as metadata
+                // Test if scope name is set as metadata if scoped route gets matched
                 $testcase->assertEquals("admin", $request->getMetadata("scope"));
             });
             
