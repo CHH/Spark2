@@ -6,9 +6,9 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Util
+ * @package    Spark_Router
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2011 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 namespace Spark;
@@ -27,14 +27,10 @@ use Spark\Router\RestRoute,
 	Spark\Router\Exception,
     Spark\HttpRequest,
     Spark\Util,
-    Spark\Util\Options,
     SplStack,
     BadMethodCallException,
     InvalidArgumentException;
 
-/**
- * TODO: Add support for named routes
- */
 class Router
 {
     protected $routes;
