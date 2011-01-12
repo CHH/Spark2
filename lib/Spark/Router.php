@@ -18,6 +18,7 @@ require_once('Util.php');
 autoload('Spark\Router\Scope',      __DIR__ . '/Router/Scope.php');
 autoload('Spark\Router\Exception',  __DIR__ . '/Router/Exception.php');
 autoload('Spark\Router\NamedRoute', __DIR__ . '/Router/NamedRoute.php');
+autoload('Spark\Router\Redirect',   __DIR__ . '/Router/Redirect.php');
 
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');

@@ -79,15 +79,12 @@ class HttpResponse
     
     function sendHeaders()
     {
-        $ok = headers_sent($file, $line);
-        
-        if (!$ok) {
+        if (headers_sent($file, $line)) {
             return $this;
         }
         
         $httpCodeSent = false;
-        
-        foreach ($headers as $header) {
+        foreach ($this->headers as $header) {
             if (!$httpCodeSent and $this->code) {
                 header($header["name"] . ": " . $header["value"], $header["replace"], $this->code);
                 $httpCodeSent = true;
