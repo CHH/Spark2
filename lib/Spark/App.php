@@ -23,6 +23,19 @@ use SplQueue,
     Spark\HttpRequest, 
     Spark\HttpResponse;
 
+function App(App $app = null)
+{
+    static $instance;
+    
+    if (null !== $app) {
+        $instance = $app;
+    }
+    if (null === $instance) {
+        $instance = new App;
+    }
+    return $instance;
+}
+
 class App
 {
     /** @var Spark\Router */
@@ -64,9 +77,9 @@ class App
 	    return $this;
 	}
 	
-	function getMetadata($key = null) 
+	function getMetadata($spec = null) 
 	{
-	    if (null === $key) {
+	    if (null === $spec) {
 	        return $this->metadata;
 	    }
 	    if (!isset($this->metadata[$spec])) {
