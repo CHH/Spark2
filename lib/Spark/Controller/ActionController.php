@@ -19,7 +19,8 @@ namespace Spark\Controller;
 
 use Spark\HttpRequest, 
     Spark\HttpResponse,
-    Spark\Util;
+    Spark\Util,
+    InvalidArgumentException;
 
 /**
  * @category   Spark
@@ -31,6 +32,9 @@ abstract class ActionController implements Controller
 {
     protected $request;
     protected $response;
+    
+    /** @var ActionController */
+    protected static $instance;
     
     final function __construct()
     {
@@ -78,4 +82,52 @@ abstract class ActionController implements Controller
 
     function after(HttpRequest $request, HttpResponse $response)
     {}
+    
+    /**
+     * Returns a callback which calls the given action and is compatible with 
+     * request callbacks.
+     *
+     * Can be used to directly attach an action to a route, e.g.
+     * $router->match(array("/foo/bar" => FooController::action("bar")));
+     *
+     * This omits the need for the Resolver in simple Applications.
+     *
+     * @param  string  $actionName
+     * @return Closure
+     */
+    final static function action($actionName)
+    {
+        if (!is_string($actionName) or empty($actionName)) {
+            throw new InvalidArgumentException("Action name must be a valid string");
+        }
+        
+        $instance = static::getInstance();
+        $method   = Util\str_camelize($actionName, false) . "Action";
+        
+        if (!is_callable(array($instance, $method))) {
+            throw new InvalidArgumentException("Controller has no action named \"$actionName\"");
+        }
+        
+        $callback = 
+            function(HttpRequest $request, HttpResponse $response) 
+            use ($instance, $method) 
+            {
+                return $instance->{$method}($request, $response);
+            };
+        
+        return $callback;
+    }
+    
+    /** 
+     * Returns an instance of the controller
+     *
+     * @return ActionController
+     */
+    protected static function getInstance()
+    {
+        if (null === static::$instance) {
+            static::$instance = new static;
+        }
+        return static::$instance;
+    }
 }
