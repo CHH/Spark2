@@ -153,10 +153,10 @@ class RestRoute implements NamedRoute
     protected function parseRoute()
     {
         $route   = $this->route;
-        $pattern = "/\:([[:alnum:]]+)/";
+        $pattern = "/\:([[:alnum:]\_\-]+)/";
         
         $route = str_replace($this->urlDelimiter, "\/", $route);
-        $regex = preg_replace($pattern, '(?P<$1>[[:alnum:]]+)', $route);
+        $regex = preg_replace($pattern, '(?P<$1>[[:alnum:]\_\-]+)', $route);
         
         $this->regex = "/^" . $regex . "$/";
     }

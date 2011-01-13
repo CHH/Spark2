@@ -42,8 +42,11 @@ class HttpRequest
         return $this;
     }
     
-    function getMetadata($key)
+    function getMetadata($key = null)
     {
+        if (null === $key) {
+            return $this->meta;
+        }
         if (!isset($this->meta[$key])) {
             return null;
         }
