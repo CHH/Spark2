@@ -106,7 +106,7 @@ class RestRoute implements NamedRoute
         
         $regex  = $this->regex;
         $result = preg_match_all($regex, $requestUri, $matches);
-        
+
         if (!$result) {
             return false;
         }
@@ -114,8 +114,12 @@ class RestRoute implements NamedRoute
         $meta = array();
         
         foreach ($matches as $param => $value) {
+            $value = current($value);
+            if (null == $value) {
+                continue;
+            }
             if (is_string($param)) {
-                $meta[$param] = current($value);
+                $meta[$param] = $value;
             }
         }
         
@@ -152,11 +156,11 @@ class RestRoute implements NamedRoute
     
     protected function parseRoute()
     {
-        $route   = $this->route;
-        $pattern = "/\:([[:alnum:]\_\-]+)/";
+        $route    = $this->route;
+        $pattern  = "/\:([a-zA-Z0-9\_\-]+)/";
         
         $route = str_replace($this->urlDelimiter, "\/", $route);
-        $regex = preg_replace($pattern, '(?P<$1>[[:alnum:]\_\-]+)', $route);
+        $regex = preg_replace($pattern, "(?P<$1>[a-zA-Z0-9\_\-]+)", $route);
         
         $this->regex = "/^" . $regex . "$/";
     }

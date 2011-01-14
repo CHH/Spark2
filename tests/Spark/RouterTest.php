@@ -6,7 +6,8 @@ use Spark\HttpRequest,
     Spark\HttpResponse, 
     Spark\Router,
     Spark\Router\RestRoute,
-    Spark\Util;
+    Spark\Util,
+    PHPUnit_Framework_Assert as Assert;
 
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
@@ -27,39 +28,36 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     
     function testRoutesCanContainOptionalParams()
     {
-        $this->markTestIncomplete("This has no been implemented yet");
-        
         $router  = $this->router;
         $request = $this->request;
         
-        $request->setRequestUri("/users/");
+        $request->setRequestUri("/users");
         
-        $callback = function($request) {
-            var_dump($request);
-        };
+        $router->match(array("/users(/:id)?" => "index#index", "id" => "foo"));
+
+        $router->route($request);
+        $this->assertEquals("foo", $request->getMetadata("id"));
+
+        // Check overriding
+        $request->setRequestUri("/users/23");
         
-        $router->match(array("/users/(:id)" => $callback));
-        $result = $router($request);
-        $result($request);
+        $router->route($request);
+        $this->assertEquals(23, (int) $request->getMetadata("id"));
     }
     
     function testTakesOptionsArrayAsArgument()
     {
         $router   = $this->router;
         $request  = $this->request;
-        $testcase = $this;
         
         $request->setRequestUri("/users/23");
         
-        $callback = function($request, $response) use ($testcase) {
-            $testcase->assertEquals(23, $request->getMetadata("id"));
-            $testcase->assertEquals("bar", $request->getMetadata("foo"));
-        };
+        $router->match(array("/users/:id" => "index#index", "as" => "users_route", "foo" => "bar"));
         
-        $router->match(array("/users/:id" => $callback, "as" => "users_route", "foo" => "bar"));
-        
-        $result = $router($this->request);
-        $result($this->request, $this->response);
+        $router($request);
+
+        $this->assertEquals(23, $request->getMetadata("id"));
+        $this->assertEquals("bar", $request->getMetadata("foo"));
     }
     
     function testProvidesMethodsToHandleHttpVerbs()
@@ -140,13 +138,14 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         $router   = $this->router;
         $request  = $this->request->setRequestUri("/admin/users")->setMethod("GET");
-        $testcase = $this;
         
-        $router->scope("admin", function($admin) use ($testcase) {
-            $admin->get("users", function($request, $response) use ($testcase) {
-                $testcase->assertEquals("admin", $request->getMetadata("scope"));
-            });
+        $router->scope("admin", function($admin) {
+            $admin->get("users", "users#index");
         });
+
+        $router->route($request);
+        
+        $this->assertEquals("admin", $request->getMetadata("scope"));
     }
     
     /**
