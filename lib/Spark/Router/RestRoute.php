@@ -27,7 +27,7 @@ class RestRoute implements NamedRoute
     protected $method;
     protected $route;
     protected $regex;
-    protected $defaults;
+    protected $metadata;
     protected $callback;    
     
     protected $urlDelimiter = "/";
@@ -36,19 +36,23 @@ class RestRoute implements NamedRoute
      * Constructor
      *
      * The constructor takes an array of options as sole argument. The first element
-     * in the array is treated as the route. If this element has the index [0], then
-     * the value is treated as route. If the index of the first element is a string, 
-     * then the key is treated as route and the value as callback.
+     * in the array is treated as the route. If the index of the first element is a string, 
+     * then the key is treated as route and the value as callback. Otherwise the
+     * route is taken from the value of the first element.
      * 
-     * All other elements in the array are treated as options. These include:
+     * Following elements in the array are treated as options. These include:
      *   - "to", callback for this route
      *   - "as", route name
      *   - "method", which HTTP method this route should match, if not given or NULL
      *     then the method is not considered
-     *
+     *   - "root", Root path for the specified route, used for scoping
+     *   - "metadata", Array of key value pairs, which is explicitly treated
+     *     as metadata, use if a desired metadata key would collide with an 
+     *     option value
+     * 
      * All other elements than these defined options are stored and set as metadata
      * on the request if the route gets matched
-     *
+     * 
      * @param  Array $routeSpec
      * @return RestRoute
      */
@@ -72,25 +76,26 @@ class RestRoute implements NamedRoute
         $callback = Util\array_delete_key("to", $options) ?: $callback;
         $name     = Util\array_delete_key("as", $options);
         $root     = Util\array_delete_key("root", $options);
+        $metadata = Util\array_delete_key("meta", $options) ?: array();
         
-        $options["scope"] = $root;
+        $options["scope"] = trim($root, $this->urlDelimiter);
         
         if ($method = Util\array_delete_key("method", $options)) {
             $this->method = strtoupper($method);
         }
         
-        $route = ($root ? $this->urlDelimiter : null) . trim($root, $this->urlDelimiter) 
+        $route = rtrim($root, $this->urlDelimiter) 
                . $this->urlDelimiter 
                . trim($route, $this->urlDelimiter);
         
         $this->route = rtrim($route, $this->urlDelimiter);
         
-        $this->callback  = $callback;
-        $this->defaults  = $options;
-        $this->name      = $name;
+        $this->callback = $callback;
+        $this->metadata = array_merge($options, $metadata);
+        $this->name     = $name;
         
-        $this->parseRoute();
-    }    
+        $this->parseStrExp();
+    }
     
     function __invoke(\Spark\HttpRequest $request)
     {
@@ -106,7 +111,7 @@ class RestRoute implements NamedRoute
         
         $regex  = $this->regex;
         $result = preg_match_all($regex, $requestUri, $matches);
-
+        
         if (!$result) {
             return false;
         }
@@ -123,7 +128,7 @@ class RestRoute implements NamedRoute
             }
         }
         
-        $meta = array_merge($this->defaults, $meta);
+        $meta = array_merge($this->metadata, $meta);
         
         foreach ($meta as $key => $value) {
             $request->setMetadata($key, $value);
@@ -154,13 +159,18 @@ class RestRoute implements NamedRoute
         return $url;
     }
     
-    protected function parseRoute()
+    protected function parseStrExp()
     {
         $route    = $this->route;
-        $pattern  = "/\:([a-zA-Z0-9\_\-]+)/";
+        $alnum    = "[a-zA-Z0-9\_\-]";
+        $pattern  = "/\:($alnum+)/";
+        
+        $namedCapture = "(?P<%s>%s)";
         
         $route = str_replace($this->urlDelimiter, "\/", $route);
-        $regex = preg_replace($pattern, "(?P<$1>[a-zA-Z0-9\_\-]+)", $route);
+        $regex = preg_replace(
+            $pattern, sprintf($namedCapture, "$1", ".+"), $route
+        );
         
         $this->regex = "/^" . $regex . "$/";
     }

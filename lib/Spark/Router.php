@@ -36,12 +36,15 @@ class Router implements Router\Route
     protected $routes;
     
     /** @var array */
-    protected $namedRoutes = array();
+    protected $named = array();
     
-    protected $root;
+    protected $root = "/";
     
     function __construct($root = null)
     {
+        if ("/" !== substr($root, 0, 1)) {
+            $root = "/" . $root;
+        }
         $this->root   = $root;
         $this->routes = new SplStack;
     }
@@ -94,7 +97,7 @@ class Router implements Router\Route
     function addRoute(Router\Route $route)
     {
         if ($route instanceof Router\NamedRoute and ($name = $route->getName())) {
-            $this->namedRoutes[$name] = $route;
+            $this->named[$name] = $route;
         }
         $this->routes->push($route);
         return $this;
@@ -109,10 +112,10 @@ class Router implements Router\Route
      */
     function getRoute($name)
     {
-        if (!isset($this->namedRoutes[$name])) {
+        if (!isset($this->named[$name])) {
             throw new InvalidArgumentException("Route $route not registered");
         }
-        return $this->namedRoutes[$name];
+        return $this->named[$name];
     }
     
     /**
@@ -125,13 +128,13 @@ class Router implements Router\Route
      *                       with the prefix specified in scope()
      * @return Router
      */
-    function scope($scope, $block)
+    function scope($root, $block)
     {
         if (!Util\block_given(func_get_args())) {
             throw new InvalidArgumentException("Second argument must be "
                 . " a lambda expression");
         }
-        $scope = new self($scope);
+        $scope = new self(rtrim($this->root, "/") . "/" . ltrim($root, "/"));
         $block($scope);
         $this->routes->push($scope);
         return $this;

@@ -160,30 +160,6 @@ class HttpRequest
         return ($this->server('HTTPS') == 'on') ? self::SCHEME_HTTPS : self::SCHEME_HTTP;
     }
     
-    function setQuery($spec, $value = null)
-    {
-        if (is_array($spec)) {
-            foreach ($spec as $key => $value) {
-                $this->setQuery($key, $value);
-            }
-            return $this;
-        }
-        $_GET[$spec] = $value;
-        return $this;
-    }
-    
-    function setPost($spec, $value = null)
-    {
-        if (is_array($spec)) {
-            foreach ($spec as $key => $value) {
-                $this->setPost($key, $value);
-            }
-            return $this;
-        }
-        $_POST[$key] = $value;
-        return $this;
-    }
-    
     function setDispatched($dispatched = true)
     {
         $this->isDispatched = $dispatched;
@@ -237,6 +213,30 @@ class HttpRequest
         }
 
         return false;
+    }
+    
+    function setQuery($spec, $value = null)
+    {
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->setQuery($key, $value);
+            }
+            return $this;
+        }
+        $_GET[$spec] = $value;
+        return $this;
+    }
+    
+    function setPost($spec, $value = null)
+    {
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->setPost($key, $value);
+            }
+            return $this;
+        }
+        $_POST[$key] = $value;
+        return $this;
     }
     
     function isGet()
