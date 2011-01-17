@@ -15,7 +15,8 @@
 namespace Spark\Router;
 
 use InvalidArgumentException,
-    Spark\Util;
+    Spark\Util,
+    Spark\HttpRequest;
 
 /**
  * TODO: Adapt regexes to enable optional params, ala "/users/(:id)"
@@ -62,8 +63,8 @@ class RestRoute implements NamedRoute
             throw new InvalidArgumentException("Route Spec cannot be empty.");
         }
         
-        $options = array_slice($routeSpec, 1) ?: array();
         $route   = array_slice($routeSpec, 0, 1);
+        $options = array_slice($routeSpec, 1) ?: array();
         
         // If first element of array is a $route => $callback pair
         if (is_string(key($route))) {
@@ -77,12 +78,9 @@ class RestRoute implements NamedRoute
         $name     = Util\array_delete_key("as", $options);
         $root     = Util\array_delete_key("root", $options);
         $metadata = Util\array_delete_key("meta", $options) ?: array();
+        $method   = Util\array_delete_key("method", $options);
         
         $options["scope"] = trim($root, $this->urlDelimiter);
-        
-        if ($method = Util\array_delete_key("method", $options)) {
-            $this->method = strtoupper($method);
-        }
         
         $route = rtrim($root, $this->urlDelimiter) 
                . $this->urlDelimiter 
@@ -93,11 +91,12 @@ class RestRoute implements NamedRoute
         $this->callback = $callback;
         $this->metadata = array_merge($options, $metadata);
         $this->name     = $name;
+        $this->method   = (!empty($method)) ? strtoupper($method) : null;
         
         $this->parseStrExp();
     }
-    
-    function __invoke(\Spark\HttpRequest $request)
+
+    function __invoke(HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
