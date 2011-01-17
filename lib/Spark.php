@@ -18,7 +18,6 @@ require_once('Spark/Util.php');
  */
 autoload('Spark\Exception', __DIR__ . '/Spark/Exception.php');
 
-require_once('Spark/Event.php');
 require_once('Spark/Controller.php');
 require_once('Spark/HttpRequest.php');
 require_once('Spark/HttpResponse.php');

@@ -59,14 +59,14 @@ abstract class ActionController implements Controller
         $this->before($request, $response);
         
         $action = $request->getMetadata("action");
-
-        if($action == null) {
+        
+        if ($action == null) {
             $action = "index";
         }
         
         $method = Util\str_camelize($action, false) . "Action";
 
-        if(!is_callable(array($this, $method))) {
+        if (!is_callable(array($this, $method))) {
             throw new Exception(sprintf(
                 "The action %s was not found in the controller %s. Please make sure the method %s exists.",
                 $action, get_class($this), $method

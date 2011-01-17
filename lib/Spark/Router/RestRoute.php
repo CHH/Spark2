@@ -102,10 +102,6 @@ class RestRoute implements NamedRoute
             return false;
         }
         
-        if (!empty($this->method)) {
-            $request->setMetadata("action", strtolower($this->method));
-        }
-        
         $requestUri = rtrim($request->getRequestUri(), $this->urlDelimiter);
         
         $regex  = $this->regex;
@@ -132,7 +128,6 @@ class RestRoute implements NamedRoute
         foreach ($meta as $key => $value) {
             $request->setMetadata($key, $value);
         }
-        
         return $this->callback;
     }
     
@@ -166,11 +161,9 @@ class RestRoute implements NamedRoute
         
         $namedCapture = "(?P<%s>%s)";
         
-        $route = str_replace($this->urlDelimiter, "\/", $route);
         $regex = preg_replace(
             $pattern, sprintf($namedCapture, "$1", ".+"), $route
         );
-        
-        $this->regex = "/^" . $regex . "$/";
+        $this->regex = "#^" . $regex . "$#";
     }
 }

@@ -88,7 +88,8 @@ class HttpRequest
     }
     
     /**
-     * Borrowed by Zend_Controller_Request_Http, thanks
+     * @copyright Copyright (c) 2005-2010 Zend Technologies USA Inc.
+     * @license   http://framework.zend.com/license/new-bsd New BSD License
      */
     function getRequestUri()
     {
@@ -134,6 +135,10 @@ class HttpRequest
         return $this->requestUri;
     }
     
+    /**
+     * @copyright Copyright (c) 2005-2010 Zend Technologies USA Inc.
+     * @license   http://framework.zend.com/license/new-bsd New BSD License
+     */
     function getHttpHost()
     {
         $host = $this->server('HTTP_HOST');
@@ -154,7 +159,11 @@ class HttpRequest
             return $name . ':' . $port;
         }
     }
-    
+
+    /**
+     * @copyright Copyright (c) 2005-2010 Zend Technologies USA Inc.
+     * @license   http://framework.zend.com/license/new-bsd New BSD License
+     */
     function getScheme()
     {
         return ($this->server('HTTPS') == 'on') ? self::SCHEME_HTTPS : self::SCHEME_HTTP;
@@ -195,6 +204,10 @@ class HttpRequest
         else return isset($_SERVER[$key]) ? $_SERVER[$key] : null;
     }
     
+    /**
+     * @copyright Copyright (c) 2005-2010 Zend Technologies USA Inc.
+     * @license   http://framework.zend.com/license/new-bsd New BSD License
+     */
     function header($header)
     {
         // Try to get it from the $_SERVER array first
@@ -211,7 +224,6 @@ class HttpRequest
                 return $headers[$header];
             }
         }
-
         return false;
     }
     
