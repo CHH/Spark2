@@ -30,9 +30,6 @@ use Spark\HttpRequest,
  */
 abstract class ActionController implements Controller
 {
-    protected $request;
-    protected $response;
-    
     /** @var ActionController */
     protected static $instance;
     
@@ -41,6 +38,9 @@ abstract class ActionController implements Controller
         $this->init();
     }
     
+    /**
+     * Template method, can be used to setup common resources
+     */
     function init()
     {}
     
@@ -53,9 +53,6 @@ abstract class ActionController implements Controller
      */
     final function __invoke(HttpRequest $request, HttpResponse $response)
     {
-        $this->request = $request;
-        $this->response = $response;
-        
         $this->before($request, $response);
         
         $action = $request->getMetadata("action");
@@ -68,7 +65,8 @@ abstract class ActionController implements Controller
 
         if (!is_callable(array($this, $method))) {
             throw new Exception(sprintf(
-                "The action %s was not found in the controller %s. Please make sure the method %s exists.",
+                "The action %s was not found in the controller %s. "
+                . "Please make sure the method %s exists.",
                 $action, get_class($this), $method
             ), 404);
         }
@@ -77,9 +75,15 @@ abstract class ActionController implements Controller
         $this->after($request, $response);
     }
     
+    /**
+     * Template Method, run before an action is dispatched
+     */
     function before(HttpRequest $request, HttpResponse $response)
     {}
 
+    /**
+     * Template Method, ran after an action was dispatched
+     */
     function after(HttpRequest $request, HttpResponse $response)
     {}
     
@@ -110,7 +114,7 @@ abstract class ActionController implements Controller
         
         $callback = 
             function(HttpRequest $request, HttpResponse $response) 
-            use ($instance, $method) 
+                use ($instance, $method) 
             {
                 return $instance->{$method}($request, $response);
             };
