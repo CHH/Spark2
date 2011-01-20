@@ -25,6 +25,7 @@ class HttpResponse
     function setCode($code)
     {
         $this->code = $code;
+        return $this;
     }
 
     function addException(\Exception $e) 
@@ -47,6 +48,11 @@ class HttpResponse
     function getExceptions()
     {
         return $this->exceptions;
+    }
+    
+    function statusCode($code = 200) {
+        $this->setCode($code);
+        return $this;
     }
     
     function header($header, $value, $replace = false)
