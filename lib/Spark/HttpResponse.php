@@ -19,7 +19,7 @@ class HttpResponse
     protected $headers = array();
     protected $body = "";    
     protected $code = 200;
-    protected $exception = array();
+    protected $exception;
     protected $renderExceptions = true;
     
     function setCode($code)
