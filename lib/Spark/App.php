@@ -183,7 +183,7 @@ class App
 	    ob_start();
 	    
 	    try {
-	        $this->routes->route($request);
+	        $this->router->route($request);
             
             foreach ($this->preDispatch as $filter) {
                 $filter($request, $response);
