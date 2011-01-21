@@ -84,7 +84,7 @@ class App
     
     function __call($method, $args)
     {
-        if (isset(static::$extensions[$method])) {
+        if (!isset(static::$extensions[$method])) {
             throw new \BadMethodCallException("Call to undefined method $method");
         }
         $callback = static::$extensions[$method];
