@@ -32,14 +32,14 @@ class AppTest extends \PHPUnit_Framework_TestCase
     function testHoldsMetadata()
     {
         $app = $this->app;
-        $app->setMetadata("foo", "bar");
+        $app->set("foo", "bar");
         
-        $this->assertEquals("bar", $app->getMetadata("foo"));
+        $this->assertEquals("bar", $app->get("foo"));
     }
     
     function testContainsARouterInstance()
     {
         $app = $this->app;
-        $this->assertInstanceOf("\Spark\Router", $app->routes);
+        $this->assertInstanceOf("\Spark\Router", $app->route());
     }
 }

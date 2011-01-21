@@ -49,11 +49,11 @@ class StandardResolver implements Resolver
 
     public function getInstance(HttpRequest $request)
     { 
-        if (null !== $request->getParam("module")) {
+        if (null !== $request->meta("module")) {
             $controller = $this->_loadCommand($request->getControllerName(), $request->getModuleName());
             return $controller;
 
-        } else if (null !== $request->getParam("controller")) {
+        } else if (null !== $request->meta("controller")) {
             $controller = $this->_loadCommand($request->getControllerName());
             return $controller;
 

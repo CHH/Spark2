@@ -36,13 +36,13 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router->match(array("/users(/:id)?" => "index#index", "id" => "foo"));
 
         $router->route($request);
-        $this->assertEquals("foo", $request->getMetadata("id"));
+        $this->assertEquals("foo", $request->meta("id"));
 
         // Check overriding
         $request->setRequestUri("/users/23");
         
         $router->route($request);
-        $this->assertEquals(23, (int) $request->getMetadata("id"));
+        $this->assertEquals(23, (int) $request->meta("id"));
     }
     
     function testTakesOptionsArrayAsArgument()
@@ -56,8 +56,8 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $router($request);
 
-        $this->assertEquals(23, $request->getMetadata("id"));
-        $this->assertEquals("bar", $request->getMetadata("foo"));
+        $this->assertEquals(23, $request->meta("id"));
+        $this->assertEquals("bar", $request->meta("foo"));
     }
     
     function testProvidesMethodsToHandleHttpVerbs()
@@ -71,22 +71,22 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $getHandler = function($request, $response) use ($self) {
             $self->assertEquals("GET", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getMetadata("id"));
+            $self->assertEquals(23, (int) $request->meta("id"));
         };
         
         $postHandler = function($request, $response) use ($self) {
             $self->assertEquals("POST", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getMetadata("id"));
+            $self->assertEquals(23, (int) $request->meta("id"));
         };
         
         $putHandler = function($request, $response) use ($self) {
             $self->assertEquals("PUT", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getMetadata("id"));
+            $self->assertEquals(23, (int) $request->meta("id"));
         };
         
         $deleteHandler = function($request, $response) use ($self) {
             $self->assertEquals("DELETE", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->getMetadata("id"));
+            $self->assertEquals(23, (int) $request->meta("id"));
         };
         
         $router->get("users/:id",    $getHandler);
@@ -119,10 +119,10 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $router->scope("admin", function($admin) use ($testcase) {
             $admin->get("users/:id", function($request, $response) use ($testcase) {
-                $testcase->assertEquals(23, (int) $request->getMetadata("id"));
+                $testcase->assertEquals(23, (int) $request->meta("id"));
                 
                 // Test if scope name is set as metadata if scoped route gets matched
-                $testcase->assertEquals("admin", $request->getMetadata("scope"));
+                $testcase->assertEquals("admin", $request->meta("scope"));
             });
             
             $admin->get("posts/:id", function() use ($testcase) {
@@ -145,7 +145,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $router->route($request);
         
-        $this->assertEquals("admin", $request->getMetadata("scope"));
+        $this->assertEquals("admin", $request->meta("scope"));
     }
     
     /**

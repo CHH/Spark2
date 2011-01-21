@@ -46,17 +46,17 @@ class CallbackFilter
             return false;
         }
         
-        $controller = $request->getMetadata("controller") ?: $controller;
-        $action     = $request->getMetadata("action")     ?: $action;
-        $module     = $request->getMetadata("module")     ?: $request->getMetadata("scope");
+        $controller = $request->meta("controller") ?: $controller;
+        $action     = $request->meta("action")     ?: $action;
+        $module     = $request->meta("module")     ?: $request->getMetadata("scope");
         
         $callback = $resolver->getControllerByName($controller, $module);
         
         if (false === $callback) {
             return false;
         }
-        $request->setMetadata("action",     $action);
-        $request->setMetadata("controller", $controller);
+        $request->meta("action",     $action);
+        $request->meta("controller", $controller);
         $request->setCallback($callback);
     }
 

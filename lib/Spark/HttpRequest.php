@@ -30,27 +30,22 @@ class HttpRequest
     protected $requestUri;
     protected $callback;
     
-    function setMetadata($spec, $value = null)
+    function meta($spec = null, $value = null)
     {
-    	if (null === $value and is_array($spec)) {
-			foreach ($spec as $key => $value) {
-				$this->setMetadata($key, $value);
-				return $this;
-			}
-    	}
-        $this->meta[$spec] = $value;
-        return $this;
-    }
-    
-    function getMetadata($key = null)
-    {
-        if (null === $key) {
+        if (null === $spec) {
             return $this->meta;
         }
-        if (!isset($this->meta[$key])) {
-            return null;
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->meta[$key] = $value;
+            }
+            return $this;
         }
-        return $this->meta[$key];
+        if (null === $value) {
+            return isset($this->meta[$spec]) ? $this->meta[$spec] : null;
+        }
+        $this->meta[$spec] = $value;
+        return $this;
     }
     
     function setCallback($callback)

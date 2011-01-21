@@ -126,7 +126,7 @@ class RestRoute implements NamedRoute
         $meta = array_merge($this->metadata, $meta);
         
         foreach ($meta as $key => $value) {
-            $request->setMetadata($key, $value);
+            $request->meta($key, $value);
         }
         return $this->callback;
     }

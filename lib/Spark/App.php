@@ -15,9 +15,13 @@
 namespace Spark;
 
 require_once("Util.php");
+
+autoload("Spark\Exception", __DIR__ . "/Exception.php");
+
 require_once("HttpRequest.php");
 require_once("HttpResponse.php");
 require_once("Router.php");
+require_once('Controller.php');
 
 use SplQueue,
     Spark\HttpRequest, 
@@ -39,25 +43,32 @@ function App(App $app = null)
 class App
 {
     /** @var Spark\Router */
-	public $routes;
+	protected $router;
     
 	/** @var SplQueue */
 	protected $postDispatch;
 
     /** @var SplQueue */
     protected $preDispatch;
+
+    protected $onError = array();
+
+    protected $configurators = array();
 	
 	/** @var array */
-	protected $metadata = array();
+	protected $options = array();
 	
-	function __construct()
+	final function __construct()
 	{
-        $this->routes = new Router;
-        
         $this->preDispatch  = new SplQueue;
-        $this->postDispatch = new SplQueue;	
+        $this->postDispatch = new SplQueue;
+        
+        $this->init();
     }
-	
+
+    function init()
+    {}
+    
 	/**
 	 * Sets metadata which can be retrieved by modules extending the app 
 	 *
@@ -65,29 +76,100 @@ class App
 	 * @param  mixed $value Optional value, if key is a scalar
 	 * @return App
 	 */
-	function setMetadata($spec, $value = null)
+	function set($spec, $value = null)
 	{
 	    if (is_array($spec)) {
 	        foreach ($spec as $option => $value) {
-	            $this->setMetadata($option, $value);
+	            $this->set($option, $value);
 	        }
 	        return $this;
 	    }
-	    $this->metadata[$spec] = $value;
+	    $this->options[$spec] = $value;
 	    return $this;
 	}
 	
-	function getMetadata($spec = null) 
+	function get($spec = null) 
 	{
-	    if (null === $spec) {
-	        return $this->metadata;
-	    }
-	    if (!isset($this->metadata[$spec])) {
+	    if (!isset($this->options[$spec])) {
 	        return null;
 	    }
-	    return $this->metadata[$spec];
+	    return $this->options[$spec];
 	}
+    
+    function getOptions()
+    {
+        return $this->options;
+    }
+
+    function route($block = null)
+    {   
+        if (null === $this->router) {
+            $this->router = new Router;
+        }
+        if (null === $block) {
+            return $this->router;
+        }
+        if (is_callable($block)) {
+            call_user_func($block, $this->router);
+            return $this;
+        }
+    }
+    
+    /**
+     * Attaches a filter to the filters run before dispatching
+     *
+     * @param  object $filter Callable object (Closure or Object implementing __invoke)
+     * @return App
+     */
+    function before($filter)
+    {
+        $this->preDispatch->enqueue($filter);
+        return $this;
+    }
 	
+	/**
+     * Attaches a filter to the filters run after dispatching
+     *
+     * @param  object $filter Callable object (Closure or Object implementing __invoke)
+     * @return App
+     */
+	function after($filter)
+	{
+	    $this->postDispatch->enqueue($filter);
+	    return $this;
+	}
+
+    /**
+     * Registers an error handler
+     */
+    function error($class, $callback = null) {
+        if (null === $callback) {
+            $callback = $class;
+            $class    = null;
+        }
+        if (is_array($callback) or !empty($callback)) {
+            $callback = function($request, $response) use ($callback) {
+                return call_user_func($callback, $request, $response);
+            };
+        }
+        $this->onError[$class][] = $callback;
+        return $this;
+    }
+
+    /**
+     * Registers an handler on the error code 404
+     */
+    function notFound($callback) {
+        $callback = function($request, $response) use ($callback) {
+            $e = $response->getException();
+
+            if (404 === $e->getCode()) call_user_func($callback, $request, $response);
+            else return;
+        };
+        $this->error($callback);
+        return $this;
+    }
+    
 	/**
 	 * Routes the request, dispatch the callback, captures all output and sends
 	 * back the response
@@ -111,40 +193,25 @@ class App
 	        $callback($request, $response);
 	        
 		} catch (\Exception $e) {
-		    $response->addException($e);
+		    $response->setException($e);
+
+            if (isset($this->errorHandlers[$class = get_class($e)])) {
+                $errorHandlers = $this->errorHandlers[$class];
+            } else {
+                $errorHandlers = $this->errorHandlers;
+            }
+		    
+		    foreach ($errorHandlers as $handler) {
+                $handler($request, $response);
+		    }
 		}
-		
-		$response->append(ob_get_clean());
 		
 		foreach ($this->postDispatch as $filter) {
 		    $filter($request, $response);
 		}
 		
-		$response->send();
-	}
-    
-    /**
-     * Attaches a filter to the filters run before dispatching
-     *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
-     */
-    function preDispatch($filter)
-    {
-        $this->preDispatch->enqueue($filter);
-        return $this;
-    }
-	
-	/**
-     * Attaches a filter to the filters run after dispatching
-     *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
-     */
-	function postDispatch($filter)
-	{
-	    $this->postDispatch->enqueue($filter);
-	    return $this;
+		$response->append(ob_get_clean())->send();
+		return $this;
 	}
     
     /**

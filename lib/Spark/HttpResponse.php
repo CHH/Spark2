@@ -19,7 +19,7 @@ class HttpResponse
     protected $headers = array();
     protected $body = "";    
     protected $code = 200;
-    protected $exceptions = array();
+    protected $exception = array();
     protected $renderExceptions = true;
     
     function setCode($code)
@@ -28,9 +28,9 @@ class HttpResponse
         return $this;
     }
 
-    function addException(\Exception $e) 
+    function setException(\Exception $e) 
     {
-        $this->exceptions[] = $e;
+        $this->exception = $e;
         return $this;
     }
 
@@ -40,14 +40,14 @@ class HttpResponse
         return $this;
     }
 
-    function hasExceptions()
+    function hasException()
     {
-        return (bool) $this->exceptions;
+        return (null !== $this->exception);
     }
 
-    function getExceptions()
+    function getException()
     {
-        return $this->exceptions;
+        return $this->exception;
     }
     
     function statusCode($code = 200) {
