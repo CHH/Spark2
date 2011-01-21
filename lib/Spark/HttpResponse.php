@@ -143,8 +143,8 @@ class HttpResponse
     {
         $this->sendHeaders();
         
-        if ($this->renderExceptions and $this->exceptions) {
-            $this->prepend(join($this->exceptions, "<br>"));
+        if ($this->renderExceptions and $this->hasException()) {
+            $this->prepend((string) $this->exception);
         }
         
         $this->sendBody();
