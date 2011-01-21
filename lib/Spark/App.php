@@ -42,6 +42,8 @@ function App(App $app = null)
 
 class App
 {
+    protected static $extensions;
+    
     /** @var Spark\Router */
 	protected $router;
     
@@ -57,17 +59,49 @@ class App
 	
 	/** @var array */
 	protected $options = array();
-	
+    
+    static function register($extension, $callback)
+    {
+        if (!is_callable($callback)) {
+            throw new Exception("Callback is not valid");
+        }
+        static::$extensions[$extension] = $callback;
+    }
+    
 	final function __construct()
 	{
         $this->preDispatch  = new SplQueue;
         $this->postDispatch = new SplQueue;
+
+        // Mix in router methods by default
+        $router = $this->route();
+        foreach (get_class_methods($router) as $method) {
+            static::register($method, array($router, $method));
+        }
         
         $this->init();
     }
-
+    
+    function __call($method, $args)
+    {
+        if (isset(static::$extensions[$method])) {
+            throw new \BadMethodCallException("Call to undefined method $method");
+        }
+        $callback = static::$extensions[$method];
+        call_user_func_array($callback, $args);
+        return $this;
+    }
+    
     function init()
     {}
+
+    /**
+     * @alias setOption()
+     */
+	function set($spec, $value = null)
+	{
+	    return $this->setOption($spec, $value);
+	}
     
 	/**
 	 * Sets metadata which can be retrieved by modules extending the app 
@@ -76,9 +110,9 @@ class App
 	 * @param  mixed $value Optional value, if key is a scalar
 	 * @return App
 	 */
-	function set($spec, $value = null)
-	{
-	    if (is_array($spec)) {
+    function setOption($spec, $value = null)
+    {
+        if (is_array($spec)) {
 	        foreach ($spec as $option => $value) {
 	            $this->set($option, $value);
 	        }
@@ -86,9 +120,9 @@ class App
 	    }
 	    $this->options[$spec] = $value;
 	    return $this;
-	}
+    }
 	
-	function get($spec = null) 
+	function getOption($spec = null) 
 	{
 	    if (!isset($this->options[$spec])) {
 	        return null;

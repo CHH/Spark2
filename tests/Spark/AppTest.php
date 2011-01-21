@@ -34,7 +34,7 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $app = $this->app;
         $app->set("foo", "bar");
         
-        $this->assertEquals("bar", $app->get("foo"));
+        $this->assertEquals("bar", $app->getOption("foo"));
     }
     
     function testContainsARouterInstance()
