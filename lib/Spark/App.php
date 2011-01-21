@@ -25,7 +25,8 @@ require_once('Controller.php');
 
 use SplQueue,
     Spark\HttpRequest, 
-    Spark\HttpResponse;
+    Spark\HttpResponse,
+    Spark\Util;
 
 function App(App $app = null)
 {
@@ -42,7 +43,7 @@ function App(App $app = null)
 
 class App
 {
-    protected static $extensions;
+    protected static $extensions = array();
     
     /** @var Spark\Router */
 	protected $router;
@@ -53,43 +54,23 @@ class App
     /** @var SplQueue */
     protected $preDispatch;
 
+    /** @var array */
     protected $onError = array();
-
-    protected $configurators = array();
 	
 	/** @var array */
 	protected $options = array();
-    
-    static function register($extension, $callback)
-    {
-        if (!is_callable($callback)) {
-            throw new Exception("Callback is not valid");
-        }
-        static::$extensions[$extension] = $callback;
-    }
     
 	final function __construct()
 	{
         $this->preDispatch  = new SplQueue;
         $this->postDispatch = new SplQueue;
 
-        // Mix in router methods by default
         $router = $this->route();
-        foreach (get_class_methods($router) as $method) {
-            static::register($method, array($router, $method));
+        foreach (Util\words("get post put delete match") as $method) {
+            $this->register($method, array($router, $method));
         }
         
         $this->init();
-    }
-    
-    function __call($method, $args)
-    {
-        if (!isset(static::$extensions[$method])) {
-            throw new \BadMethodCallException("Call to undefined method $method");
-        }
-        $callback = static::$extensions[$method];
-        call_user_func_array($callback, $args);
-        return $this;
     }
     
     function init()
@@ -160,7 +141,7 @@ class App
         $this->preDispatch->enqueue($filter);
         return $this;
     }
-	
+
 	/**
      * Attaches a filter to the filters run after dispatching
      *
@@ -179,7 +160,7 @@ class App
     function error($class, $callback = null) {
         if (null === $callback) {
             $callback = $class;
-            $class    = null;
+            $class    = 0;
         }
         if (is_array($callback) or !empty($callback)) {
             $callback = function($request, $response) use ($callback) {
@@ -232,7 +213,7 @@ class App
             if (isset($this->onError[$class = get_class($e)])) {
                 $errorHandlers = $this->onError[$class];
             } else {
-                $errorHandlers = $this->onError;
+                $errorHandlers = $this->onError[0];
             }
 		    
 		    foreach ($errorHandlers as $handler) {
@@ -247,6 +228,33 @@ class App
 		$response->append(ob_get_clean())->send();
 		return $this;
 	}
+
+    static function run()
+    {
+        $instance = new static;
+        return $instance(new HttpRequest, new HttpResponse);
+    }
+    
+    static function register($extension, $callback)
+    {
+        if (!is_callable($callback)) {
+            throw new Exception("Callback is not valid");
+        }
+        static::$extensions[$extension] = $callback;
+    }
+
+    /**
+     * Allow dynamic class overloading
+     */
+    function __call($method, $args)
+    {
+        if (!isset(static::$extensions[$method])) {
+            throw new \BadMethodCallException("Call to undefined method $method");
+        }
+        $callback = static::$extensions[$method];
+        call_user_func_array($callback, $args);
+        return $this;
+    }
     
     /**
      * Validates if the callback is callable and wraps array style callbacks
