@@ -229,10 +229,10 @@ class App
 		} catch (\Exception $e) {
 		    $response->setException($e);
 
-            if (isset($this->errorHandlers[$class = get_class($e)])) {
-                $errorHandlers = $this->errorHandlers[$class];
+            if (isset($this->onError[$class = get_class($e)])) {
+                $errorHandlers = $this->onError[$class];
             } else {
-                $errorHandlers = $this->errorHandlers;
+                $errorHandlers = $this->onError;
             }
 		    
 		    foreach ($errorHandlers as $handler) {
