@@ -28,24 +28,29 @@ function after($callback)
     Spark\App()->after($callback);
 }
 
+function match($routeSpec, $callback)
+{
+    Spark\App()->route()->match($routeSpec, $callback);
+}
+
 function get($routeSpec, $callback = null)
 {
-    Spark\App()->router()->get($routeSpec, $callback);
+    Spark\App()->route()->get($routeSpec, $callback);
 }
 
 function post($routeSpec, $callback = null)
 {
-    Spark\App()->router()->post($routeSpec, $callback);
+    Spark\App()->route()->post($routeSpec, $callback);
 }
 
 function put($routeSpec, $callback = null)
 {
-    Spark\App()->router()->put($routeSpec, $callback);
+    Spark\App()->route()->put($routeSpec, $callback);
 }
 
 function delete($routeSpec, $callback = null)
 {
-    Spark\App()->router()->delete($routeSpec, $callback);
+    Spark\App()->route()->delete($routeSpec, $callback);
 }
 
 function error($class, $callback = null)
