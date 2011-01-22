@@ -20,7 +20,11 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     
     function testRoutesCanBeAssembledToUrl()
     {
-        $route  = new RestRoute(array("/:a/:b/:c" => "index#index"));
+        return $this->markTestSkipped(
+            "Route naming and assembling is currently not supported"
+        );
+        
+        $route  = new RestRoute("/:a/:b/:c");
         $params = array("a" => "say", "b" => "hello", "c" => "world");
         
         $this->assertEquals("/say/hello/world", $route->assemble($params));
@@ -32,8 +36,8 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $request = $this->request;
         
         $request->setRequestUri("/users");
-        
-        $router->match(array("/users(/:id)?" => "index#index", "id" => "foo"));
+
+        $router->match("/users(/:id)?")->to("index#index")->meta("id", "foo");
 
         $router->route($request);
         $this->assertEquals("foo", $request->meta("id"));
@@ -44,15 +48,15 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router->route($request);
         $this->assertEquals(23, (int) $request->meta("id"));
     }
-    
-    function testTakesOptionsArrayAsArgument()
+
+    function testProvidesOptionsViaAFluentInterface()
     {
         $router   = $this->router;
         $request  = $this->request;
         
         $request->setRequestUri("/users/23");
-        
-        $router->match(array("/users/:id" => "index#index", "as" => "users_route", "foo" => "bar"));
+
+        $router->match("/users/:id")->to("index#index")->meta("foo", "bar");
         
         $router($request);
 
@@ -103,10 +107,15 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     
     function testRoutesCanBeNamed()
     {
+        return $this->markTestSkipped("Route naming is currently not supported");
+        
         $router = $this->router;
         
-        $router->match(array("/users/:name" => "users#view", "as" => "users_route"));
-        $this->assertInstanceOf("\Spark\Router\RestRoute", $router->getRoute("users_route"));
+        $router->match("/users/:name")->to("users#view")->name("users_route");
+        
+        $this->assertInstanceOf(
+            "\Spark\Router\RestRoute", $router->getRoute("users_route")
+        );
     }
     
     function testRoutesCanBeScoped()
@@ -146,15 +155,6 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router->route($request);
         
         $this->assertEquals("admin", $request->meta("scope"));
-    }
-    
-    /**
-     * @expectedException \BadMethodCallException
-     */
-    function testBindingToInvalidHttpMethodThrowsException()
-    {
-        // There is no HTTP Method named "destroy"
-        $this->router->destroy(array("/foo/bar" => "foo#bar"));
     }
     
     /**

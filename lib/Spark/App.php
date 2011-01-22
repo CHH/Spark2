@@ -235,6 +235,9 @@ class App
         return $instance(new HttpRequest, new HttpResponse);
     }
     
+    /*
+     * Allow dynamic class overloading
+     */
     static function register($extension, $callback)
     {
         if (!is_callable($callback)) {
@@ -242,10 +245,7 @@ class App
         }
         static::$extensions[$extension] = $callback;
     }
-
-    /**
-     * Allow dynamic class overloading
-     */
+    
     function __call($method, $args)
     {
         if (!isset(static::$extensions[$method])) {

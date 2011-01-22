@@ -18,89 +18,52 @@ use InvalidArgumentException,
     Spark\Util,
     Spark\HttpRequest;
 
-/**
- * TODO: Adapt regexes to enable optional params, ala "/users/(:id)"
- */
-class RestRoute implements NamedRoute
+class RestRoute implements Route
 {
-    protected $name;    
-    
+    /** @var string HTTP Method which this route should be bound to */
     protected $method;
+
+    /** @var string Root path for the route */
+    protected $root = "/";
+
+    /** @var string Raw route string */
     protected $route;
+
+    /** @var string Compiled regular expression for given route */
     protected $regex;
-    protected $metadata;
+
+    /** @var array Additional metadata associated with this route */
+    protected $metadata = array();
+
+    /** @var callback|string */
     protected $callback;    
-    
+
+    /** @var string */
     protected $urlDelimiter = "/";
+
+    static function create($route)
+    {
+        return new static($route);
+    }
     
     /**
      * Constructor
      *
-     * The constructor takes an array of options as sole argument. The first element
-     * in the array is treated as the route. If the index of the first element is a string, 
-     * then the key is treated as route and the value as callback. Otherwise the
-     * route is taken from the value of the first element.
-     * 
-     * Following elements in the array are treated as options. These include:
-     *   - "to", callback for this route
-     *   - "as", route name
-     *   - "method", which HTTP method this route should match, if not given or NULL
-     *     then the method is not considered
-     *   - "root", Root path for the specified route, used for scoping
-     *   - "metadata", Array of key value pairs, which is explicitly treated
-     *     as metadata, use if a desired metadata key would collide with an 
-     *     option value
-     * 
-     * All other elements than these defined options are stored and set as metadata
-     * on the request if the route gets matched
-     * 
-     * @param  Array $routeSpec
+     * @param  string $route
      * @return RestRoute
      */
-    function __construct(Array $routeSpec)
+    function __construct($route)
     {
-        if (!$routeSpec) {
-            throw new InvalidArgumentException("Route Spec cannot be empty.");
-        }
-        
-        $route   = array_slice($routeSpec, 0, 1);
-        $options = array_slice($routeSpec, 1) ?: array();
-        
-        // If first element of array is a $route => $callback pair
-        if (is_string(key($route))) {
-            $callback = current($route);
-            $route    = key($route);
-        } else {
-            $route = current($route);
-        }
-        
-        $callback = Util\array_delete_key("to", $options) ?: $callback;
-        $name     = Util\array_delete_key("as", $options);
-        $root     = Util\array_delete_key("root", $options);
-        $metadata = Util\array_delete_key("meta", $options) ?: array();
-        $method   = Util\array_delete_key("method", $options);
-        
-        $options["scope"] = trim($root, $this->urlDelimiter);
-        
-        $route = rtrim($root, $this->urlDelimiter) 
-               . $this->urlDelimiter 
-               . trim($route, $this->urlDelimiter);
-        
         $this->route = rtrim($route, $this->urlDelimiter);
-        
-        $this->callback = $callback;
-        $this->metadata = array_merge($options, $metadata);
-        $this->name     = $name;
-        $this->method   = (!empty($method)) ? strtoupper($method) : null;
-        
-        $this->parseStrExp();
     }
-
+    
     function __invoke(HttpRequest $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
         }
+        
+        $this->parseStrExp();
         
         $requestUri = rtrim($request->getRequestUri(), $this->urlDelimiter);
         
@@ -130,39 +93,54 @@ class RestRoute implements NamedRoute
         }
         return $this->callback;
     }
-    
-    function setName($name)
+
+    function to($callback)
     {
-        $this->name = $name;
+        $this->callback = $callback;
         return $this;
     }
     
-    function getName()
+    function meta($spec, $value = null)
     {
-        return $this->name;
+        if (is_array($spec)) {
+            foreach ($spec as $key => $value) {
+                $this->metadata[$key] = $value;
+            }
+        } else {
+            $this->metadata[$spec] = $value;
+        }
+        return $this;
     }
     
-    function assemble(Array $params)
+    function root($root = "/")
     {
-        $url = $this->route;
-        
-        foreach ($params as $key => $value) {
-            $url = str_replace(":$key", $value, $url);
-        }
-        
-        return $url;
+        $this->root = $root;
+        $this->meta("scope", trim($root, $this->urlDelimiter));
+        return $this;
+    }
+    
+    function method($httpMethod = null)
+    {
+        $this->method = empty($httpMethod) ? null : strtoupper($httpMethod);
+        return $this;
     }
     
     protected function parseStrExp()
     {
-        $route    = $this->route;
+        $route = $this->route;
+        $root  = $this->root;
+        
+        $route = rtrim($root, $this->urlDelimiter) 
+               . $this->urlDelimiter 
+               . trim($route, $this->urlDelimiter);
+        
+        $route = rtrim($route, $this->urlDelimiter);
+        
         $alnum    = "[a-zA-Z0-9\_\-]";
         $pattern  = "/\:($alnum+)/";
         
-        $namedCapture = "(?P<%s>%s)";
-        
         $regex = preg_replace(
-            $pattern, sprintf($namedCapture, "$1", ".+"), $route
+            $pattern, "(?P<$1>[^/]+)", $route
         );
         $this->regex = "#^" . $regex . "$#";
     }

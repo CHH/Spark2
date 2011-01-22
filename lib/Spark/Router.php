@@ -27,7 +27,6 @@ use Spark\Router\RestRoute,
     Spark\HttpRequest,
     Spark\Util,
     SplStack,
-    BadMethodCallException,
     InvalidArgumentException;
 
 class Router implements Router\Route
@@ -96,28 +95,10 @@ class Router implements Router\Route
      */
     function addRoute(Router\Route $route)
     {
-        if ($route instanceof Router\NamedRoute and ($name = $route->getName())) {
-            $this->named[$name] = $route;
-        }
         $this->routes->push($route);
         return $this;
     }
-    
-    /**
-     * Returns a named route
-     *
-     * @throws InvalidArgumentException if no matching route was found
-     * @param  string $name
-     * @return Spark\Router\NamedRoute
-     */
-    function getRoute($name)
-    {
-        if (!isset($this->named[$name])) {
-            throw new InvalidArgumentException("Route $route not registered");
-        }
-        return $this->named[$name];
-    }
-    
+
     /**
      * Starts a routing scope
      *
@@ -151,10 +132,42 @@ class Router implements Router\Route
      */
     function match($routeSpec, $callback = null)
     {
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
+        $route = $this->createRoute($routeSpec);
+        if (null !== $callback) {
+            $route->to($callback);
         }
-        return $this->addRoute($this->createRoute($routeSpec));
+        $this->addRoute($route);
+        return $route;
+    }
+
+    function get($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("GET", $routeSpec, $callback);
+    }
+    
+    function post($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("POST", $routeSpec, $callback);
+    }
+    
+    function put($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("PUT", $routeSpec, $callback);
+    }
+    
+    function delete($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("DELETE", $routeSpec, $callback);
+    }
+    
+    function head($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("HEAD", $routeSpec, $callback);
+    }
+
+    function options($routeSpec, $callback = null)
+    {
+        return $this->matchMethod("OPTIONS", $routeSpec, $callback);
     }
     
     /**
@@ -163,26 +176,19 @@ class Router implements Router\Route
      * HTTP Method names can be directly called as methods on the router
      *
      * @param  string $httpMethod
-     * @param  array  $arguments  For argument list see {@see match()}
+     * @param  mixed  $routeSpec
+     * @param  mixed  $callback
      * @return Router
      */
-    function __call($httpMethod, $arguments)
+    protected function matchMethod($httpMethod, $routeSpec, $callback = null)
     {
         $httpMethod = strtoupper($httpMethod);
-        
+
         if (!in_array($httpMethod, Util\words("GET POST PUT DELETE HEAD OPTIONS"))) {
-            throw new BadMethodCallException("Method $httpMethod() does not exist.");
+            throw new InvalidArgumentException("Undefined HTTP Method $httpMethod");
         }
         
-        $routeSpec = isset($arguments[0]) ? $arguments[0] : null;
-        $callback  = isset($arguments[1]) ? $arguments[1] : null;
-        
-        if (is_string($routeSpec)) {
-            $routeSpec = array($routeSpec => $callback);
-        }
-        $routeSpec = array_merge($routeSpec, array("method" => $httpMethod));
-        
-        return $this->match($routeSpec);
+        return $this->match($routeSpec, $callback)->method($httpMethod);
     }
     
     /**
@@ -191,9 +197,10 @@ class Router implements Router\Route
      * @param  Array $routeSpec
      * @return Spark\Router\RestRoute
      */
-    protected function createRoute(Array $routeSpec)
+    protected function createRoute($route)
     {
-        $routeSpec = array_merge($routeSpec, array("root" => $this->root));
-        return new RestRoute($routeSpec);
+        $route = new RestRoute($route);
+        $route->root($this->root);
+        return $route;
     }
 }
