@@ -73,7 +73,6 @@ class RestRoute implements Route
         if (!$result) {
             return false;
         }
-        
         $meta = array();
         
         foreach ($matches as $param => $value) {

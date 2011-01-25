@@ -43,8 +43,6 @@ function App(App $app = null)
 
 class App
 {
-    protected static $extensions = array();
-    
     /** @var Spark\Router */
 	protected $router;
     
@@ -55,21 +53,19 @@ class App
     protected $preDispatch;
 
     /** @var array */
-    protected $onError = array();
+    protected $onError = array(0 => array());
 	
 	/** @var array */
 	protected $options = array();
     
+    protected $configurators;
+    
 	final function __construct()
 	{
-        $this->preDispatch  = new SplQueue;
-        $this->postDispatch = new SplQueue;
+	    $this->configurators = new SplQueue;
+        $this->preDispatch   = new SplQueue;
+        $this->postDispatch  = new SplQueue;
 
-        $router = $this->route();
-        foreach (Util\words("get post put delete match") as $method) {
-            $this->register($method, array($router, $method));
-        }
-        
         $this->init();
     }
     
@@ -83,6 +79,20 @@ class App
 	{
 	    return $this->setOption($spec, $value);
 	}
+    
+    function get($spec = null)
+    {
+        if (null === $spec) {
+            return $this->getOptions();
+        }
+        return $this->getOption($spec);
+    }
+    
+    function configure($filter)
+    {
+        $this->configurators->enqueue($filter);
+        return $this;
+    }
     
 	/**
 	 * Sets metadata which can be retrieved by modules extending the app 
@@ -197,6 +207,10 @@ class App
 	{
 	    ob_start();
 	    
+	    foreach ($this->configurators as $filter) {
+	        $filter($this);
+	    }
+	    
 	    try {
 	        $this->router->route($request);
             
@@ -228,33 +242,6 @@ class App
 		$response->append(ob_get_clean())->send();
 		return $this;
 	}
-
-    static function run()
-    {
-        $instance = new static;
-        return $instance(new HttpRequest, new HttpResponse);
-    }
-    
-    /*
-     * Allow dynamic class overloading
-     */
-    static function register($extension, $callback)
-    {
-        if (!is_callable($callback)) {
-            throw new Exception("Callback is not valid");
-        }
-        static::$extensions[$extension] = $callback;
-    }
-    
-    function __call($method, $args)
-    {
-        if (!isset(static::$extensions[$method])) {
-            throw new \BadMethodCallException("Call to undefined method $method");
-        }
-        $callback = static::$extensions[$method];
-        call_user_func_array($callback, $args);
-        return $this;
-    }
     
     /**
      * Validates if the callback is callable and wraps array style callbacks
