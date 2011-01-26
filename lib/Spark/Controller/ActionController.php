@@ -20,6 +20,7 @@ namespace Spark\Controller;
 use Spark\HttpRequest, 
     Spark\HttpResponse,
     Spark\Util,
+    Spark\Router\Redirect,
     InvalidArgumentException;
 
 /**
@@ -55,6 +56,10 @@ abstract class ActionController implements Controller
     {
         $this->before($request, $response);
         
+        // Store instances to allow helper methods to access them
+        $this->request  = $request;
+        $this->response = $response;
+        
         $action = $request->meta("action");
         
         if ($action == null) {
@@ -86,6 +91,15 @@ abstract class ActionController implements Controller
      */
     function after(HttpRequest $request, HttpResponse $response)
     {}
+    
+    protected function redirect($url)
+    {
+        if (empty($url)) {
+            throw new InvalidArgumentException("URL cannot be an empty string");
+        }
+        $redirect = new Redirect($url);
+        $redirect($this->request, $this->response);
+    }
     
     /**
      * Returns a callback which calls the given action and is compatible with 

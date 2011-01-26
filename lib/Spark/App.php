@@ -235,11 +235,19 @@ class App
 		    }
 		}
 		
+		// Attach all stdout output from callbacks
+		$response->append(ob_get_clean());
+		
+		ob_start();
+		
 		foreach ($this->postDispatch as $filter) {
 		    $filter($request, $response);
 		}
 		
-		$response->append(ob_get_clean())->send();
+		// Attach all stdout output from post dispatch filters
+		$response->append(ob_get_clean());
+		
+		$response->send();
 		return $this;
 	}
     
