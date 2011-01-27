@@ -47,7 +47,7 @@ class Router implements Router\Route
         $this->root   = $root;
         $this->routes = new SplStack;
     }
-    
+
     /**
      * @alias route()
      */
@@ -199,8 +199,8 @@ class Router implements Router\Route
      */
     protected function createRoute($route)
     {
-        $route = new RestRoute($route);
-        $route->root($this->root);
+        $route = new RestRoute(rtrim($this->root, "/") . "/" . ltrim($route, "/"));
+        $route->meta("scope", trim($this->root, "/"));
         return $route;
     }
 }

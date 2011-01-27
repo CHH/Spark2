@@ -23,9 +23,6 @@ class RestRoute implements Route
     /** @var string HTTP Method which this route should be bound to */
     protected $method;
 
-    /** @var string Root path for the route */
-    protected $root = "/";
-
     /** @var string Raw route string */
     protected $route;
 
@@ -54,7 +51,8 @@ class RestRoute implements Route
      */
     function __construct($route)
     {
-        $this->route = rtrim($route, $this->urlDelimiter);
+        $this->route = rtrim($route, "/");
+        $this->parseStrExp();
     }
     
     function __invoke(HttpRequest $request)
@@ -62,8 +60,6 @@ class RestRoute implements Route
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;
         }
-        
-        $this->parseStrExp();
         
         $requestUri = rtrim($request->getRequestUri(), $this->urlDelimiter);
         
@@ -111,13 +107,6 @@ class RestRoute implements Route
         return $this;
     }
     
-    function root($root = "/")
-    {
-        $this->root = $root;
-        $this->meta("scope", trim($root, $this->urlDelimiter));
-        return $this;
-    }
-    
     function method($httpMethod = null)
     {
         $this->method = empty($httpMethod) ? null : strtoupper($httpMethod);
@@ -127,12 +116,6 @@ class RestRoute implements Route
     protected function parseStrExp()
     {
         $route = $this->route;
-        $root  = $this->root;
-        
-        $route = rtrim($root, $this->urlDelimiter) 
-               . $this->urlDelimiter 
-               . trim($route, $this->urlDelimiter);
-        
         $route = rtrim($route, $this->urlDelimiter);
         
         $alnum    = "[a-zA-Z0-9\_\-]";
