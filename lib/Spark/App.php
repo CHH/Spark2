@@ -46,12 +46,8 @@ class App
 	/** @var array */
 	protected $options = array();
     
-    protected $configurators;
-    
 	final function __construct()
 	{
-	    $this->configurators = new SplQueue;
-	    
         $this->preDispatch  = new HttpFilters;
         $this->postDispatch = new HttpFilters;
         $this->onError      = new HttpFilters;
@@ -77,12 +73,6 @@ class App
             return $this->getOptions();
         }
         return $this->getOption($spec);
-    }
-    
-    function configure($filter)
-    {
-        $this->configurators->enqueue($filter);
-        return $this;
     }
     
 	/**
@@ -188,10 +178,6 @@ class App
 	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
 	    ob_start();
-	    
-	    foreach ($this->configurators as $filter) {
-	        $filter($this);
-	    }
 	    
 	    try {
 	        $this->preDispatch->filter($request, $response);
