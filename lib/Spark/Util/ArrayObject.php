@@ -43,4 +43,17 @@ class ArrayObject extends \ArrayObject
         $this->exchangeArray(array_slice($this->getArrayCopy(), $start, $length));
         return $this;
     }
+    
+    function first()
+    {
+        $iterator = $this->getIterator();
+        return $iterator->current();
+    }
+    
+    function last()
+    {
+        $iterator = $this->getIterator();
+        $iterator->seek($this->count() - 1);
+        return $iterator->current();
+    }
 }

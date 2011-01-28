@@ -46,4 +46,12 @@ class ArrayObjectTest extends PHPUnit_Framework_TestCase
         $array->slice(2, 1);
         $this->assertEquals("bar", $array[0]);
     }
+    
+    function testReturnsFirstAndLastElement()
+    {
+        $array = new ArrayObject(array("foo", "bar", "baz"));
+        
+        $this->assertEquals("foo", $array->first());
+        $this->assertEquals("baz", $array->last());
+    }
 }

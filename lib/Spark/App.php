@@ -26,20 +26,8 @@ require_once('Controller.php');
 use SplQueue,
     Spark\HttpRequest, 
     Spark\HttpResponse,
-    Spark\Util;
-
-function App(App $app = null)
-{
-    static $instance;
-    
-    if (null !== $app) {
-        $instance = $app;
-    }
-    if (null === $instance) {
-        $instance = new App;
-    }
-    return $instance;
-}
+    Spark\Util,
+    Spark\Util\HttpFilters;
 
 class App
 {
@@ -52,8 +40,8 @@ class App
     /** @var SplQueue */
     protected $preDispatch;
 
-    /** @var array */
-    protected $onError = array(0 => array());
+    /** @var array Error handlers */
+    protected $onError = array();
 	
 	/** @var array */
 	protected $options = array();
@@ -63,9 +51,12 @@ class App
 	final function __construct()
 	{
 	    $this->configurators = new SplQueue;
-        $this->preDispatch   = new SplQueue;
-        $this->postDispatch  = new SplQueue;
-
+	    
+        $this->preDispatch  = new HttpFilters;
+        $this->postDispatch = new HttpFilters;
+        $this->onError      = new HttpFilters;
+        
+        $this->before($this->route());
         $this->init();
     }
     
@@ -148,7 +139,7 @@ class App
      */
     function before($filter)
     {
-        $this->preDispatch->enqueue($filter);
+        $this->preDispatch->queue($filter);
         return $this;
     }
 
@@ -160,24 +151,15 @@ class App
      */
 	function after($filter)
 	{
-	    $this->postDispatch->enqueue($filter);
+	    $this->postDispatch->queue($filter);
 	    return $this;
 	}
 
     /**
      * Registers an error handler
      */
-    function error($class, $callback = null) {
-        if (null === $callback) {
-            $callback = $class;
-            $class    = 0;
-        }
-        if (is_array($callback) or !empty($callback)) {
-            $callback = function($request, $response) use ($callback) {
-                return call_user_func($callback, $request, $response);
-            };
-        }
-        $this->onError[$class][] = $callback;
+    function error($callback) {
+        $this->onError->queue($callback);
         return $this;
     }
 
@@ -212,38 +194,21 @@ class App
 	    }
 	    
 	    try {
-	        $this->router->route($request);
-            
-            foreach ($this->preDispatch as $filter) {
-                $filter($request, $response);
-            }
+	        $this->preDispatch->filter($request, $response);
             
             $callback = $this->validateCallback($request->getCallback());
 	        $callback($request, $response);
 	        
 		} catch (\Exception $e) {
 		    $response->setException($e);
-
-            if (isset($this->onError[$class = get_class($e)])) {
-                $errorHandlers = $this->onError[$class];
-            } else {
-                $errorHandlers = $this->onError[0];
-            }
-		    
-		    foreach ($errorHandlers as $handler) {
-                $handler($request, $response);
-		    }
+            $this->onError->filter($request, $response);
 		}
 		
 		// Attach all stdout output from callbacks
 		$response->append(ob_get_clean());
 		
 		ob_start();
-		
-		foreach ($this->postDispatch as $filter) {
-		    $filter($request, $response);
-		}
-		
+		$this->postDispatch->filter($request, $response);
 		// Attach all stdout output from post dispatch filters
 		$response->append(ob_get_clean());
 		
