@@ -4,9 +4,9 @@ namespace Spark\Util;
 
 use InvalidArgumentException,
     SplQueue,
+    SplDoublyLinkedList,
     Spark\HttpRequest,
-    Spark\HttpResponse,
-    Spark\Util\ArrayObject;
+    Spark\HttpResponse;
 
 class HttpFilters implements \IteratorAggregate
 {
@@ -75,10 +75,10 @@ class HttpFilters implements \IteratorAggregate
      */
     function filter(HttpRequest $request, HttpResponse $response)
     {
-        $return = new ArrayObject;
+        $return = new SplDoublyLinkedList;
         
         foreach ($this->filters as $filter) {
-            $return[] = $filter($request, $response);
+            $return->push($filter($request, $response));
             
             if (null !== ($callback = $this->filterUntil)) {
                 if (true === call_user_func($callback, $request, $response)) {
