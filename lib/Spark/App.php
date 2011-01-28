@@ -41,7 +41,7 @@ class App
     protected $preDispatch;
 
     /** @var array Error handlers */
-    protected $onError = array();
+    protected $onError;
 	
 	/** @var array */
 	protected $options = array();
@@ -193,9 +193,9 @@ class App
 		// Attach all stdout output from callbacks
 		$response->append(ob_get_clean());
 		
+		// Attach all stdout output from post dispatch filters
 		ob_start();
 		$this->postDispatch->filter($request, $response);
-		// Attach all stdout output from post dispatch filters
 		$response->append(ob_get_clean());
 		
 		$response->send();
