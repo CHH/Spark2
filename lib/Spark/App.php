@@ -26,7 +26,7 @@ require_once('Controller.php');
 use Spark\HttpRequest, 
     Spark\HttpResponse,
     Spark\Util,
-    Spark\Util\HttpFilters;
+    Spark\Util\HttpFilterChain;
 
 class App
 {
@@ -47,9 +47,9 @@ class App
     
 	final function __construct()
 	{
-        $this->preDispatch  = new HttpFilters;
-        $this->postDispatch = new HttpFilters;
-        $this->onError      = new HttpFilters;
+        $this->preDispatch  = new HttpFilterChain;
+        $this->postDispatch = new HttpFilterChain;
+        $this->onError      = new HttpFilterChain;
         
         $this->before($this->route());
         $this->init();

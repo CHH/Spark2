@@ -17,6 +17,12 @@ use Spark\App,
     Spark\HttpRequest,
     Spark\HttpResponse;
 
+/**
+ * Implements a Singleton for Spark\App
+ *
+ * @param  Spark\App $app Inject your own App instance
+ * @return Spark\App
+ */
 function Spark(App $app = null)
 {
     static $instance;
@@ -31,10 +37,19 @@ function Spark(App $app = null)
     return $instance;
 }
 
+/**
+ * Runs an App
+ *
+ * Uses the Singleton's App instance if no app is given
+ *
+ * @param  Spark\App|string App instance or Class name
+ * @return Spark\App
+ */
 class Spark
 {
     static function run($app = null)
     {
+        // Use Singleton instance
         if (null === $app) {
             $app = Spark();
         }

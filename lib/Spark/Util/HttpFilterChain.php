@@ -1,4 +1,16 @@
 <?php
+/**
+ * Holds filters which filter request and response objects
+ * 
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.txt.
+ *
+ * @category   Spark
+ * @package    Spark_Util
+ * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
+ * @copyright  Copyright (c) Christoph Hochstrasser
+ * @license    MIT License
+ */
 
 namespace Spark\Util;
 
@@ -8,7 +20,7 @@ use InvalidArgumentException,
     Spark\HttpRequest,
     Spark\HttpResponse;
 
-class HttpFilters implements \IteratorAggregate
+class HttpFilterChain implements \IteratorAggregate
 {
     /** @var SplQueue */
     protected $filters;
@@ -24,7 +36,7 @@ class HttpFilters implements \IteratorAggregate
     /**
      * Adds a filter
      *
-     * Filters should be a function of HttpRequest and HttpResponse.
+     * Filter should be a function of HttpRequest and HttpResponse.
      *
      * @param  callback $filter
      * @return HttpFilters
