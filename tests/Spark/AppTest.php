@@ -36,7 +36,36 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("bar", $app->getOption("foo"));
     }
     
-    function testContainsARouterInstance()
+    function testSetTakesArrayOfOptions()
+    {
+        $app = $this->app;
+        
+        $values = array(
+            "foo" => "bar",
+            "bar" => "baz"
+        );
+        
+        $app->set($values);
+        
+        $this->assertEquals("bar", $app->getOption("foo"));
+        $this->assertEquals("baz", $app->getOption("bar"));
+        
+        return $values;
+    }
+    
+    /**
+     * @depends testSetTakesArrayOfOptions
+     */
+    function testGetWithNoArgumentsReturnsAllOptions($values)
+    {
+        $app = $this->app;
+        $app->set($values);
+        
+        $this->assertEquals($values, $app->get());
+        $this->assertEquals($values, $app->getOptions());
+    }
+    
+    function testContainsRouterInstance()
     {
         $app = $this->app;
         $this->assertInstanceOf("\Spark\Router", $app->route());
