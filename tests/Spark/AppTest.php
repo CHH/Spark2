@@ -13,20 +13,19 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->app = new App;
     }    
     
-    function testCanActAsSingleton()
+    function testAppInstanceIsExchangeable()
     {
-        $app1 = \Spark\App();
-        $app2 = \Spark\App();
+        Spark($this->app);
         
-        $this->assertSame($app1, $app2);
+        $this->assertSame($this->app, Spark());
     }
     
-    function testSingletonInstanceIsExchangeable()
+    function testCanActAsSingleton()
     {
-        $app = new App;
-        \Spark\App($app);
+        $app1 = Spark();
+        $app2 = Spark();
         
-        $this->assertSame($app, \Spark\App());
+        $this->assertSame($app1, $app2);
     }
     
     function testHoldsMetadata()
