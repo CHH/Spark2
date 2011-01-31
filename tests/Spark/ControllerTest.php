@@ -10,7 +10,7 @@ use Spark\HttpRequest,
 
 class ControllerTest extends \PHPUnit_Framework_TestCase
 {
-    function testActioControllerCanReturnCallbackToAction()
+    function testActionControllerCanReturnCallbackToAction()
     {
         $callback = TestController::action("index");
         
