@@ -17,11 +17,17 @@ use Spark\App,
     Spark\HttpRequest,
     Spark\HttpResponse;
 
-function Spark()
+function Spark(App $app = null)
 {
     static $instance;
     
-    if (null === $instance) $instance = new App;
+    if (null === $instance) {
+        if (null !== $app) {
+            $instance = $app;
+        } else {
+            $instance = new App;
+        }
+    }
     return $instance;
 }
 
