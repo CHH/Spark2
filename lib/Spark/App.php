@@ -23,8 +23,7 @@ require_once("HttpResponse.php");
 require_once("Router.php");
 require_once('Controller.php');
 
-use SplQueue,
-    Spark\HttpRequest, 
+use Spark\HttpRequest, 
     Spark\HttpResponse,
     Spark\Util,
     Spark\Util\HttpFilters;
