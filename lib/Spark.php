@@ -11,11 +11,12 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
+require_once('SparkCore.php');
 require_once('Spark/App.php');
 
 use Spark\App,
-    Spark\HttpRequest,
-    Spark\HttpResponse;
+    SparkCore\HttpRequest,
+    SparkCore\HttpResponse;
 
 /**
  * Implements a Singleton for Spark\App

@@ -12,7 +12,7 @@
  * @license    MIT License
  */
 
-namespace Spark;
+namespace SparkCore;
 
 class HttpResponse
 {

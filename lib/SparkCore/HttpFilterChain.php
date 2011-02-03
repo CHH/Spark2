@@ -12,13 +12,12 @@
  * @license    MIT License
  */
 
-namespace Spark\Util;
+namespace SparkCore;
 
 use InvalidArgumentException,
-    SplQueue,
     SplDoublyLinkedList,
-    Spark\HttpRequest,
-    Spark\HttpResponse;
+    SparkCore\HttpRequest,
+    SparkCore\HttpResponse;
 
 class HttpFilterChain implements \IteratorAggregate
 {
@@ -30,18 +29,34 @@ class HttpFilterChain implements \IteratorAggregate
     
     function __construct()
     {
-        $this->filters = new SplQueue;
+        $this->filters = new SplDoublyLinkedList;
     }
     
     /**
-     * Adds a filter
+     * Appends a filter
      *
      * Filter should be a function of HttpRequest and HttpResponse.
      *
      * @param  callback $filter
-     * @return HttpFilters
+     * @return HttpFilterChain
      */
-    function queue($filter)
+    function append($filter)
+    {
+        return $this->add("bottom", $filter);
+    }
+    
+    /**
+     * Prepends a filter
+     *
+     * @param  callback $filter
+     * @return HttpFilterChain
+     */
+    function prepend($filter)
+    {
+        return $this->add("top", $filter);
+    }
+    
+    protected function add($position, $filter)
     {
         if (!is_callable($filter)) {
             throw new InvalidArgumentException("You must supply a valid Callback as Filter");
@@ -51,7 +66,14 @@ class HttpFilterChain implements \IteratorAggregate
                 return call_user_func($filter, $request, $response);
             };
         }
-        $this->filters->enqueue($filter);
+        if ("bottom" === $position) {
+            $this->filters->push($filter);
+        } else if ("top" === $position) {
+            $this->filters->unshift($filter);
+        } else {
+            throw new InvalidArgumentException("Invalid position $position, only "
+                . "top and bottom are supported.");
+        }
         return $this;
     }
     
@@ -73,6 +95,12 @@ class HttpFilterChain implements \IteratorAggregate
         return $this;
     }
     
+    /**
+     * Allows a filter chain to be used as filter inside another filter chain
+     *
+     * @param HttpRequest  $request
+     * @param HttpResponse $response
+     */
     function __invoke(HttpRequest $request, HttpResponse $response)
     {   
         return $this->filter($request, $response);
@@ -83,7 +111,7 @@ class HttpFilterChain implements \IteratorAggregate
      *
      * @param  HttpRequest  $request
      * @param  HttpResponse $response
-     * @return ArrayObject  Array of each filter's return value
+     * @return SplDoublyLinkedList Collection of filter return values
      */
     function filter(HttpRequest $request, HttpResponse $response)
     {

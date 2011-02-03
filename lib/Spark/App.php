@@ -23,8 +23,8 @@ require_once("HttpResponse.php");
 require_once("Router.php");
 require_once('Controller.php');
 
-use Spark\HttpRequest, 
-    Spark\HttpResponse,
+use SparkCore\HttpRequest, 
+    SparkCore\HttpResponse,
     Spark\Util,
     Spark\Util\HttpFilterChain;
 
@@ -176,49 +176,6 @@ class App
 	 */
 	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
-	    ob_start();
 	    
-	    try {
-	        $this->preDispatch->filter($request, $response);
-            
-            $callback = $this->validateCallback($request->getCallback());
-	        $callback($request, $response);
-	        
-		} catch (\Exception $e) {
-		    $response->setException($e);
-            $this->onError->filter($request, $response);
-		}
-		
-		// Attach all stdout output from callbacks
-		$response->append(ob_get_clean());
-		
-		// Attach all stdout output from post dispatch filters
-		ob_start();
-		$this->postDispatch->filter($request, $response);
-		$response->append(ob_get_clean());
-		
-		$response->send();
-		return $this;
-	}
-    
-    /**
-     * Validates if the callback is callable and wraps array style callbacks
-     * in a closure to allow closure-style calling
-     *
-     * @param  mixed $callback
-     * @return Closure
-     */
-	protected function validateCallback($callback)
-	{
-        if (!is_callable($callback)) {
-            throw new \RuntimeException("The callback is not valid");
-        }
-        
-        if (is_array($callback) or is_string($callback)) {
-            $callback = function($request, $response) use ($callback) {
-                return call_user_func($callback, $request, $response);
-            };
-        }
-        return $callback;
 	}
 }
