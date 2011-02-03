@@ -18,18 +18,23 @@ require_once("Util.php");
 
 autoload("Spark\Exception", __DIR__ . "/Exception.php");
 
+require_once("Dispatcher.php");
 require_once("Router.php");
 require_once('Controller.php');
 
 use SparkCore\HttpRequest, 
     SparkCore\HttpResponse,
     SparkCore\HttpFilterChain,
+    Spark\Dispatcher,
     Spark\Util;
 
 class App
 {
     /** @var Spark\Router */
 	protected $router;
+    
+    /** @var Spark\Dispatcher */
+    protected $dispatcher;
     
 	/** @var SplQueue */
 	protected $postDispatch;
@@ -40,16 +45,25 @@ class App
     /** @var array Error handlers */
     protected $onError;
 	
+	protected $middleware;
+	
 	/** @var array */
 	protected $options = array();
     
 	final function __construct()
 	{
+	    $this->middleware = new HttpFilterChain;
+	    
         $this->preDispatch  = new HttpFilterChain;
         $this->postDispatch = new HttpFilterChain;
         $this->onError      = new HttpFilterChain;
+
+        $this->middleware
+             ->append($this->preDispatch)
+             ->append($this->route())
+             ->append($this->getDispatcher())
+             ->append($this->postDispatch);
         
-        $this->before($this->route());
         $this->init();
     }
     
@@ -174,6 +188,14 @@ class App
 	 */
 	function __invoke(HttpRequest $request, HttpResponse $response)
 	{
-	    
+	    $this->middleware->filter($request, $response);
+	}
+	
+	function getDispatcher()
+	{
+	    if (null === $this->dispatcher) {
+	        $this->dispatcher = new Dispatcher;
+	    }
+	    return $this->dispatcher;
 	}
 }
