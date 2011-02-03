@@ -18,15 +18,13 @@ require_once("Util.php");
 
 autoload("Spark\Exception", __DIR__ . "/Exception.php");
 
-require_once("HttpRequest.php");
-require_once("HttpResponse.php");
 require_once("Router.php");
 require_once('Controller.php');
 
 use SparkCore\HttpRequest, 
     SparkCore\HttpResponse,
-    Spark\Util,
-    Spark\Util\HttpFilterChain;
+    SparkCore\HttpFilterChain,
+    Spark\Util;
 
 class App
 {
@@ -128,7 +126,7 @@ class App
      */
     function before($filter)
     {
-        $this->preDispatch->queue($filter);
+        $this->preDispatch->append($filter);
         return $this;
     }
 
@@ -140,7 +138,7 @@ class App
      */
 	function after($filter)
 	{
-	    $this->postDispatch->queue($filter);
+	    $this->postDispatch->append($filter);
 	    return $this;
 	}
 
@@ -148,7 +146,7 @@ class App
      * Registers an error handler
      */
     function error($callback) {
-        $this->onError->queue($callback);
+        $this->onError->append($callback);
         return $this;
     }
 

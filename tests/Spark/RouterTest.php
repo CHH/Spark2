@@ -2,8 +2,8 @@
 
 namespace Spark\Test;
 
-use Spark\HttpRequest, 
-    Spark\HttpResponse, 
+use SparkCore\HttpRequest, 
+    SparkCore\HttpResponse, 
     Spark\Router,
     Spark\Router\RestRoute,
     Spark\Util,

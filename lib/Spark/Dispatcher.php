@@ -2,8 +2,8 @@
 
 namespace Spark;
 
-use Spark\HttpRequest,
-    Spark\HttpResponse;
+use SparkCore\HttpRequest,
+    SparkCore\HttpResponse;
 
 class Dispatcher
 {

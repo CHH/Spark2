@@ -14,7 +14,7 @@
 
 namespace Spark\Controller;
 
-use Spark\HttpRequest;
+use SparkCore\HttpRequest;
 
 /**
  * @category   Spark

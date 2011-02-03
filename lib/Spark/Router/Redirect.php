@@ -10,8 +10,8 @@
 
 namespace Spark\Router;
 
-use Spark\HttpRequest,
-    Spark\HttpResponse;
+use SparkCore\HttpRequest,
+    SparkCore\HttpResponse;
 
 /**
  * Simple Route Callback which does a redirect to the Location specified in the constructor

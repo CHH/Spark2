@@ -16,7 +16,7 @@ namespace Spark\Router;
 
 use InvalidArgumentException,
     Spark\Util,
-    Spark\HttpRequest;
+    SparkCore\HttpRequest;
 
 class RestRoute implements Route
 {

@@ -13,7 +13,8 @@
 
 namespace Spark\Controller;
 
-use Spark\HttpRequest, Spark\HttpResponse;
+use SparkCore\HttpRequest, 
+    SparkCore\HttpResponse;
 
 /**
  * @category   Spark

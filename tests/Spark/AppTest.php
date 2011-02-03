@@ -3,8 +3,8 @@
 namespace Spark\Test;
 
 use Spark\App,
-    Spark\HttpRequest,
-    Spark\HttpResponse;
+    SparkCore\HttpRequest,
+    SparkCore\HttpResponse;
 
 class AppTest extends \PHPUnit_Framework_TestCase
 {
