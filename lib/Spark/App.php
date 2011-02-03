@@ -179,8 +179,7 @@ class App
     }
     
 	/**
-	 * Routes the request, dispatch the callback, captures all output and sends
-	 * back the response
+	 * Triggers executing of all Middleware
 	 *
 	 * @param  HttpRequest  $request
 	 * @param  HttpResponse $response
