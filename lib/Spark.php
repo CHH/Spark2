@@ -14,9 +14,7 @@
 require_once('SparkCore.php');
 require_once('Spark/App.php');
 
-use Spark\App,
-    SparkCore\HttpRequest,
-    SparkCore\HttpResponse;
+use Spark\App;
 
 /**
  * Implements a Singleton for Spark\App
@@ -27,7 +25,7 @@ use Spark\App,
 function Spark(App $app = null)
 {
     static $instance;
-    
+
     if (null === $instance) {
         if (null !== $app) {
             $instance = $app;
@@ -38,35 +36,19 @@ function Spark(App $app = null)
     return $instance;
 }
 
-/**
- * Runs an App
- *
- * Uses the Singleton's App instance if no app is given
- *
- * @param  Spark\App|string App instance or Class name
- * @return Spark\App
+/* 
+ * Bootstrap the framework
  */
-class Spark
-{
-    static function run($app = null)
-    {
-        // Use Singleton instance
-        if (null === $app) {
-            $app = Spark();
-        }
-        
-        // Class Name given
-        if (is_string($app)) {
-            $app = new $app;
-        }
-        
-        if (!$app instanceof App) {
-            throw new InvalidArgumentException("App must be a valid instance of Spark\App");
-        }
-        
-        $request  = new HttpRequest;
-        $response = new HttpResponse;
-        
-        return $app($request, $response);
-    }
-}
+$core  = SparkCore();
+$spark = Spark();
+
+$router = $spark->getRouter();
+$dispatcher = $spark->getDispatcher();
+$preDispatch = $spark->getPreDispatch();
+$postDispatch = $spark->getPostDispatch();
+
+$core->append($preDispatch)
+     ->append($router)
+     ->append($dispatcher)
+     ->append($postDispatch);
+

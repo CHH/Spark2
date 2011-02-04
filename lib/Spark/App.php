@@ -44,21 +44,15 @@ class App
 
 	/** @var array */
 	protected $options = array();
+
+    protected $errorHandlers;
     
 	final function __construct()
 	{
-        $this->preDispatch  = new HttpFilterChain;
-        $this->postDispatch = new HttpFilterChain;
-    }
-    
-    function setUp(SparkCore $core)
-    {
-    	$core->append($this->preDispatch)
-			 ->append($this->route())
-			 ->append($this->getDispatcher())
-			 ->append($this->postDispatch);
-    	
-    	$this->init();
+        $this->preDispatch   = new HttpFilterChain;
+        $this->postDispatch  = new HttpFilterChain;
+        $this->errorHandlers = new HttpFilterChain;
+        $this->init();
     }
     
     function init()
@@ -113,15 +107,13 @@ class App
     }
 
     function route($block = null)
-    {   
-        if (null === $this->router) {
-            $this->router = new Router;
-        }
+    {
+        $router = $this->getRouter();
         if (null === $block) {
-            return $this->router;
+            return $router;
         }
         if (is_callable($block)) {
-            call_user_func($block, $this->router);
+            call_user_func($block, $router);
             return $this;
         }
     }
@@ -154,7 +146,7 @@ class App
      * Registers an error handler
      */
     function error($callback) {
-        $this->core->error($callback);
+        $this->errorHandlers->append($callback);
         return $this;
     }
 
@@ -168,13 +160,9 @@ class App
             if (404 === $e->getCode()) call_user_func($callback, $request, $response);
             else return;
         };
-        $this->core->error($callback);
+        $this->errorHandlers->append($callback);
         return $this;
-    }$this->middleware
-             ->append($this->preDispatch)
-             ->append($this->route())
-             ->append($this->getDispatcher())
-             ->append($this->postDispatch);
+    }
     
 	/**
 	 * Triggers executing of all Middleware
@@ -187,6 +175,11 @@ class App
 	{
 	    $this->middleware->filter($request, $response);
 	}
+
+    function getErrorHandlers()
+    {
+        return $this->errorHandlers;
+    }
 	
 	function getDispatcher()
 	{
@@ -194,5 +187,23 @@ class App
 	        $this->dispatcher = new Dispatcher;
 	    }
 	    return $this->dispatcher;
+	}
+
+	function getPostDispatch()
+	{
+	    return $this->postDispatch;
+	}
+
+	function getPreDispatch()
+	{
+	    return $this->preDispatch;
+	}
+
+	function getRouter()
+	{
+	    if (null === $this->router) {
+            $this->router = new Router;
+        }
+	    return $this->router;
 	}
 }
