@@ -42,29 +42,23 @@ class App
     /** @var SplQueue */
     protected $preDispatch;
 
-    /** @var array Error handlers */
-    protected $onError;
-	
-	protected $middleware;
-	
 	/** @var array */
 	protected $options = array();
     
 	final function __construct()
 	{
-	    $this->middleware = new HttpFilterChain;
-	    
         $this->preDispatch  = new HttpFilterChain;
         $this->postDispatch = new HttpFilterChain;
-        $this->onError      = new HttpFilterChain;
-
-        $this->middleware
-             ->append($this->preDispatch)
-             ->append($this->route())
-             ->append($this->getDispatcher())
-             ->append($this->postDispatch);
-        
-        $this->init();
+    }
+    
+    function setUp(SparkCore $core)
+    {
+    	$core->append($this->preDispatch)
+			 ->append($this->route())
+			 ->append($this->getDispatcher())
+			 ->append($this->postDispatch);
+    	
+    	$this->init();
     }
     
     function init()
@@ -160,7 +154,7 @@ class App
      * Registers an error handler
      */
     function error($callback) {
-        $this->onError->append($callback);
+        $this->core->error($callback);
         return $this;
     }
 
@@ -174,9 +168,13 @@ class App
             if (404 === $e->getCode()) call_user_func($callback, $request, $response);
             else return;
         };
-        $this->error($callback);
+        $this->core->error($callback);
         return $this;
-    }
+    }$this->middleware
+             ->append($this->preDispatch)
+             ->append($this->route())
+             ->append($this->getDispatcher())
+             ->append($this->postDispatch);
     
 	/**
 	 * Triggers executing of all Middleware
