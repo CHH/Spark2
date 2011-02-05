@@ -2,9 +2,7 @@
 
 namespace Spark\Test;
 
-use Spark\App,
-    SparkCore\HttpRequest,
-    SparkCore\HttpResponse;
+use Spark\App;
 
 class AppTest extends \PHPUnit_Framework_TestCase
 {
@@ -68,6 +66,6 @@ class AppTest extends \PHPUnit_Framework_TestCase
     function testContainsRouterInstance()
     {
         $app = $this->app;
-        $this->assertInstanceOf("\Spark\Router", $app->route());
+        $this->assertInstanceOf("\Spark\Router", $app->getRouter());
     }
 }

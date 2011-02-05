@@ -2,8 +2,8 @@
 
 namespace Spark\Test;
 
-use SparkCore\HttpRequest, 
-    SparkCore\HttpResponse, 
+use SparkCore\Request, 
+    SparkCore\Response, 
     Spark\Router,
     Spark\Router\RestRoute,
     Spark\Util,
@@ -14,8 +14,8 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     function setUp()
     {
         $this->router   = new Router;
-        $this->request  = new HttpRequest;
-        $this->response = new HttpResponse;
+        $this->request  = new Request;
+        $this->response = new Response;
     }    
     
     function testRoutesCanBeAssembledToUrl()

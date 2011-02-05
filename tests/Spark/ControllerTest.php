@@ -4,8 +4,8 @@ namespace Spark\Test;
 
 require_once TESTS . "/Spark/_data/TestController.php";
 
-use SparkCore\HttpRequest, 
-    SparkCore\HttpResponse, 
+use SparkCore\Request, 
+    SparkCore\Response, 
     Spark\Test\TestController;
 
 class ControllerTest extends \PHPUnit_Framework_TestCase
@@ -15,7 +15,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $callback = TestController::action("index");
         
         $this->assertTrue(is_callable($callback));
-        $this->assertEquals("indexAction", $callback(new HttpRequest, new HttpResponse));
+        $this->assertEquals("indexAction", $callback(new Request, new Response));
     }
     
     /**
