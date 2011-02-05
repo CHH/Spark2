@@ -16,7 +16,7 @@ namespace Spark\Router;
 
 use InvalidArgumentException,
     Spark\Util,
-    SparkCore\HttpRequest;
+    SparkCore\Request;
 
 class RestRoute implements Route
 {
@@ -55,7 +55,7 @@ class RestRoute implements Route
         $this->parseStrExp();
     }
     
-    function __invoke(HttpRequest $request)
+    function __invoke(Request $request)
     {
         if (null !== $this->method and $request->getMethod() !== $this->method) {
             return false;

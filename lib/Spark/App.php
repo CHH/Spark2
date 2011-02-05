@@ -22,9 +22,9 @@ require_once("Dispatcher.php");
 require_once("Router.php");
 require_once('Controller.php');
 
-use SparkCore\HttpRequest, 
-    SparkCore\HttpResponse,
-    SparkCore\HttpFilterChain,
+use SparkCore\Request, 
+    SparkCore\Response,
+    SparkCore\FilterChain,
     Spark\Dispatcher,
     Spark\Util;
 
@@ -49,9 +49,9 @@ class App
     
 	final function __construct()
 	{
-        $this->preDispatch   = new HttpFilterChain;
-        $this->postDispatch  = new HttpFilterChain;
-        $this->errorHandlers = new HttpFilterChain;
+        $this->preDispatch   = new FilterChain;
+        $this->postDispatch  = new FilterChain;
+        $this->errorHandlers = new FilterChain;
         $this->init();
     }
     
@@ -171,7 +171,7 @@ class App
 	 * @param  HttpResponse $response
 	 * @return void
 	 */
-	function __invoke(HttpRequest $request, HttpResponse $response)
+	function __invoke(Request $request, Response $response)
 	{
 	    $this->middleware->filter($request, $response);
 	}

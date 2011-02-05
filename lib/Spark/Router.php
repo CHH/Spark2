@@ -24,7 +24,7 @@ require_once('Router/RestRoute.php');
 
 use Spark\Router\RestRoute,
 	Spark\Router\Exception,
-    SparkCore\HttpRequest,
+    SparkCore\Request,
     Spark\Util,
     SplStack,
     InvalidArgumentException;
@@ -51,7 +51,7 @@ class Router implements Router\Route
     /**
      * @alias route()
      */
-    function __invoke(HttpRequest $request)
+    function __invoke(Request $request)
     {
         return $this->route($request);
     }
@@ -63,7 +63,7 @@ class Router implements Router\Route
      * @param  Spark\HttpRequest $request
      * @return mixed Callback
      */
-    function route(HttpRequest $request)
+    function route(Request $request)
     {
         $matched = false;
         

@@ -16,16 +16,14 @@ namespace SparkCore;
 
 use InvalidArgumentException,
     SplDoublyLinkedList,
-    SparkCore\HttpRequest,
-    SparkCore\HttpResponse;
+    SparkCore\Request,
+    SparkCore\Response,
+    SparkCore\Util\ReturnValues;
 
-class HttpFilterChain implements \IteratorAggregate, \Countable
+class FilterChain implements \IteratorAggregate, \Countable
 {
     /** @var SplQueue */
     protected $filters;
-    
-    /** @var callback */    
-    protected $filterUntil;
     
     function __construct()
     {
@@ -86,13 +84,11 @@ class HttpFilterChain implements \IteratorAggregate, \Countable
      * @param  callback $filterUntil
      * @return HttpFilters
      */
-    function until($filterUntil)
+    function filter(Request $request, Response $response)
     {
-        if (!is_callable($filterUntil)) {
-            throw new InvalidArgumentException("The condition must be a valid callback");
-        }
-        $this->filterUntil = $filterUntil;
-        return $this;
+        return $this->filterUntil($request, $response, function() {
+            return false;
+        });
     }
     
     /**
@@ -101,14 +97,9 @@ class HttpFilterChain implements \IteratorAggregate, \Countable
      * @param HttpRequest  $request
      * @param HttpResponse $response
      */
-    function __invoke(HttpRequest $request, HttpResponse $response)
+    function __invoke(Request $request, Response $response)
     {   
         return $this->filter($request, $response);
-    }
-
-    function count()
-    {
-        return $this->filters->count();
     }
     
     /**
@@ -116,22 +107,30 @@ class HttpFilterChain implements \IteratorAggregate, \Countable
      *
      * @param  HttpRequest  $request
      * @param  HttpResponse $response
-     * @return SplDoublyLinkedList Collection of filter return values
+     * @param  callback     $until Loop breaks if TRUE is returned by the callback
+     * @return SparkCore\Util\ReturnValues Collection of filter return values
      */
-    function filter(HttpRequest $request, HttpResponse $response)
+    function filterUntil(Request $request, Response $response, $until)
     {
-        $return = new SplDoublyLinkedList;
+        if (!is_callable($until)) {
+            throw new InvalidArgumentException("No valid callback given");
+        }
+        
+        $return = new ReturnValues;
 
         foreach ($this->filters as $filter) {
             $return->push($filter($request, $response));
             
-            if (null !== ($callback = $this->filterUntil)) {
-                if (true === call_user_func($callback, $request, $response)) {
-                    break;
-                }
+            if (true === call_user_func($until, $request, $response)) {
+                break;
             }
         }
         return $return;
+    }
+
+    function count()
+    {
+        return $this->filters->count();
     }
     
     function getIterator()

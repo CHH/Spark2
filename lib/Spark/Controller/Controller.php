@@ -13,8 +13,8 @@
 
 namespace Spark\Controller;
 
-use SparkCore\HttpRequest, 
-    SparkCore\HttpResponse;
+use SparkCore\Request, 
+    SparkCore\Response;
 
 /**
  * @category   Spark
@@ -24,5 +24,5 @@ use SparkCore\HttpRequest,
  */
 interface Controller
 {
-    public function __invoke(HttpRequest $request, HttpResponse $response);
+    public function __invoke(Request $request, Response $response);
 }

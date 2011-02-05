@@ -17,7 +17,7 @@ namespace Spark\Controller;
 
 use Spark\Util,
     Spark\Util\Options, 
-    SparkCore\HttpRequest;
+    SparkCore\Request;
 
 /**
  * @category   Spark
@@ -47,7 +47,7 @@ class StandardResolver implements Resolver
         return $this;
     }
 
-    public function getInstance(HttpRequest $request)
+    public function getInstance(Request $request)
     { 
         if (null !== $request->meta("module")) {
             $controller = $this->_loadCommand($request->getControllerName(), $request->getModuleName());

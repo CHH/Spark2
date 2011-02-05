@@ -17,8 +17,8 @@
 
 namespace Spark\Controller;
 
-use SparkCore\HttpRequest, 
-    SparkCore\HttpResponse,
+use SparkCore\Request, 
+    SparkCore\Response,
     Spark\Util,
     Spark\Router\Redirect,
     InvalidArgumentException;
@@ -52,7 +52,7 @@ abstract class ActionController implements Controller
      * @param  \Spark\Controller\HttpResponse $response
      * @return void
      */
-    final function __invoke(HttpRequest $request, HttpResponse $response)
+    final function __invoke(Request $request, Response $response)
     {
         $this->before($request, $response);
         
@@ -83,13 +83,13 @@ abstract class ActionController implements Controller
     /**
      * Template Method, run before an action is dispatched
      */
-    function before(HttpRequest $request, HttpResponse $response)
+    function before(Request $request, Response $response)
     {}
 
     /**
      * Template Method, ran after an action was dispatched
      */
-    function after(HttpRequest $request, HttpResponse $response)
+    function after(Request $request, Response $response)
     {}
     
     protected function redirect($url)
@@ -127,7 +127,7 @@ abstract class ActionController implements Controller
         }
         
         $callback = 
-            function(HttpRequest $request, HttpResponse $response) 
+            function(Request $request, Response $response) 
                 use ($instance, $method) 
             {
                 return $instance->{$method}($request, $response);

@@ -14,7 +14,7 @@
 
 namespace SparkCore;
 
-class HttpResponse
+class Response
 {
     protected $headers = array();
     protected $body = "";    

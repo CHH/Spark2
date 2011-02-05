@@ -1,12 +1,13 @@
 <?php
 
-require_once "SparkCore/HttpRequest.php";
-require_once "SparkCore/HttpResponse.php";
-require_once "SparkCore/HttpFilterChain.php";
+require_once "SparkCore/Util.php";
+require_once "SparkCore/Request.php";
+require_once "SparkCore/Response.php";
+require_once "SparkCore/FilterChain.php";
 
-use SparkCore\HttpRequest,
-	SparkCore\HttpResponse,
-	SparkCore\HttpFilterChain;
+use SparkCore\Request,
+	SparkCore\Response,
+	SparkCore\FilterChain;
 
 function SparkCore()
 {
@@ -20,26 +21,22 @@ function SparkCore()
 
 class SparkCore
 {
-    /** @var HttpFilterChain */
+    /** @var FilterChain */
 	protected $stack;
 
-	/** @var HttpFilterChain */
+	/** @var FilterChain */
 	protected $errorHandlers;
 
-	/** @var HttpRequest */
+	/** @var Request */
 	protected $request;
 
-	/** @var HttpResponse */
+	/** @var Response */
 	protected $response;
 	
 	function __construct()
 	{
-		$this->stack = new HttpFilterChain;
-		$this->errorHandlers = new HttpFilterChain;
-
-		$this->stack->until(function(HttpRequest $request, HttpResponse $response) {
-		    return $request->isDispatched();
-		});
+		$this->stack = new FilterChain;
+		$this->errorHandlers = new FilterChain;
 	}
     
     function run()
@@ -52,7 +49,9 @@ class SparkCore
         }
 		
 		try {
-			$returnValues = $this->stack->filter($request, $response);
+			$returnValues = $this->stack->filterUntil(
+			    $request, $response, array($request, "isDispatched")
+			);
 		} catch (\Exception $e) {
 			$response->setException($e);
 			$this->errorHandlers->filter($request, $response);
@@ -86,12 +85,12 @@ class SparkCore
 	function getRequest()
 	{
 		if (null === $this->request) {
-			$this->request = new HttpRequest;
+			$this->request = new Request;
 		}
 		return $this->request;
 	}
 	
-	function setRequest(HttpRequest $request)
+	function setRequest(Request $request)
 	{
 		$this->request = $request;
 		return $this;
@@ -100,12 +99,12 @@ class SparkCore
 	function getResponse()
 	{
 		if (null === $this->response) {
-			$this->response = new HttpResponse;
+			$this->response = new Response;
 		}
 		return $this->response;
 	}
 	
-	function setResponse(HttpResponse $response)
+	function setResponse(Response $response)
 	{
 		$this->response = $response;
 		return $this;

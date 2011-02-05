@@ -13,7 +13,7 @@
  */
 namespace SparkCore;
 
-class HttpRequest
+class Request
 {
     const GET     = "GET";
     const POST    = "POST";

@@ -15,7 +15,7 @@
 
 namespace Spark\Controller;
 
-use SparkCore\HttpRequest,
+use SparkCore\Request,
     Spark\Util;
 
 /**
@@ -31,7 +31,7 @@ class CallbackFilter
     /** @var Resolver */
     protected $resolver;
     
-    function __invoke(HttpRequest $request)
+    function __invoke(Request $request)
     {
         $resolver = $this->getResolver();
         $callback = $request->getCallback();

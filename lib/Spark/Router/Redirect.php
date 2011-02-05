@@ -10,8 +10,8 @@
 
 namespace Spark\Router;
 
-use SparkCore\HttpRequest,
-    SparkCore\HttpResponse;
+use SparkCore\Request,
+    SparkCore\Response;
 
 /**
  * Simple Route Callback which does a redirect to the Location specified in the constructor
@@ -27,7 +27,7 @@ class Redirect
         $this->code = $code;
     }    
     
-    function __invoke(HttpRequest $request, HttpResponse $response) 
+    function __invoke(Request $request, Response $response) 
     {
         $response->header("location", $this->location);
         $response->setCode($this->code);

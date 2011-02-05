@@ -14,7 +14,7 @@
 
 namespace Spark\Controller;
 
-use SparkCore\HttpRequest;
+use SparkCore\Request;
 
 /**
  * @category   Spark
@@ -38,5 +38,5 @@ interface Resolver
      * @param  Spark_HttpRequest $request The routed Request
      * @return Spark_Controller_Controller
      */
-    function getInstance(HttpRequest $request);
+    function getInstance(Request $request);
 }

@@ -2,12 +2,12 @@
 
 namespace Spark;
 
-use SparkCore\HttpRequest,
-    SparkCore\HttpResponse;
+use SparkCore\Request,
+    SparkCore\Response;
 
 class Dispatcher
 {
-    function __invoke(HttpRequest $request, HttpResponse $response)
+    function __invoke(Request $request, Response $response)
     {
         ob_start();
 	    
