@@ -60,7 +60,8 @@ class SparkCore
         if (0 === count($this->stack)) {
             trigger_error("Stack is empty, no handlers set", E_USER_NOTICE);
         }
-		
+
+		ob_start();
 		try {
 			$returnValues = $this->stack->filterUntil(
 			    $request, $response, array($request, "isDispatched")
@@ -69,6 +70,7 @@ class SparkCore
 			$response->setException($e);
 			$this->errorHandlers->filter($request, $response);
 		}
+	    $response->append(ob_get_clean())->send();
 		return $returnValues;
     }
 	

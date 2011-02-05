@@ -9,8 +9,6 @@ class Dispatcher
 {
     function __invoke(Request $request, Response $response)
     {
-        ob_start();
-	    
 	    try {
             $callback = $this->validateCallback($request->getCallback());
 	        $callback($request, $response);
@@ -18,11 +16,6 @@ class Dispatcher
 		} catch (\Exception $e) {
 		    $response->setException($e);
 		}
-		
-		// Attach all stdout output from callbacks
-		$response->append(ob_get_clean());
-		
-		$response->send();
 		return $this;
     }
     
