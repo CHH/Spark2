@@ -1,13 +1,15 @@
 <?php
 
 require_once "SparkCore/Util.php";
+require_once "SparkCore/Framework.php";
 require_once "SparkCore/Request.php";
 require_once "SparkCore/Response.php";
 require_once "SparkCore/FilterChain.php";
 
 use SparkCore\Request,
 	SparkCore\Response,
-	SparkCore\FilterChain;
+	SparkCore\FilterChain,
+	SparkCore\Framework;
 
 function SparkCore()
 {
@@ -39,11 +41,22 @@ class SparkCore
 		$this->errorHandlers = new FilterChain;
 	}
     
-    function run()
+    function run($framework = null)
     {
         $request  = $this->getRequest();
 		$response = $this->getResponse();
 
+        if (null !== $framework) {
+            if (is_string($framework) and !empty($framework)) {
+                $framework = new $framework;
+            }
+            if (!$framework instanceof Framework) {
+                throw new \InvalidArgumentException("Initializers must implement the"
+                    . " SparkCore\Framework Interface");
+            }
+            $framework->setUp($this);
+        }
+        
         if (0 === count($this->stack)) {
             trigger_error("Stack is empty, no handlers set", E_USER_NOTICE);
         }
@@ -66,21 +79,39 @@ class SparkCore
 
     function prepend($middleware)
 	{
+	    if (func_num_args() > 1) {
+            foreach (func_get_args() as $middleware) {
+                $this->stack->prepend($middleware);
+            }
+            return $this;
+	    }
 		$this->stack->prepend($middleware);
 		return $this;
 	}
 	
 	function append($middleware)
-	{
+	{  
+	    if (func_num_args() > 1) {
+            foreach (func_get_args() as $middleware) {
+                $this->stack->append($middleware);
+            }
+            return $this;
+	    }
 		$this->stack->append($middleware);
 		return $this;
 	}
 	
 	function error($middleware)
 	{
-		$this->onError->append($middleware);
+		$this->errorHandlers->append($middleware);
 		return $this;
 	}
+
+    function setErrorHandlers(FilterChain $handlers)
+    {
+        $this->errorHandlers = $handlers;
+        return $this;
+    }
 	
 	function getRequest()
 	{

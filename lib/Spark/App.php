@@ -28,7 +28,7 @@ use SparkCore\Request,
     Spark\Dispatcher,
     Spark\Util;
 
-class App
+class App implements \SparkCore\Framework
 {
     /** @var Spark\Router */
 	protected $router;
@@ -53,6 +53,18 @@ class App
         $this->postDispatch  = new FilterChain;
         $this->errorHandlers = new FilterChain;
         $this->init();
+    }
+
+    function setUp(\SparkCore $core)
+    {
+        $core->append(
+            $this->preDispatch, 
+            $this->getRouter(),
+            $this->getDispatcher(),
+            $this->postDispatch
+        );
+
+        $core->setErrorHandlers($this->errorHandlers);
     }
     
     function init()
@@ -164,39 +176,12 @@ class App
         return $this;
     }
     
-	/**
-	 * Triggers executing of all Middleware
-	 *
-	 * @param  HttpRequest  $request
-	 * @param  HttpResponse $response
-	 * @return void
-	 */
-	function __invoke(Request $request, Response $response)
-	{
-	    $this->middleware->filter($request, $response);
-	}
-
-    function getErrorHandlers()
-    {
-        return $this->errorHandlers;
-    }
-	
 	function getDispatcher()
 	{
 	    if (null === $this->dispatcher) {
 	        $this->dispatcher = new Dispatcher;
 	    }
 	    return $this->dispatcher;
-	}
-
-	function getPostDispatch()
-	{
-	    return $this->postDispatch;
-	}
-
-	function getPreDispatch()
-	{
-	    return $this->preDispatch;
 	}
 
 	function getRouter()

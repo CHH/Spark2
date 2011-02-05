@@ -35,20 +35,3 @@ function Spark(App $app = null)
     }
     return $instance;
 }
-
-/* 
- * Bootstrap the framework
- */
-$core  = SparkCore();
-$spark = Spark();
-
-$router = $spark->getRouter();
-$dispatcher = $spark->getDispatcher();
-$preDispatch = $spark->getPreDispatch();
-$postDispatch = $spark->getPostDispatch();
-
-$core->append($preDispatch)
-     ->append($router)
-     ->append($dispatcher)
-     ->append($postDispatch);
-
