@@ -17,42 +17,11 @@ namespace SparkCore;
 class Response
 {
     protected $headers = array();
-    protected $body = "";
-    protected $code = 200;
-    protected $exception;
-    protected $renderExceptions = true;
+    protected $content = "";
+    protected $status  = 200;
 
-    function getCode()
+    function __construct($content = "", $status = 200, $headers)
     {
-        return $this->code;
-    }
-    
-    function setCode($code)
-    {
-        $this->code = $code;
-        return $this;
-    }
-
-    function setException(\Exception $e) 
-    {
-        $this->exception = $e;
-        return $this;
-    }
-
-    function renderExceptions($enabled = true)
-    {
-        $this->renderExceptions = $enabled;
-        return $this;
-    }
-
-    function hasException()
-    {
-        return (null !== $this->exception);
-    }
-
-    function getException()
-    {
-        return $this->exception;
     }
     
     function statusCode($code = null) {
