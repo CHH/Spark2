@@ -168,8 +168,10 @@ class App implements \SparkCore\Framework
     function notFound($callback) {
         $callback = function($request, $response) use ($callback) {
             $e = $response->getException();
-
-            if (404 === $e->getCode()) call_user_func($callback, $request, $response);
+            
+            if (404 === $e->getCode() or 404 === $response->statusCode()) {
+                call_user_func($callback, $request, $response);
+            }
             else return;
         };
         $this->errorHandlers->append($callback);

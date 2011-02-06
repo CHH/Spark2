@@ -21,6 +21,11 @@ class Response
     protected $code = 200;
     protected $exception;
     protected $renderExceptions = true;
+
+    function getCode()
+    {
+        return $this->code;
+    }
     
     function setCode($code)
     {
@@ -50,7 +55,10 @@ class Response
         return $this->exception;
     }
     
-    function statusCode($code = 200) {
+    function statusCode($code = null) {
+        if (null === $code) {
+            return $this->code;
+        }
         $this->setCode($code);
         return $this;
     }
