@@ -17,7 +17,7 @@ namespace SparkCore;
 class Response
 {
     protected $headers = array();
-    protected $body = "";    
+    protected $body = "";
     protected $code = 200;
     protected $exception;
     protected $renderExceptions = true;
