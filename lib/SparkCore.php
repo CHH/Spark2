@@ -34,13 +34,20 @@ class SparkCore
 
 	/** @var Response */
 	protected $response;
-	
+
 	function __construct()
 	{
 		$this->stack = new FilterChain;
 		$this->errorHandlers = new FilterChain;
 	}
-    
+
+    /**
+     * Runs the Request Handlers
+     *
+     * @param string|Framework $framework Class or object which is used to bootstrap
+     *                                    the Request Handler stack
+     * @return ReturnValues
+     */
     function run($framework = null)
     {
         $request  = $this->getRequest();
@@ -74,11 +81,6 @@ class SparkCore
 		return $returnValues;
     }
 	
-	function __invoke()
-	{
-		return $this->run();
-	}
-
     function prepend($middleware)
 	{
 	    if (func_num_args() > 1) {
