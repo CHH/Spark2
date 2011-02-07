@@ -76,7 +76,7 @@ class FilterChain implements \IteratorAggregate, \Countable
     
     function filter(Request $request)
     {
-        return $this->filterUntil($request, $response, function() {
+        return $this->filterUntil($request, function() {
             return false;
         });
     }
@@ -89,7 +89,7 @@ class FilterChain implements \IteratorAggregate, \Countable
      */
     function __invoke(Request $request)
     {   
-        return $this->filter($request, $response);
+        $this->filter($request);
     }
     
     /**
@@ -108,9 +108,9 @@ class FilterChain implements \IteratorAggregate, \Countable
         $return = new ReturnValues;
 
         foreach ($this->filters as $filter) {
-            $return->push($filter($request, $response));
+            $return->push($filter($request));
             
-            if (true === call_user_func($until, $request, $response)) {
+            if (true === call_user_func($until, $request)) {
                 break;
             }
         }

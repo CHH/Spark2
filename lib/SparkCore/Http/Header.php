@@ -5,13 +5,13 @@ namespace SparkCore\Http;
 class Header
 {
     protected $type;
-    protected $content;
+    protected $value;
     protected $replace = false;
     
     function __construct($header, $value = null, $replace = false)
     {
         $this->type = $this->normalizeHeader($header);
-        $this->content = $content;
+        $this->value = $value;
         $this->replace = $replace;
     }
     

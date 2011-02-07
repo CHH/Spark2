@@ -53,7 +53,7 @@ class Router implements Router\Route
      */
     function __invoke(Request $request)
     {
-        return $this->route($request);
+        $this->route($request);
     }
     
     /**

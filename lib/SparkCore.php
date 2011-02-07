@@ -69,7 +69,7 @@ class SparkCore
 		ob_start();
 		try {
 			$returnValues = $this->stack->filterUntil(
-			    $request, $response, array($request, "isDispatched")
+			    $request, array($request, "isDispatched")
 			);
 		} catch (\Exception $e) {
 			foreach ($this->errorHandlers as $handler) {
@@ -80,7 +80,7 @@ class SparkCore
 	    $response = new Response;
 	    $response->appendContent(ob_get_clean());
 	    
-	    if ($returnValues) {
+	    if (isset($returnValues)) {
 	        foreach ($returnValues as $return) {
 	            if (!$return instanceof Response) {
 	                continue;
@@ -89,10 +89,8 @@ class SparkCore
                 $response->appendContent($return->getContent());
 	        }
 	    }
-	    
 	    $response->send();
-	    
-		return $returnValues;
+	    return $this;
     }
 	
     function prepend($middleware)

@@ -64,7 +64,7 @@ class App implements \SparkCore\Framework
             $this->postDispatch
         );
 
-        $core->setErrorHandlers($this->errorHandlers);
+        //$core->setErrorHandlers($this->errorHandlers);
     }
     
     function init()

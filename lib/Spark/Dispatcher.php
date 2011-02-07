@@ -10,12 +10,11 @@ class Dispatcher
     {
 	    try {
             $callback = $this->validateCallback($request->getCallback());
-	        $callback($request);
+	        return $callback($request);
 	        
 		} catch (\Exception $e) {
 		    $response->setException($e);
 		}
-		return $this;
     }
     
     /**

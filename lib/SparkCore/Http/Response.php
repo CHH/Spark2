@@ -36,7 +36,7 @@ class Response
     function send()
     {
         $this->sendHeaders();        
-        $this->sendBody();
+        $this->sendContent();
         return $this;
     }
     
