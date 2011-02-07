@@ -2,13 +2,12 @@
 
 namespace Spark\Test;
 
-use SparkCore\Request,
-    SparkCore\Response,
+use SparkCore\Http\Request,
     Spark\Controller\ActionController;
 
 class TestController extends ActionController
 {
-    function indexAction(Request $request, Response $response)
+    function indexAction(Request $request)
     {
         return __FUNCTION__;
     }

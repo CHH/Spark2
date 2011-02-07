@@ -2,12 +2,15 @@
 
 require_once "SparkCore/Util.php";
 require_once "SparkCore/Framework.php";
-require_once "SparkCore/Request.php";
-require_once "SparkCore/Response.php";
+
+require_once "SparkCore/Http/Header.php";
+require_once "SparkCore/Http/Request.php";
+require_once "SparkCore/Http/Response.php";
+
 require_once "SparkCore/FilterChain.php";
 
-use SparkCore\Request,
-	SparkCore\Response,
+use SparkCore\Http\Request,
+	SparkCore\Http\Response,
 	SparkCore\FilterChain,
 	SparkCore\Framework;
 
@@ -27,18 +30,14 @@ class SparkCore
 	protected $stack;
 
 	/** @var FilterChain */
-	protected $errorHandlers;
+	protected $errorHandlers = array();
 
 	/** @var Request */
 	protected $request;
 
-	/** @var Response */
-	protected $response;
-
 	function __construct()
 	{
 		$this->stack = new FilterChain;
-		$this->errorHandlers = new FilterChain;
 	}
 
     /**
@@ -51,7 +50,6 @@ class SparkCore
     function run($framework = null)
     {
         $request  = $this->getRequest();
-		$response = $this->getResponse();
 
         if (null !== $framework) {
             if (is_string($framework) and !empty($framework)) {
@@ -74,10 +72,26 @@ class SparkCore
 			    $request, $response, array($request, "isDispatched")
 			);
 		} catch (\Exception $e) {
-			$response->setException($e);
-			$this->errorHandlers->filter($request, $response);
+			foreach ($this->errorHandlers as $handler) {
+			    call_user_func($handler, $e);
+			}
 		}
-	    $response->append(ob_get_clean())->send();
+	    
+	    $response = new Response;
+	    $response->appendContent(ob_get_clean());
+	    
+	    if ($returnValues) {
+	        foreach ($returnValues as $return) {
+	            if (!$return instanceof Response) {
+	                continue;
+	            }
+                $response->addHeaders($return->getHeaders());
+                $response->appendContent($return->getContent());
+	        }
+	    }
+	    
+	    $response->send();
+	    
 		return $returnValues;
     }
 	
@@ -107,11 +121,11 @@ class SparkCore
 	
 	function error($middleware)
 	{
-		$this->errorHandlers->append($middleware);
+		$this->errorHandlers[] = $middleware;
 		return $this;
 	}
 
-    function setErrorHandlers(FilterChain $handlers)
+    function setErrorHandlers(array $handlers)
     {
         $this->errorHandlers = $handlers;
         return $this;
@@ -128,20 +142,6 @@ class SparkCore
 	function setRequest(Request $request)
 	{
 		$this->request = $request;
-		return $this;
-	}
-	
-	function getResponse()
-	{
-		if (null === $this->response) {
-			$this->response = new Response;
-		}
-		return $this->response;
-	}
-	
-	function setResponse(Response $response)
-	{
-		$this->response = $response;
 		return $this;
 	}
 }

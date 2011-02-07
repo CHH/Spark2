@@ -1,6 +1,6 @@
 <?php
 /**
- * Basic Command Interface
+ * Basic Controller Interface
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
@@ -13,8 +13,7 @@
 
 namespace Spark\Controller;
 
-use SparkCore\Request, 
-    SparkCore\Response;
+use SparkCore\Http\Request;
 
 /**
  * @category   Spark
@@ -24,5 +23,5 @@ use SparkCore\Request,
  */
 interface Controller
 {
-    public function __invoke(Request $request, Response $response);
+    public function __invoke(Request $request);
 }

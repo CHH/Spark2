@@ -2,8 +2,7 @@
 
 namespace Spark\Test;
 
-use SparkCore\Request, 
-    SparkCore\Response, 
+use SparkCore\Http\Request, 
     Spark\Router,
     Spark\Router\RestRoute,
     Spark\Util,
@@ -15,7 +14,6 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         $this->router   = new Router;
         $this->request  = new Request;
-        $this->response = new Response;
     }    
     
     function testRoutesCanBeAssembledToUrl()
@@ -68,27 +66,26 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         $router   = $this->router;
         $request  = $this->request;
-        $response = $this->response;
         $self     = $this;
         
         $request->setRequestUri("/users/23");
         
-        $getHandler = function($request, $response) use ($self) {
+        $getHandler = function($request) use ($self) {
             $self->assertEquals("GET", strtoupper($request->getMethod()));
             $self->assertEquals(23, (int) $request->meta("id"));
         };
         
-        $postHandler = function($request, $response) use ($self) {
+        $postHandler = function($request) use ($self) {
             $self->assertEquals("POST", strtoupper($request->getMethod()));
             $self->assertEquals(23, (int) $request->meta("id"));
         };
         
-        $putHandler = function($request, $response) use ($self) {
+        $putHandler = function($request) use ($self) {
             $self->assertEquals("PUT", strtoupper($request->getMethod()));
             $self->assertEquals(23, (int) $request->meta("id"));
         };
         
-        $deleteHandler = function($request, $response) use ($self) {
+        $deleteHandler = function($request) use ($self) {
             $self->assertEquals("DELETE", strtoupper($request->getMethod()));
             $self->assertEquals(23, (int) $request->meta("id"));
         };
@@ -101,7 +98,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         foreach (Util\words("GET POST PUT DELETE") as $method) {
             $request->setMethod($method);
             $callback = $router->route($request);
-            $callback($request, $response);
+            $callback($request);
         }
     }
     
@@ -122,12 +119,11 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         $router   = $this->router;
         $request  = $this->request->setRequestUri("/admin/users/23")->setMethod("GET");
-        $response = $this->response;
         
         $testcase = $this;
         
         $router->scope("admin", function($admin) use ($testcase) {
-            $admin->get("users/:id", function($request, $response) use ($testcase) {
+            $admin->get("users/:id", function($request) use ($testcase) {
                 $testcase->assertEquals(23, (int) $request->meta("id"));
                 
                 // Test if scope name is set as metadata if scoped route gets matched
@@ -140,7 +136,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         });
         
         $callback = $router->route($request);
-        $callback($request, $response);
+        $callback($request);
     }
     
     function testRegistersScopeNameAsMetadataWithRoute()

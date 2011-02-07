@@ -17,8 +17,8 @@
 
 namespace Spark\Controller;
 
-use SparkCore\Request, 
-    SparkCore\Response,
+use SparkCore\Http\Request, 
+    SparkCore\Http\Response,
     Spark\Util,
     Spark\Router\Redirect,
     InvalidArgumentException;
@@ -49,16 +49,14 @@ abstract class ActionController implements Controller
      * Gets called by the Front Controller on dispatch
      *
      * @param  \Spark\Controller\HttpRequest  $request
-     * @param  \Spark\Controller\HttpResponse $response
      * @return void
      */
-    final function __invoke(Request $request, Response $response)
+    final function __invoke(Request $request)
     {
-        $this->before($request, $response);
+        $this->before($request);
         
         // Store instances to allow helper methods to access them
         $this->request  = $request;
-        $this->response = $response;
         
         $action = $request->meta("action");
         
@@ -76,20 +74,22 @@ abstract class ActionController implements Controller
             ), 404);
         }
         
-        $this->{$method}($request, $response);
-        $this->after($request, $response);
+        $response = $this->{$method}($request);
+        $this->after($request);
+        
+        return $response;
     }
     
     /**
      * Template Method, run before an action is dispatched
      */
-    function before(Request $request, Response $response)
+    function before(Request $request)
     {}
 
     /**
      * Template Method, ran after an action was dispatched
      */
-    function after(Request $request, Response $response)
+    function after(Request $request)
     {}
     
     protected function redirect($url)
@@ -98,7 +98,7 @@ abstract class ActionController implements Controller
             throw new InvalidArgumentException("URL cannot be an empty string");
         }
         $redirect = new Redirect($url);
-        $redirect($this->request, $this->response);
+        $redirect();
     }
     
     /**
@@ -126,12 +126,9 @@ abstract class ActionController implements Controller
             throw new InvalidArgumentException("Controller has no action named \"$actionName\"");
         }
         
-        $callback = 
-            function(Request $request, Response $response) 
-                use ($instance, $method) 
-            {
-                return $instance->{$method}($request, $response);
-            };
+        $callback = function(Request $request) use ($instance, $method) {
+            return $instance->{$method}($request);
+        };
         
         return $callback;
     }

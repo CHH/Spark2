@@ -16,8 +16,7 @@ namespace SparkCore;
 
 use InvalidArgumentException,
     SplDoublyLinkedList,
-    SparkCore\Request,
-    SparkCore\Response,
+    SparkCore\Http\Request,
     SparkCore\Util\ReturnValues;
 
 class FilterChain implements \IteratorAggregate, \Countable
@@ -33,7 +32,7 @@ class FilterChain implements \IteratorAggregate, \Countable
     /**
      * Appends a filter
      *
-     * Filter should be a function of HttpRequest and HttpResponse.
+     * Filter should be a function of Http\Request and return an Http\Response.
      *
      * @param  callback $filter
      * @return HttpFilterChain
@@ -60,8 +59,8 @@ class FilterChain implements \IteratorAggregate, \Countable
             throw new InvalidArgumentException("You must supply a valid Callback as Filter");
         }
         if (is_array($filter) or is_string($filter)) {
-            $filter = function(HttpRequest $request, HttpResponse $response) use ($filter) {
-                return call_user_func($filter, $request, $response);
+            $filter = function(HttpRequest $request) use ($filter) {
+                return call_user_func($filter, $request);
             };
         }
         if ("bottom" === $position) {
@@ -75,16 +74,7 @@ class FilterChain implements \IteratorAggregate, \Countable
         return $this;
     }
     
-    /**
-     * Assigns a function which gets evaluated on each iteration.
-     *
-     * This function gets called with the HttpRequest and HttpResponse as arguments
-     * and it causes the loop to break if the return value is TRUE
-     *
-     * @param  callback $filterUntil
-     * @return HttpFilters
-     */
-    function filter(Request $request, Response $response)
+    function filter(Request $request)
     {
         return $this->filterUntil($request, $response, function() {
             return false;
@@ -97,7 +87,7 @@ class FilterChain implements \IteratorAggregate, \Countable
      * @param HttpRequest  $request
      * @param HttpResponse $response
      */
-    function __invoke(Request $request, Response $response)
+    function __invoke(Request $request)
     {   
         return $this->filter($request, $response);
     }
@@ -106,11 +96,10 @@ class FilterChain implements \IteratorAggregate, \Countable
      * Executes the filters
      *
      * @param  HttpRequest  $request
-     * @param  HttpResponse $response
      * @param  callback     $until Loop breaks if TRUE is returned by the callback
      * @return SparkCore\Util\ReturnValues Collection of filter return values
      */
-    function filterUntil(Request $request, Response $response, $until)
+    function filterUntil(Request $request, $until)
     {
         if (!is_callable($until)) {
             throw new InvalidArgumentException("No valid callback given");

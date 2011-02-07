@@ -23,5 +23,5 @@ interface Route
      * @param  HttpRequest $request
      * @return mixed Callback
      */
-    function __invoke(\SparkCore\Request $request);
+    function __invoke(\SparkCore\Http\Request $request);
 }

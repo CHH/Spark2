@@ -24,7 +24,7 @@ require_once('Router/RestRoute.php');
 
 use Spark\Router\RestRoute,
 	Spark\Router\Exception,
-    SparkCore\Request,
+    SparkCore\Http\Request,
     Spark\Util,
     SplStack,
     InvalidArgumentException;

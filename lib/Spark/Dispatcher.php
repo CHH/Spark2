@@ -2,16 +2,15 @@
 
 namespace Spark;
 
-use SparkCore\Request,
-    SparkCore\Response;
+use SparkCore\Http\Request;
 
 class Dispatcher
 {
-    function __invoke(Request $request, Response $response)
+    function __invoke(Request $request)
     {
 	    try {
             $callback = $this->validateCallback($request->getCallback());
-	        $callback($request, $response);
+	        $callback($request);
 	        
 		} catch (\Exception $e) {
 		    $response->setException($e);

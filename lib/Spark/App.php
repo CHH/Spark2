@@ -22,8 +22,8 @@ require_once("Dispatcher.php");
 require_once("Router.php");
 require_once('Controller.php');
 
-use SparkCore\Request, 
-    SparkCore\Response,
+use SparkCore\Http\Request, 
+    SparkCore\Http\Response,
     SparkCore\FilterChain,
     Spark\Dispatcher,
     Spark\Util;
@@ -51,10 +51,10 @@ class App implements \SparkCore\Framework
 	{
         $this->preDispatch   = new FilterChain;
         $this->postDispatch  = new FilterChain;
-        $this->errorHandlers = new FilterChain;
         $this->init();
     }
 
+    // TODO: Fix Error handlers
     function setUp(\SparkCore $core)
     {
         $core->append(
