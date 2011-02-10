@@ -47,7 +47,7 @@ class Controller
     static function enable(App $app)
     {
         $filter  = new Controller\CallbackFilter;
-        $filter->getResolver()->setOptions($app->getOptions());
+        $filter->getResolver()->setOptions($app->get());
 
         return $app->before($filter);
     }

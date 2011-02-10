@@ -4,13 +4,26 @@ namespace Spark;
 
 use SparkCore\Http\Request;
 
+function Dispatcher()
+{
+    static $instance;
+    
+    if (null === $instance) {
+        $instance = new Dispatcher;
+    }
+    return $instance;
+}
+
 class Dispatcher
 {
     function __invoke(Request $request)
     {
 	    try {
             $callback = $this->validateCallback($request->getCallback());
-	        return $callback($request);
+	        $response = $callback($request);
+	        
+	        $request->setDispatched();
+	        return $response;
 	        
 		} catch (\Exception $e) {
 		    $response->setException($e);

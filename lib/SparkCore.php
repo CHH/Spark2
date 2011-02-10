@@ -1,18 +1,23 @@
 <?php
 
+require_once "Spark/Util.php";
 require_once "SparkCore/Util.php";
-require_once "SparkCore/Framework.php";
 
-require_once "SparkCore/Http/Header.php";
-require_once "SparkCore/Http/Request.php";
-require_once "SparkCore/Http/Response.php";
+autoload('SparkCore\Exception',         __DIR__ . "/SparkCore/Exception.php");
+autoload('SparkCore\NotFoundException', __DIR__ . "/SparkCore/NotFoundException.php");
 
+autoload('SparkCore\Error', __DIR__ . "/SparkCore/Error.php");
+
+require_once "SparkCore/Http.php";
 require_once "SparkCore/FilterChain.php";
 
 use SparkCore\Http\Request,
+    SparkCore\Http\RequestInterface,
 	SparkCore\Http\Response,
+	SparkCore\Http\ResponseInterface,
 	SparkCore\FilterChain,
-	SparkCore\Framework;
+	SparkCore\Error,
+	SparkCore\NotFoundException;
 
 function SparkCore()
 {
@@ -29,8 +34,8 @@ class SparkCore
     /** @var FilterChain */
 	protected $stack;
 
-	/** @var FilterChain */
-	protected $errorHandlers = array();
+	/** @var SplStack */
+	protected $errorHandlers;
 
 	/** @var Request */
 	protected $request;
@@ -38,28 +43,25 @@ class SparkCore
 	function __construct()
 	{
 		$this->stack = new FilterChain;
+		$this->errorHandlers = new SplStack;
 	}
 
     /**
-     * Runs the Request Handlers
+     * Runs the Middleware
      *
-     * @param string|Framework $framework Class or object which is used to bootstrap
-     *                                    the Request Handler stack
+     * @param  mixed $app Class name or instance of an app to run
      * @return ReturnValues
      */
-    function run($framework = null)
+    function run($app = null)
     {
-        $request  = $this->getRequest();
+        $request = $this->getRequest();
 
-        if (null !== $framework) {
-            if (is_string($framework) and !empty($framework)) {
-                $framework = new $framework;
+        if (null !== $app) {
+            // Try to instantiate if a classname is given
+            if (is_string($app) and class_exists($app)) {
+                $app = new $app;
             }
-            if (!$framework instanceof Framework) {
-                throw new \InvalidArgumentException("Initializers must implement the"
-                    . " SparkCore\Framework Interface");
-            }
-            $framework->setUp($this);
+            $this->add($app);
         }
         
         if (0 === count($this->stack)) {
@@ -67,45 +69,46 @@ class SparkCore
         }
 
 		ob_start();
+	    $response = new Response;
+		
 		try {
 			$returnValues = $this->stack->filterUntil(
 			    $request, array($request, "isDispatched")
 			);
-		} catch (\Exception $e) {
-			foreach ($this->errorHandlers as $handler) {
-			    call_user_func($handler, $e);
-			}
-		}
-	    
-	    $response = new Response;
-	    $response->appendContent(ob_get_clean());
-	    
-	    if (isset($returnValues)) {
-	        foreach ($returnValues as $return) {
-	            if (!$return instanceof Response) {
+			
+			// Aggregate returned responses
+			foreach ($returnValues as $return) {
+	            if (!$return instanceof ResponseInterface) {
 	                continue;
 	            }
                 $response->addHeaders($return->getHeaders());
                 $response->appendContent($return->getContent());
+                $response->setStatus($return->getStatus());
 	        }
-	    }
+	        
+	        if (!$request->isDispatched() or 404 === $response->getStatus()) {
+	            throw new NotFoundException("The requested URL was not found");
+	        }
+		} catch (\Exception $e) {
+			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
+			
+			foreach ($this->errorHandlers as $handler) {
+                call_user_func($handler, $error);
+            }
+		}
+	    
+	    $response->appendContent(ob_get_clean());
 	    $response->send();
 	    return $this;
     }
 	
-    function prepend($middleware)
-	{
-	    if (func_num_args() > 1) {
-            foreach (func_get_args() as $middleware) {
-                $this->stack->prepend($middleware);
-            }
-            return $this;
-	    }
-		$this->stack->prepend($middleware);
-		return $this;
-	}
-	
-	function append($middleware)
+	/**
+	 * Add middleware to the loop
+	 *
+	 * @param  callback $middleware
+	 * @return SparkCore
+	 */
+	function add($middleware)
 	{  
 	    if (func_num_args() > 1) {
             foreach (func_get_args() as $middleware) {
@@ -117,29 +120,60 @@ class SparkCore
 		return $this;
 	}
 	
-	function error($middleware)
+	/**
+	 * Registers an error handler
+	 *
+	 * Error handlers receive as their first and only argument an Error Object which
+	 * holds a message, the request object and the exception if one was thrown.
+	 *
+	 * @param  callback $handler
+	 * @return SparkCore
+	 */
+	function error($handler)
 	{
-		$this->errorHandlers[] = $middleware;
+	    if (!is_callable($handler)) {
+	        throw new InvalidArgumentException("You must supply a callback as error handler");
+	    }
+		$this->errorHandlers->push($handler);
 		return $this;
 	}
-
-    function setErrorHandlers(array $handlers)
+    
+    /**
+     * Add multiple error handlers
+     *
+     * @param  array $handlers List of callbacks
+     * @return SparkCore
+     */
+    function addErrorHandlers(array $handlers)
     {
-        $this->errorHandlers = $handlers;
+        foreach ($handlers as $handler) {
+            $this->error($handler);
+        }
         return $this;
     }
-	
-	function getRequest()
-	{
-		if (null === $this->request) {
-			$this->request = new Request;
-		}
-		return $this->request;
-	}
-	
-	function setRequest(Request $request)
-	{
-		$this->request = $request;
-		return $this;
-	}
+    
+    /**
+     * Returns the request instance
+     *
+     * @return Request
+     */
+    function getRequest()
+    {
+        if (null === $this->request) {
+            $this->request = new Request;
+        }
+        return $this->request;
+    }
+    
+    /**
+     * Inject a custom Request instance
+     *
+     * @param  Request $request
+     * @return SparkCore
+     */
+    function setRequest(RequestInterface $request)
+    {
+        $this->request = $request;
+        return $this;
+    }
 }

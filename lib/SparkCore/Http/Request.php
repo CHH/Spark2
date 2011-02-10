@@ -13,7 +13,7 @@
  */
 namespace SparkCore\Http;
 
-class Request
+class Request implements RequestInterface
 {
     const GET     = "GET";
     const POST    = "POST";
@@ -32,8 +32,35 @@ class Request
     protected $requestUri;
     protected $callback;
 
-    /* application metadata */
+    function param($key)
+    {
+        if (!is_string($key) or empty($key)) {
+            throw new InvalidArgumentException("Key must be a non-empty string");
+        }
+        
+        switch (true) {
+            case $value = $this->meta($key):
+                break;
+            case $value = $this->query($key):
+                break;
+            case $value = $this->post($key);
+                break;
+            case $value = $this->file($key);
+                break;
+            default:
+                $value = null;
+                break;
+        }
+        return $value;
+    }
     
+    /**
+     * Set application metadata
+     *
+     * @param  string|array $spec Either key, a list of key-values, or null (returns all metadata)
+     * @param  mixed $value
+     * @return Request
+     */
     function meta($spec = null, $value = null)
     {
         if (null === $spec) {
@@ -271,10 +298,10 @@ class Request
      * @copyright Copyright (c) 2005-2010 Zend Technologies USA Inc.
      * @license   http://framework.zend.com/license/new-bsd New BSD License
      */
-    function headers($header)
+    function header($key)
     {
         // Try to get it from the $_SERVER array first
-        $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $header));
+        $temp = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
         if (!empty($_SERVER[$temp])) {
             return $_SERVER[$temp];
         }
@@ -283,8 +310,8 @@ class Request
         // Apache
         if (function_exists('apache_request_headers')) {
             $headers = apache_request_headers();
-            if (!empty($headers[$header])) {
-                return $headers[$header];
+            if (!empty($headers[$key])) {
+                return $headers[$key];
             }
         }
         return false;
@@ -314,6 +341,10 @@ class Request
         return $this;
     }
 
+    function hasFormData()
+    {
+    }
+    
     /* Test for HTTP Method */
     function isGet()
     {

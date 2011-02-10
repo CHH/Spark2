@@ -29,6 +29,16 @@ use Spark\Router\RestRoute,
     SplStack,
     InvalidArgumentException;
 
+function Router()
+{
+    static $instance;
+    
+    if (null === $instance) {
+        $instance = new Router;
+    }
+    return $instance;
+}
+
 class Router implements Router\Route
 {
     /** @var SplStack */

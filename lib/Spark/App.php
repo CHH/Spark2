@@ -28,51 +28,41 @@ use SparkCore\Http\Request,
     Spark\Dispatcher,
     Spark\Util;
 
-class App implements \SparkCore\Framework
+class App
 {
-    /** @var Spark\Router */
-	protected $router;
-    
-    /** @var Spark\Dispatcher */
-    protected $dispatcher;
-    
 	/** @var SplQueue */
-	protected $postDispatch;
+	protected $before;
 
     /** @var SplQueue */
-    protected $preDispatch;
+    protected $after;
 
 	/** @var array */
 	protected $options = array();
-
-    protected $errorHandlers;
     
 	final function __construct()
 	{
-        $this->preDispatch   = new FilterChain;
-        $this->postDispatch  = new FilterChain;
+        $this->before = new FilterChain;
+        $this->after  = new FilterChain;
         $this->init();
     }
-
-    // TODO: Fix Error handlers
-    function setUp(\SparkCore $core)
+    
+    function __invoke(Request $request)
     {
-        $core->append(
-            $this->preDispatch, 
-            $this->getRouter(),
-            $this->getDispatcher(),
-            $this->postDispatch
-        );
+        $router = $this->getRouter();
+        $router($request);
 
-        //$core->setErrorHandlers($this->errorHandlers);
+        $this->before->filter($request);
+        
+        $dispatcher = $this->getDispatcher();
+        $response = $dispatcher($request);
+        
+        $this->after->filter($request);
+        return $response;
     }
     
     function init()
     {}
 
-    /**
-     * @alias setOption()
-     */
 	function set($spec, $value = null)
 	{
 	    return $this->setOption($spec, $value);
@@ -84,38 +74,6 @@ class App implements \SparkCore\Framework
             return $this->getOptions();
         }
         return $this->getOption($spec);
-    }
-    
-	/**
-	 * Sets metadata which can be retrieved by modules extending the app 
-	 *
-	 * @param  mixed $spec  Either array of key value pairs or single key
-	 * @param  mixed $value Optional value, if key is a scalar
-	 * @return App
-	 */
-    function setOption($spec, $value = null)
-    {
-        if (is_array($spec)) {
-	        foreach ($spec as $option => $value) {
-	            $this->set($option, $value);
-	        }
-	        return $this;
-	    }
-	    $this->options[$spec] = $value;
-	    return $this;
-    }
-	
-	function getOption($spec = null) 
-	{
-	    if (!isset($this->options[$spec])) {
-	        return null;
-	    }
-	    return $this->options[$spec];
-	}
-    
-    function getOptions()
-    {
-        return $this->options;
     }
 
     function route($block = null)
@@ -138,7 +96,7 @@ class App implements \SparkCore\Framework
      */
     function before($filter)
     {
-        $this->preDispatch->append($filter);
+        $this->before->append($filter);
         return $this;
     }
 
@@ -150,7 +108,7 @@ class App implements \SparkCore\Framework
      */
 	function after($filter)
 	{
-	    $this->postDispatch->append($filter);
+	    $this->after->append($filter);
 	    return $this;
 	}
 
@@ -158,7 +116,7 @@ class App implements \SparkCore\Framework
      * Registers an error handler
      */
     function error($callback) {
-        $this->errorHandlers->append($callback);
+        SparkCore()->error($callback);
         return $this;
     }
 
@@ -174,23 +132,49 @@ class App implements \SparkCore\Framework
             }
             else return;
         };
-        $this->errorHandlers->append($callback);
+        $this->error($callback);
         return $this;
     }
     
 	function getDispatcher()
 	{
-	    if (null === $this->dispatcher) {
-	        $this->dispatcher = new Dispatcher;
-	    }
-	    return $this->dispatcher;
+	    return Dispatcher();
 	}
 
 	function getRouter()
 	{
-	    if (null === $this->router) {
-            $this->router = new Router;
-        }
-	    return $this->router;
+	    return Router();
 	}
+    
+	/**
+	 * Sets metadata which can be retrieved by modules extending the app 
+	 *
+	 * @param  mixed $spec  Either array of key value pairs or single key
+	 * @param  mixed $value Optional value, if key is a scalar
+	 * @return App
+	 */
+    protected function setOption($spec, $value = null)
+    {
+        if (is_array($spec)) {
+	        foreach ($spec as $option => $value) {
+	            $this->set($option, $value);
+	        }
+	        return $this;
+	    }
+	    $this->options[$spec] = $value;
+	    return $this;
+    }
+	
+	protected function getOption($spec = null) 
+	{
+	    if (!isset($this->options[$spec])) {
+	        return null;
+	    }
+	    return $this->options[$spec];
+	}
+    
+    protected function getOptions()
+    {
+        return $this->options;
+    }
 }

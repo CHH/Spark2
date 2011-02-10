@@ -28,7 +28,9 @@ class RestRoute implements Route
 
     /** @var string Compiled regular expression for given route */
     protected $regex;
-
+    
+    protected $constraints = array();
+    
     /** @var array Additional metadata associated with this route */
     protected $metadata = array();
 
@@ -110,6 +112,25 @@ class RestRoute implements Route
     function method($httpMethod = null)
     {
         $this->method = empty($httpMethod) ? null : strtoupper($httpMethod);
+        return $this;
+    }
+    
+    /**
+     * Add constraints to params
+     *
+     * @param  array|string $spec       Either list of param-constraint pairs or name of param
+     * @param  string       $constraint Regular Expression
+     * @return RestRoute
+     */
+    function constrain($spec, $constraint = null)
+    {
+        if (is_array($spec)) {
+            foreach ($spec as $param => $constraint) {
+                $this->constrain($param, $constraint);
+            }
+            return $this;
+        }
+        $this->constraints[$spec] = $constraint;
         return $this;
     }
     

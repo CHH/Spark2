@@ -16,7 +16,7 @@ namespace SparkCore\Http;
 
 use InvalidArgumentException;
 
-class Response
+class Response implements ResponseInterface
 {
     protected $headers = array();
     protected $content = "";
@@ -52,7 +52,7 @@ class Response
         return $this;
     }
     
-    function setContent($content)
+    function setContent($content = "")
     {
         if (!is_string((string) $content)) {
             throw new InvalidArgumentException("Content must be a string");
