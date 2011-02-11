@@ -14,13 +14,10 @@
 
 namespace Spark;
 
-require_once("Util.php");
-
 autoload("Spark\Exception", __DIR__ . "/Exception.php");
 
 require_once("Dispatcher.php");
 require_once("Router.php");
-require_once('Controller.php');
 
 use Spark\Http\Request, 
     Spark\Http\Response,

@@ -18,7 +18,7 @@ autoload("Spark\Error", __DIR__ . "/Spark/Error.php");
 autoload("Spark\FilterChain", __DIR__ . "/Spark/FilterChain.php");
 
 require_once "Spark/Http.php";
-
+require_once('Spark/Controller.php');
 require_once('Spark/App.php');
 
 use Spark\App,
@@ -50,15 +50,21 @@ class Spark
 
     static function run($app)
     {
+        $app = static::factory($app);
+        
+        $request = static::getRequest();
+        return $app($request);
+    }
+    
+    static function factory($app)
+    {
         if (is_string($app) and class_exists($app)) {
-            $app = new App;
+            $app = new $app;
         }
         if (!$app instanceof App) {
             throw new \InvalidArgumentException("App must be an instance of Spark\App");
         }
-        
-        $request = static::getRequest();
-        return $app($request);
+        return $app;       
     }
     
     static function setRequest(Request $request)
