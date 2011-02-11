@@ -2,7 +2,7 @@
 
 namespace Spark\Test;
 
-use SparkCore\Http\Request,
+use Spark\Http\Request,
     Spark\Controller\ActionController;
 
 class TestController extends ActionController

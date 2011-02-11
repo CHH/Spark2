@@ -22,42 +22,87 @@ require_once("Dispatcher.php");
 require_once("Router.php");
 require_once('Controller.php');
 
-use SparkCore\Http\Request, 
-    SparkCore\Http\Response,
-    SparkCore\FilterChain,
+use Spark\Http\Request, 
+    Spark\Http\Response,
+    Spark\Http\NotFoundException,
+    Spark\Http\FilterChain,
+    Spark\Error,
     Spark\Dispatcher,
-    Spark\Util;
+    Spark\Util,
+    SplStack;
 
 class App
 {
-	/** @var SplQueue */
-	protected $before;
-
-    /** @var SplQueue */
-    protected $after;
-
+    /** @var Router */
+    protected $router;
+    
+    /** @var Dispatcher */
+    protected $dispatcher;
+    
+    protected $errorHandlers;
+    
 	/** @var array */
 	protected $options = array();
     
+    /** @var FilterChain holds all middleware */
+    protected $stack;
+    
 	final function __construct()
 	{
-        $this->before = new FilterChain;
-        $this->after  = new FilterChain;
+        $this->stack = new FilterChain;
+        $this->errorHandlers = new SplStack;
+        
+        // Add default middleware
+        $this->stack
+             ->append($this->getRouter())
+             ->append($this->getDispatcher());
+        
         $this->init();
     }
     
     function __invoke(Request $request)
     {
-        $router = $this->getRouter();
-        $router($request);
-
-        $this->before->filter($request);
-        
-        $dispatcher = $this->getDispatcher();
-        $response = $dispatcher($request);
-        
-        $this->after->filter($request);
-        return $response;
+		ob_start();
+	    $response = new Response;
+		
+		try {
+			$returnValues = $this->stack->filterUntil(
+			    $request, array($request, "isDispatched")
+			);
+			
+			// Aggregate returned responses
+			foreach ($returnValues as $return) {
+	            if (!$return instanceof ResponseInterface) {
+	                continue;
+	            }
+                $response->addHeaders($return->getHeaders());
+                $response->appendContent($return->getContent());
+                $response->setStatus($return->getStatus());
+	        }
+	        
+	        if (!$request->isDispatched() or 404 === $response->getStatus()) {
+	            throw new NotFoundException("The requested URL was not found");
+	        }
+	    
+		} catch (\Exception $e) {
+		    if (0 === count($this->errorHandlers)) {
+		        die($e);
+		    }
+		
+			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
+			
+			foreach ($this->errorHandlers as $handler) {
+                call_user_func($handler, $error);
+            }
+		}
+	    
+	    $response->appendContent(ob_get_clean());
+	    
+	    if ($this->get("return_response")) {
+	        return $response;
+	    }
+	    $response->send();
+	    return $this;
     }
     
     function init()
@@ -75,7 +120,14 @@ class App
         }
         return $this->getOption($spec);
     }
-
+    
+    /**
+     * Provides access to routes
+     * 
+     * @param  callback $block Either a callback or NULL, if NULL returns a router instance
+     * @return App|Router If $block is a callback, then it returns the App, if the block
+     *                    is NULL, then it returns a Router instance
+     */
     function route($block = null)
     {
         $router = $this->getRouter();
@@ -96,7 +148,7 @@ class App
      */
     function before($filter)
     {
-        $this->before->append($filter);
+        $this->getDispatcher()->before($filter);
         return $this;
     }
 
@@ -108,7 +160,7 @@ class App
      */
 	function after($filter)
 	{
-	    $this->after->append($filter);
+	    $this->getDispatcher()->after($filter);
 	    return $this;
 	}
 
@@ -116,18 +168,24 @@ class App
      * Registers an error handler
      */
     function error($callback) {
-        SparkCore()->error($callback);
-        return $this;
+        if (!is_callable($handler)) {
+	        throw new InvalidArgumentException("You must supply a callback as error handler");
+	    }
+		$this->errorHandlers->push($handler);
+		return $this;
     }
 
     /**
      * Registers an handler on the error code 404
+     *
+     * @param  callback $callback
+     * @return App
      */
     function notFound($callback) {
-        $callback = function($request, $response) use ($callback) {
-            $e = $response->getException();
+        $callback = function($error) use ($callback) {
+            $e = $error->getException();
             
-            if (404 === $e->getCode() or 404 === $response->statusCode()) {
+            if (404 === $e->getCode()) {
                 call_user_func($callback, $request, $response);
             }
             else return;
@@ -138,12 +196,18 @@ class App
     
 	function getDispatcher()
 	{
-	    return Dispatcher();
+	    if (null === $this->dispatcher) {
+	        $this->dispatcher = new Dispatcher;
+	    }
+	    return $this->dispatcher;
 	}
 
 	function getRouter()
 	{
-	    return Router();
+	    if (null === $this->router) {
+	        $this->router = new Router;
+	    }
+	    return $this->router;
 	}
     
 	/**

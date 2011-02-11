@@ -11,6 +11,8 @@
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
+ 
+/** @namespace */
 namespace Spark;
 
 require_once('Util.php');
@@ -24,20 +26,11 @@ require_once('Router/RestRoute.php');
 
 use Spark\Router\RestRoute,
 	Spark\Router\Exception,
-    SparkCore\Http\Request,
+    Spark\Http\Request,
     Spark\Util,
     SplStack,
+    SplObjectStorage,
     InvalidArgumentException;
-
-function Router()
-{
-    static $instance;
-    
-    if (null === $instance) {
-        $instance = new Router;
-    }
-    return $instance;
-}
 
 class Router implements Router\Route
 {
@@ -47,7 +40,14 @@ class Router implements Router\Route
     /** @var array */
     protected $named = array();
     
+    /** @var string Root of all routes of this router, used for scoping */
     protected $root = "/";
+    
+    /** @var SplObjectStorage */
+    protected $callbacks;
+    
+    /** @var Router\Route */
+    protected $matchedRoute;
     
     function __construct($root = null)
     {
@@ -56,6 +56,7 @@ class Router implements Router\Route
         }
         $this->root   = $root;
         $this->routes = new SplStack;
+        $this->callbacks = new SplObjectStorage;
     }
 
     /**
@@ -63,7 +64,7 @@ class Router implements Router\Route
      */
     function __invoke(Request $request)
     {
-        $this->route($request);
+        return $this->route($request);
     }
     
     /**
@@ -79,26 +80,34 @@ class Router implements Router\Route
         
         foreach ($this->routes as $route) {
             try {
-                $callback = $route($request);
+                $matched = $route($request);
             } catch (\Exception $e) {
-                $callback = false;
+                $matched = false;
             }
-            if (false !== $callback) {
-                $matched = true;
+            if (false !== $matched) {
                 break;
             }
         }
+        
         if (!$matched) {
             throw new Exception("No Route matched", 404);
         }
+        
+        $this->matchedRoute = $route;
+        
+        if ($route instanceof self) {
+            $callback = $matched;
+        } else {
+            $callback = $this->getCallback($route);
+        }
+        
         $request->setCallback($callback);
+        
         return $callback;
     }
     
     /**
      * Registers a custom route instance with the router.
-     * If the route implements the NamedRoute interface and has a name, then it also
-     * gets registered with the named routes.
      *
      * @param  Spark\Router\Route $route
      * @return Router
@@ -109,6 +118,11 @@ class Router implements Router\Route
         return $this;
     }
 
+    function getMatchedRoute()
+    {
+        return $this->matchedRoute;
+    }    
+    
     /**
      * Starts a routing scope
      *
@@ -134,48 +148,44 @@ class Router implements Router\Route
     /**
      * Binds a callback to the route and registers the route with the router
      *
-     * @param  mixed $routeSpec Either Array of options or route as string
-     *                          For a complete list of options see 
-     *                          {@see \Spark\Router\RestRoute::__construct()}
+     * @param  mixed $routeSpec Route as string
      * @param  mixed $callback  Optional Callback, mandatory if route is given as string
      * @return Router
      */
-    function match($routeSpec, $callback = null)
+    function match($routeSpec, $callback)
     {
         $route = $this->createRoute($routeSpec);
-        if (null !== $callback) {
-            $route->to($callback);
-        }
+        $this->addCallback($route, $callback);
         $this->addRoute($route);
         return $route;
     }
 
-    function get($routeSpec, $callback = null)
+    function get($routeSpec, $callback)
     {
         return $this->matchMethod("GET", $routeSpec, $callback);
     }
     
-    function post($routeSpec, $callback = null)
+    function post($routeSpec, $callback)
     {
         return $this->matchMethod("POST", $routeSpec, $callback);
     }
     
-    function put($routeSpec, $callback = null)
+    function put($routeSpec, $callback)
     {
         return $this->matchMethod("PUT", $routeSpec, $callback);
     }
     
-    function delete($routeSpec, $callback = null)
+    function delete($routeSpec, $callback)
     {
         return $this->matchMethod("DELETE", $routeSpec, $callback);
     }
     
-    function head($routeSpec, $callback = null)
+    function head($routeSpec, $callback)
     {
         return $this->matchMethod("HEAD", $routeSpec, $callback);
     }
 
-    function options($routeSpec, $callback = null)
+    function options($routeSpec, $callback)
     {
         return $this->matchMethod("OPTIONS", $routeSpec, $callback);
     }
@@ -190,7 +200,7 @@ class Router implements Router\Route
      * @param  mixed  $callback
      * @return Router
      */
-    protected function matchMethod($httpMethod, $routeSpec, $callback = null)
+    protected function matchMethod($httpMethod, $routeSpec, $callback)
     {
         $httpMethod = strtoupper($httpMethod);
 
@@ -212,5 +222,16 @@ class Router implements Router\Route
         $route = new RestRoute(rtrim($this->root, "/") . "/" . ltrim($route, "/"));
         $route->meta("scope", trim($this->root, "/"));
         return $route;
+    }
+    
+    protected function addCallback(Router\Route $route, $callback)
+    {
+        $this->callbacks->attach($route, $callback);
+        return $this;
+    }
+    
+    protected function getCallback(Router\Route $route)
+    {
+        return $this->callbacks[$route];
     }
 }

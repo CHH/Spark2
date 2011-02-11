@@ -21,7 +21,7 @@ interface Route
      * matched, or return callback if the route has matched
      *
      * @param  HttpRequest $request
-     * @return mixed Callback
+     * @return bool
      */
-    function __invoke(\SparkCore\Http\Request $request);
+    function __invoke(\Spark\Http\Request $request);
 }

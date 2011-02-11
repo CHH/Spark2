@@ -12,12 +12,12 @@
  * @license    MIT License
  */
 
-namespace SparkCore;
+namespace Spark\Http;
 
 use InvalidArgumentException,
     SplDoublyLinkedList,
-    SparkCore\Http\Request,
-    SparkCore\Util\ReturnValues;
+    Spark\Http\Request,
+    Spark\Util\ReturnValues;
 
 class FilterChain implements \IteratorAggregate, \Countable
 {
@@ -58,19 +58,24 @@ class FilterChain implements \IteratorAggregate, \Countable
         if (!is_callable($filter)) {
             throw new InvalidArgumentException("You must supply a valid Callback as Filter");
         }
+        
         if (is_array($filter) or is_string($filter)) {
             $filter = function(HttpRequest $request) use ($filter) {
                 return call_user_func($filter, $request);
             };
         }
+        
         if ("bottom" === $position) {
             $this->filters->push($filter);
+            
         } else if ("top" === $position) {
             $this->filters->unshift($filter);
+            
         } else {
             throw new InvalidArgumentException("Invalid position $position, only "
                 . "top and bottom are supported.");
         }
+        
         return $this;
     }
     

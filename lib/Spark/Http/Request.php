@@ -11,7 +11,7 @@
  * @copyright  Copyright (c) 2011 Christoph Hochstrasser
  * @license    MIT License
  */
-namespace SparkCore\Http;
+namespace Spark\Http;
 
 class Request implements RequestInterface
 {

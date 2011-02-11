@@ -12,7 +12,7 @@
  * @license    MIT License
  */
 
-namespace SparkCore\Http;
+namespace Spark\Http;
 
 use InvalidArgumentException;
 

@@ -16,7 +16,7 @@ namespace Spark\Router;
 
 use InvalidArgumentException,
     Spark\Util,
-    SparkCore\Http\Request;
+    Spark\Http\Request;
 
 class RestRoute implements Route
 {
@@ -33,9 +33,6 @@ class RestRoute implements Route
     
     /** @var array Additional metadata associated with this route */
     protected $metadata = array();
-
-    /** @var callback|string */
-    protected $callback;    
 
     /** @var string */
     protected $urlDelimiter = "/";
@@ -88,13 +85,7 @@ class RestRoute implements Route
         foreach ($meta as $key => $value) {
             $request->meta($key, $value);
         }
-        return $this->callback;
-    }
-
-    function to($callback)
-    {
-        $this->callback = $callback;
-        return $this;
+        return true;
     }
     
     function meta($spec, $value = null)

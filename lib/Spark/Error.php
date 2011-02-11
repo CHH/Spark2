@@ -1,9 +1,8 @@
 <?php
 
-namespace SparkCore;
+namespace Spark;
 
-use Exception,
-    SparkCore\Http\Request;
+use Spark\Http\RequestInterface;
 
 class Error
 {
@@ -11,7 +10,7 @@ class Error
     protected $exception;
     protected $request;
     
-    function __construct($msg, RequestInterface $request, Exception $exception = null)
+    function __construct($msg, RequestInterface $request, \Exception $exception = null)
     {
         $this->msg = $msg;
         $this->request = $request;

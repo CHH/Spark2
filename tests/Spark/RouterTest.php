@@ -2,7 +2,7 @@
 
 namespace Spark\Test;
 
-use SparkCore\Http\Request, 
+use Spark\Http\Request, 
     Spark\Router,
     Spark\Router\RestRoute,
     Spark\Util,
@@ -35,7 +35,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $request->setRequestUri("/users");
 
-        $router->match("/users(/:id)?")->to("index#index")->meta("id", "foo");
+        $router->match("/users(/:id)?", "index#index")->meta("id", "foo");
 
         $router->route($request);
         $this->assertEquals("foo", $request->meta("id"));
@@ -54,7 +54,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $request->setRequestUri("/users/23");
 
-        $router->match("/users/:id")->to("index#index")->meta("foo", "bar");
+        $router->match("/users/:id", "index#index")->meta("foo", "bar");
         
         $router($request);
 
@@ -108,7 +108,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $router = $this->router;
         
-        $router->match("/users/:name")->to("users#view")->name("users_route");
+        $router->match("/users/:name", "users#view")->name("users_route");
         
         $this->assertInstanceOf(
             "\Spark\Router\RestRoute", $router->getRoute("users_route")
@@ -136,7 +136,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         });
         
         $callback = $router->route($request);
-        $callback($request);
+        call_user_func($callback, $request);
     }
     
     function testRegistersScopeNameAsMetadataWithRoute()

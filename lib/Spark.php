@@ -11,10 +11,18 @@
  * @copyright  Copyright (c) 2010 Christoph Hochstrasser
  * @license    MIT License
  */
-require_once('SparkCore.php');
+require_once "Spark/Util.php";
+
+autoload("Spark\NotFoundException", __DIR__ . "/Spark/NotFoundException.php");
+autoload("Spark\Error", __DIR__ . "/Spark/Error.php");
+autoload("Spark\FilterChain", __DIR__ . "/Spark/FilterChain.php");
+
+require_once "Spark/Http.php";
+
 require_once('Spark/App.php');
 
-use Spark\App;
+use Spark\App,
+    Spark\Http\Request;
 
 /**
  * Implements a Singleton for Spark\App
@@ -34,4 +42,35 @@ function Spark(App $app = null)
         }
     }
     return $instance;
+}
+
+class Spark
+{
+    static protected $request;
+
+    static function run($app)
+    {
+        if (is_string($app) and class_exists($app)) {
+            $app = new App;
+        }
+        if (!$app instanceof App) {
+            throw new \InvalidArgumentException("App must be an instance of Spark\App");
+        }
+        
+        $request = static::getRequest();
+        $app($request);
+    }
+    
+    static function setRequest(Request $request)
+    {
+        static::$request = $request;
+    }
+    
+    static function getRequest()
+    {
+        if (null === static::$request) {
+            static::$request = new Request;
+        }
+        return static::$request;
+    }
 }

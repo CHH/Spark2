@@ -1,6 +1,6 @@
 <?php
 
-namespace SparkCore\Http;
+namespace Spark\Http;
 
 interface RequestInterface
 {

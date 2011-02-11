@@ -1,6 +1,6 @@
 <?php
 
-namespace SparkCore\Util;
+namespace Spark\Util;
 
 class ReturnValues extends \SplStack
 {

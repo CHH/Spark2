@@ -31,7 +31,7 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $app = $this->app;
         $app->set("foo", "bar");
         
-        $this->assertEquals("bar", $app->getOption("foo"));
+        $this->assertEquals("bar", $app->get("foo"));
     }
     
     function testSetTakesArrayOfOptions()
@@ -45,8 +45,8 @@ class AppTest extends \PHPUnit_Framework_TestCase
         
         $app->set($values);
         
-        $this->assertEquals("bar", $app->getOption("foo"));
-        $this->assertEquals("baz", $app->getOption("bar"));
+        $this->assertEquals("bar", $app->get("foo"));
+        $this->assertEquals("baz", $app->get("bar"));
         
         return $values;
     }
@@ -60,7 +60,6 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $app->set($values);
         
         $this->assertEquals($values, $app->get());
-        $this->assertEquals($values, $app->getOptions());
     }
     
     function testContainsRouterInstance()

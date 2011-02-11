@@ -17,8 +17,8 @@
 
 namespace Spark\Controller;
 
-use SparkCore\Http\Request, 
-    SparkCore\Http\Response,
+use Spark\Http\Request, 
+    Spark\Http\Response,
     Spark\Util,
     Spark\Router\Redirect,
     InvalidArgumentException;

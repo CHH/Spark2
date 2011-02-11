@@ -45,7 +45,10 @@ class ClassLoader
 		if (!isset($this->autoloadable[$symbol])) {
 	        return false;
 	    }
-	    require($this->autoloadable[$symbol]);
+	    if (!$file = realpath($this->autoloadable[$symbol])) {
+	        throw new \UnexpectedValueException("$file does not exist");
+	    }
+	    require($file);
 	}
 	
 	function register()

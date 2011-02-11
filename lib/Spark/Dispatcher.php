@@ -2,32 +2,46 @@
 
 namespace Spark;
 
-use SparkCore\Http\Request;
-
-function Dispatcher()
-{
-    static $instance;
-    
-    if (null === $instance) {
-        $instance = new Dispatcher;
-    }
-    return $instance;
-}
+use Spark\Http\Request,
+    Spark\Http\FilterChain;
 
 class Dispatcher
 {
+    protected $before;
+    protected $after;    
+    
+    function __construct()
+    {
+        $this->before = new FilterChain;
+        $this->after  = new FilterChain; 
+    }
+    
     function __invoke(Request $request)
     {
-	    try {
-            $callback = $this->validateCallback($request->getCallback());
-	        $response = $callback($request);
-	        
-	        $request->setDispatched();
-	        return $response;
-	        
-		} catch (\Exception $e) {
-		    $response->setException($e);
-		}
+        $callback = $this->validateCallback($request->getCallback());
+        
+        $this->before->filter($request);
+        $response = $callback($request);
+        $this->after->filter($request);
+        
+        $request->setDispatched();
+        return $response;
+    }
+    
+    function before($callback = null)
+    {
+        if (null === $callback) {
+            return $this->before;
+        }
+        return $this->before->append($callback);
+    }
+    
+    function after($callback = null)
+    {
+        if (null === $callback) {
+            return $this->after;
+        }
+        $this->after->append($callback);
     }
     
     /**
