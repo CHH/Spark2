@@ -47,6 +47,8 @@ class App
     /** @var FilterChain holds all middleware */
     protected $stack;
     
+    protected $response;
+    
 	final function __construct()
 	{
         $this->stack = new FilterChain;
@@ -62,9 +64,9 @@ class App
     
     function __invoke(Request $request)
     {
-		ob_start();
-	    $response = new Response;
+	    $response = $this->getResponse();
 		
+		ob_start();
 		try {
 			$returnValues = $this->stack->filterUntil(
 			    $request, array($request, "isDispatched")
@@ -85,8 +87,9 @@ class App
 	        }
 	    
 		} catch (\Exception $e) {
+		    // Let the Exception bubble up if no error handlers are registered
 		    if (0 === count($this->errorHandlers)) {
-		        die($e);
+		        throw $e;
 		    }
 		
 			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
@@ -194,6 +197,11 @@ class App
         return $this;
     }
     
+    /**
+     * Returns a Dispatcher instance
+     *
+     * @return Dispatcher
+     */
 	function getDispatcher()
 	{
 	    if (null === $this->dispatcher) {
@@ -201,7 +209,12 @@ class App
 	    }
 	    return $this->dispatcher;
 	}
-
+    
+    /**
+     * Returns a Router instance
+     *
+     * @return Router
+     */
 	function getRouter()
 	{
 	    if (null === $this->router) {
@@ -209,6 +222,20 @@ class App
 	    }
 	    return $this->router;
 	}
+    
+    function setResponse(\Spark\Http\ResponseInterface $response)
+    {
+        $this->response = $response;
+        return $this;
+    }
+    
+    function getResponse()
+    {
+        if (null === $this->response) {
+            $this->response = new Response;
+        }
+        return $this->response;
+    }
     
 	/**
 	 * Sets metadata which can be retrieved by modules extending the app 

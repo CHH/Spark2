@@ -58,7 +58,7 @@ class Spark
         }
         
         $request = static::getRequest();
-        $app($request);
+        return $app($request);
     }
     
     static function setRequest(Request $request)
