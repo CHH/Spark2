@@ -12,7 +12,7 @@
  * @license    MIT License
  */
 
-namespace Spark\Http;
+namespace Spark\Util;
 
 use InvalidArgumentException,
     SplDoublyLinkedList,
@@ -39,7 +39,11 @@ class FilterChain implements \IteratorAggregate, \Countable
      */
     function append($filter)
     {
-        return $this->add("bottom", $filter);
+        if (!is_callable($filter)) {
+            throw new InvalidArgumentException("You must supply a valid Callback as Filter");
+        }
+        $this->filters->push($filter);
+        return $this;
     }
     
     /**
@@ -49,39 +53,17 @@ class FilterChain implements \IteratorAggregate, \Countable
      * @return HttpFilterChain
      */
     function prepend($filter)
-    {
-        return $this->add("top", $filter);
-    }
-    
-    protected function add($position, $filter)
-    {
+    {   
         if (!is_callable($filter)) {
             throw new InvalidArgumentException("You must supply a valid Callback as Filter");
         }
-        
-        if (is_array($filter) or is_string($filter)) {
-            $filter = function(HttpRequest $request) use ($filter) {
-                return call_user_func($filter, $request);
-            };
-        }
-        
-        if ("bottom" === $position) {
-            $this->filters->push($filter);
-            
-        } else if ("top" === $position) {
-            $this->filters->unshift($filter);
-            
-        } else {
-            throw new InvalidArgumentException("Invalid position $position, only "
-                . "top and bottom are supported.");
-        }
-        
+        $this->filters->unshift($filter);
         return $this;
     }
     
-    function filter(Request $request)
+    function filter(array $argv)
     {
-        return $this->filterUntil($request, function() {
+        return $this->filterUntil($argv, function() {
             return false;
         });
     }
@@ -89,22 +71,21 @@ class FilterChain implements \IteratorAggregate, \Countable
     /**
      * Allows a filter chain to be used as filter inside another filter chain
      *
-     * @param HttpRequest  $request
-     * @param HttpResponse $response
+     * @param array $argv Array of filter arguments
      */
-    function __invoke(Request $request)
+    function __invoke(array $argv)
     {   
-        $this->filter($request);
+        return $this->filter($request);
     }
     
     /**
      * Executes the filters
      *
-     * @param  HttpRequest  $request
+     * @param  array        $argv  Array of filter arguments
      * @param  callback     $until Loop breaks if TRUE is returned by the callback
      * @return SparkCore\Util\ReturnValues Collection of filter return values
      */
-    function filterUntil(Request $request, $until)
+    function filterUntil(array $argv, $until)
     {
         if (!is_callable($until)) {
             throw new InvalidArgumentException("No valid callback given");
@@ -113,9 +94,9 @@ class FilterChain implements \IteratorAggregate, \Countable
         $return = new ReturnValues;
 
         foreach ($this->filters as $filter) {
-            $return->push($filter($request));
+            $return->push(call_user_func_array($filter, $argv));
             
-            if (true === call_user_func($until, $request)) {
+            if (true === call_user_func_array($until, $argv)) {
                 break;
             }
         }
