@@ -33,5 +33,7 @@ function autoload($symbol, $require)
 
 autoload('Spark\Util\ArrayObject',  __DIR__ . '/Util/ArrayObject.php');
 autoload('Spark\Util\StringObject', __DIR__ . '/Util/StringObject.php');
+autoload('Spark\Util\StringExpression', __DIR__ . '/Util/StringExpression.php');
 autoload('Spark\Util\Options',      __DIR__ . '/Util/Options.php');
-autoload('Spark\Util\ReturnValues',  __DIR__ . '/Util/ReturnValues.php');
+autoload('Spark\Util\ReturnValues', __DIR__ . '/Util/ReturnValues.php');
+autoload('Spark\Util\FilterChain',  __DIR__ . '/Util/FilterChain.php');

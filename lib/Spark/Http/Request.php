@@ -13,7 +13,7 @@
  */
 namespace Spark\Http;
 
-class Request implements RequestInterface
+class Request
 {
     const GET     = "GET";
     const POST    = "POST";
@@ -31,7 +31,12 @@ class Request implements RequestInterface
     
     protected $requestUri;
     protected $callback;
-
+    
+    function params()
+    {
+        return $this->meta + $_REQUEST + $_FILES + $_COOKIE;
+    }
+    
     function param($key)
     {
         if (!is_string($key) or empty($key)) {

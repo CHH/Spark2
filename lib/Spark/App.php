@@ -22,10 +22,10 @@ require_once("Router.php");
 use Spark\Http\Request, 
     Spark\Http\Response,
     Spark\Http\NotFoundException,
-    Spark\Http\FilterChain,
     Spark\Error,
     Spark\Dispatcher,
     Spark\Util,
+    Spark\Util\FilterChain,
     SplStack;
 
 class App
@@ -66,7 +66,7 @@ class App
 		ob_start();
 		try {
 			$returnValues = $this->stack->filterUntil(
-			    $request, array($request, "isDispatched")
+			    array($request), array($request, "isDispatched")
 			);
 			
 			// Aggregate returned responses
@@ -220,7 +220,7 @@ class App
 	    return $this->router;
 	}
     
-    function setResponse(\Spark\Http\ResponseInterface $response)
+    function setResponse(Response $response)
     {
         $this->response = $response;
         return $this;

@@ -16,7 +16,8 @@ namespace Spark\Router;
 
 use InvalidArgumentException,
     Spark\Util,
-    Spark\Http\Request;
+    Spark\Http\Request,
+    Spark\Router\StringExpression;
 
 class RestRoute implements Route
 {
@@ -26,9 +27,6 @@ class RestRoute implements Route
     /** @var string Raw route string */
     protected $route;
 
-    /** @var string Compiled regular expression for given route */
-    protected $regex;
-    
     protected $constraints = array();
     
     /** @var array Additional metadata associated with this route */
@@ -51,7 +49,6 @@ class RestRoute implements Route
     function __construct($route)
     {
         $this->route = rtrim($route, "/");
-        $this->parseStrExp();
     }
     
     function __invoke(Request $request)
@@ -62,8 +59,8 @@ class RestRoute implements Route
         
         $requestUri = rtrim($request->getRequestUri(), $this->urlDelimiter);
         
-        $regex  = $this->regex;
-        $result = preg_match_all($regex, $requestUri, $matches);
+        $exp = new StringExpression($this->route, $this->constraints);
+        $result = preg_match_all($exp->toRegExp(), $requestUri, $matches);
         
         if (!$result) {
             return false;
@@ -123,19 +120,5 @@ class RestRoute implements Route
         }
         $this->constraints[$spec] = $constraint;
         return $this;
-    }
-    
-    protected function parseStrExp()
-    {
-        $route = $this->route;
-        $route = rtrim($route, $this->urlDelimiter);
-        
-        $alnum    = "[a-zA-Z0-9\_\-]";
-        $pattern  = "/\:($alnum+)/";
-        
-        $regex = preg_replace(
-            $pattern, "(?P<$1>[^/]+)", $route
-        );
-        $this->regex = "#^" . $regex . "$#";
     }
 }

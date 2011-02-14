@@ -18,8 +18,8 @@ namespace Spark;
 require_once('Util.php');
 
 autoload('Spark\Router\Exception',  __DIR__ . '/Router/Exception.php');
-autoload('Spark\Router\NamedRoute', __DIR__ . '/Router/NamedRoute.php');
 autoload('Spark\Router\Redirect',   __DIR__ . '/Router/Redirect.php');
+autoload('Spark\Router\StringExpression', __DIR__ . '/Router/StringExpression.php');
 
 require_once('Router/Route.php');
 require_once('Router/RestRoute.php');
@@ -36,9 +36,6 @@ class Router implements Router\Route
 {
     /** @var SplStack */
     protected $routes;
-    
-    /** @var array */
-    protected $named = array();
     
     /** @var string Root of all routes of this router, used for scoping */
     protected $root = "/";

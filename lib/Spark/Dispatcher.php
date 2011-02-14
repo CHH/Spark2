@@ -1,13 +1,17 @@
 <?php
 
+/** @namespace */
 namespace Spark;
 
 use Spark\Http\Request,
-    Spark\Http\FilterChain;
+    Spark\Util\FilterChain;
 
 class Dispatcher
 {
+    /** @var FilterChain */
     protected $before;
+    
+    /** @var FilterChain */
     protected $after;    
     
     function __construct()
@@ -20,9 +24,9 @@ class Dispatcher
     {
         $callback = $this->validateCallback($request->getCallback());
         
-        $this->before->filter($request);
+        $this->before->filter(array($request));
         $response = $callback($request);
-        $this->after->filter($request);
+        $this->after->filter(array($request));
         
         $request->setDispatched();
         return $response;

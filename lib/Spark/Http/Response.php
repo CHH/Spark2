@@ -16,7 +16,7 @@ namespace Spark\Http;
 
 use InvalidArgumentException;
 
-class Response implements ResponseInterface
+class Response
 {
     protected $headers = array();
     protected $content = "";
