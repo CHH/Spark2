@@ -14,11 +14,6 @@
 
 namespace Spark;
 
-autoload("Spark\Exception", __DIR__ . "/Exception.php");
-
-require_once("Dispatcher.php");
-require_once("Router.php");
-
 use Spark\Http\Request, 
     Spark\Http\Response,
     Spark\Http\NotFoundException,
@@ -36,6 +31,7 @@ class App
     /** @var Dispatcher */
     protected $dispatcher;
     
+    /** @var SplStack */
     protected $errorHandlers;
     
 	/** @var array */
@@ -44,7 +40,7 @@ class App
     /** @var FilterChain holds all middleware */
     protected $stack;
     
-    /** @var Spark\Http\Response */
+    /** @var Response */
     protected $response;
     
 	final function __construct()
@@ -60,6 +56,12 @@ class App
         $this->init();
     }
     
+    /**
+     * Dispatches the request and sends the Response
+     *
+     * @param  Request $request 
+     * @return App|Response Returns the response if "return_response" is TRUE
+     */
     function __invoke(Request $request)
     {
 	    $response = $this->getResponse();
@@ -106,14 +108,30 @@ class App
 	    return $this;
     }
     
+    /**
+     * Template Method which can be used to initialize Subclasses
+     */
     function init()
     {}
-
+    
+    /**
+     * Sets an option
+     * 
+     * @param  string|array $spec Either list of key-values or name of the key
+     * @param  mixed $value
+     * @return App
+     */
 	function set($spec, $value = null)
 	{
 	    return $this->setOption($spec, $value);
 	}
     
+    /**
+     * Get an option
+     *
+     * @param  mixed $spec Returns the value of the option or all options if NULL
+     * @return mixed
+     */
     function get($spec = null)
     {
         if (null === $spec) {

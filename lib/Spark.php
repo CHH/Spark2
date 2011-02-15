@@ -8,17 +8,18 @@
  * @category   Spark
  * @package    Core
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 require_once "Spark/Util.php";
 
-autoload("Spark\NotFoundException", __DIR__ . "/Spark/NotFoundException.php");
-autoload("Spark\Error", __DIR__ . "/Spark/Error.php");
-autoload("Spark\FilterChain", __DIR__ . "/Spark/FilterChain.php");
+autoload("Spark\Exception",  __DIR__ . "/Spark/Exception.php");
+autoload("Spark\Error",      __DIR__ . "/Spark/Error.php");
+autoload("Spark\Dispatcher", __DIR__ . "/Spark/Dispatcher.php");
 
 require_once "Spark/Http.php";
 require_once('Spark/Controller.php');
+require_once('Spark/Router.php');
 require_once('Spark/App.php');
 
 use Spark\App,
@@ -46,8 +47,15 @@ function Spark(App $app = null)
 
 class Spark
 {
+    /** @var Request */
     static protected $request;
 
+    /**
+     * Instantiates the given app and calls it with an HTTP Request 
+     *
+     * @param  string|App $app Class name or App instance
+     * @return App
+     */
     static function run($app)
     {
         $app = static::factory($app);
@@ -56,6 +64,12 @@ class Spark
         return $app($request);
     }
     
+    /**
+     * Instantiates the given App class
+     *
+     * @param  string $app Class name of a App subclass
+     * @return App
+     */
     static function factory($app)
     {
         if (is_string($app) and class_exists($app)) {
