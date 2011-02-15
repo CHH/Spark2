@@ -123,7 +123,14 @@ class App
      */
 	function set($spec, $value = null)
 	{
-	    return $this->setOption($spec, $value);
+	    if (is_array($spec)) {
+	        foreach ($spec as $option => $value) {
+	            $this->options[$option] = $value;
+	        }
+	        return $this;
+	    }
+	    $this->options[$spec] = $value;
+	    return $this;
 	}
     
     /**
@@ -135,9 +142,9 @@ class App
     function get($spec = null)
     {
         if (null === $spec) {
-            return $this->getOptions();
+            return $this->options;
         }
-        return $this->getOption($spec);
+        return !empty($this->options[$spec]) ? $this->options[$spec] : null;
     }
     
     /**
@@ -252,36 +259,4 @@ class App
 	    }
 	    return $this->dispatcher;
 	}
-    
-	/**
-	 * Sets metadata which can be retrieved by modules extending the app 
-	 *
-	 * @param  mixed $spec  Either array of key value pairs or single key
-	 * @param  mixed $value Optional value, if key is a scalar
-	 * @return App
-	 */
-    protected function setOption($spec, $value = null)
-    {
-        if (is_array($spec)) {
-	        foreach ($spec as $option => $value) {
-	            $this->set($option, $value);
-	        }
-	        return $this;
-	    }
-	    $this->options[$spec] = $value;
-	    return $this;
-    }
-	
-	protected function getOption($spec = null) 
-	{
-	    if (!isset($this->options[$spec])) {
-	        return null;
-	    }
-	    return $this->options[$spec];
-	}
-    
-    protected function getOptions()
-    {
-        return $this->options;
-    }
 }
