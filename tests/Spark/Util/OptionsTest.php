@@ -4,7 +4,7 @@ namespace Spark\Test\Util;
 
 require_once TESTS . "/Spark/_data/SampleClass.php";
 
-use Spark\Util\Options,
+use Spark\Util,
     Spark\Test\SampleClass;
 
 class OptionsTest extends \PHPUnit_Framework_TestCase
@@ -18,7 +18,7 @@ class OptionsTest extends \PHPUnit_Framework_TestCase
             "bar"     => "baz"
         );
         
-        Options::setOptions($sample, $options);
+        Util\set_options($sample, $options);
         
         $this->assertEquals($options["foo_bar"], $sample->fooBar);
         $this->assertEquals($options["bar"], $sample->bar);

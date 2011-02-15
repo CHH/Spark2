@@ -16,7 +16,6 @@
 namespace Spark\Controller;
 
 use Spark\Util,
-    Spark\Util\Options, 
     Spark\Http\Request;
 
 /**
@@ -43,7 +42,7 @@ class StandardResolver implements Resolver
 
     public function setOptions(array $options)
     {
-        Options::setOptions($this, $options);
+        Util\set_options($this, $options);
         return $this;
     }
 
