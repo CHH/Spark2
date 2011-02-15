@@ -1,6 +1,6 @@
 <?php
 /**
- * Holds filters which filter request and response objects
+ * A generic Filter chain implementation
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.

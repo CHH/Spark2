@@ -1,6 +1,6 @@
 <?php
 /**
- * Spark Framework
+ * A simple Utility for setting options on objects
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.

@@ -1,8 +1,20 @@
 <?php
+/**
+ * Error Object which contains references to the last request and the occured exception
+ * 
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.txt.
+ *
+ * @category   Spark
+ * @package    Spark_App
+ * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
+ * @copyright  Copyright (c) Christoph Hochstrasser
+ * @license    MIT License
+ */
 
 namespace Spark;
 
-use Spark\Http\RequestInterface;
+use Spark\Http\Request;
 
 class Error
 {
@@ -10,7 +22,7 @@ class Error
     protected $exception;
     protected $request;
     
-    function __construct($msg, RequestInterface $request, \Exception $exception = null)
+    function __construct($msg, Request $request, \Exception $exception = null)
     {
         $this->msg = $msg;
         $this->request = $request;

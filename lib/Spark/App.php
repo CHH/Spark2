@@ -6,9 +6,9 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_App
+ * @package    Spark_Util
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2011 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 
@@ -44,6 +44,7 @@ class App
     /** @var FilterChain holds all middleware */
     protected $stack;
     
+    /** @var Spark\Http\Response */
     protected $response;
     
 	final function __construct()
@@ -195,19 +196,6 @@ class App
     }
     
     /**
-     * Returns a Dispatcher instance
-     *
-     * @return Dispatcher
-     */
-	function getDispatcher()
-	{
-	    if (null === $this->dispatcher) {
-	        $this->dispatcher = new Dispatcher;
-	    }
-	    return $this->dispatcher;
-	}
-    
-    /**
      * Returns a Router instance
      *
      * @return Router
@@ -233,6 +221,19 @@ class App
         }
         return $this->response;
     }
+    
+    /**
+     * Returns a Dispatcher instance
+     *
+     * @return Dispatcher
+     */
+	protected function getDispatcher()
+	{
+	    if (null === $this->dispatcher) {
+	        $this->dispatcher = new Dispatcher;
+	    }
+	    return $this->dispatcher;
+	}
     
 	/**
 	 * Sets metadata which can be retrieved by modules extending the app 

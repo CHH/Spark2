@@ -8,7 +8,7 @@
  * @category   Spark
  * @package    Spark_Controller
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2011 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 

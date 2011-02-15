@@ -7,7 +7,7 @@
  *
  * @category   Spark
  * @package    Spark_Controller
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 

@@ -9,7 +9,7 @@
  * @category   Spark
  * @package    Spark_Controller
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
- * @copyright  Copyright (c) 2011 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 
@@ -22,7 +22,7 @@ use Spark\Util,
 /**
  * @category   Spark
  * @package    Spark_Controller
- * @copyright  Copyright (c) 2010 Christoph Hochstrasser
+ * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 class StandardResolver implements Resolver
