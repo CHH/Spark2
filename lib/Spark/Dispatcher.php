@@ -94,8 +94,8 @@ class Dispatcher
         }
         
         if (is_array($callback) or is_string($callback)) {
-            $callback = function($request, $response) use ($callback) {
-                return call_user_func($callback, $request, $response);
+            $callback = function($request) use ($callback) {
+                return call_user_func($callback, $request);
             };
         }
         return $callback;

@@ -20,6 +20,7 @@ autoload("Spark\Dispatcher", __DIR__ . "/Spark/Dispatcher.php");
 require_once "Spark/Http.php";
 require_once('Spark/Controller.php');
 require_once('Spark/Router.php');
+require_once('Spark/View.php');
 require_once('Spark/App.php');
 
 use Spark\App,

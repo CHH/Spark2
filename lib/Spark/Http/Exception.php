@@ -1,6 +1,6 @@
 <?php
 /**
- * Http Package
+ * An Interface for tagging Exceptions of the Http Package
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
@@ -11,10 +11,8 @@
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
+ 
+namespace Spark\Http;
 
-autoload("Spark\Http\Exception",         __DIR__ . "/Http/Exception.php");
-autoload("Spark\Http\NotFoundException", __DIR__ . "/Http/NotFoundException.php");
-
-require_once "Http/Header.php";
-require_once "Http/Request.php";
-require_once "Http/Response.php";
+interface Exception extends \Spark\Exception
+{}

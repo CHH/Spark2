@@ -40,13 +40,16 @@ class App
     /** @var FilterChain holds all middleware */
     protected $stack;
     
+    /** @var Spark\View\Renderer */
+    protected $viewRenderer;
+    
     /** @var Response */
     protected $response;
     
 	final function __construct()
 	{
         $this->stack = new FilterChain;
-        $this->errorHandlers = new SplStack;
+        $this->errorHandlers = new FilterChain;
         
         // Add default middleware
         $this->stack
@@ -55,6 +58,12 @@ class App
         
         $this->init();
     }
+    
+    /**
+     * Template Method which can be used to initialize Subclasses
+     */
+    function init()
+    {}
     
     /**
      * Dispatches the request and sends the Response
@@ -68,18 +77,18 @@ class App
 		
 		ob_start();
 		try {
-			$returnValues = $this->stack->filterUntil(
+			$responses = $this->stack->filterUntil(
 			    array($request), array($request, "isDispatched")
 			);
 			
 			// Aggregate returned responses
-			foreach ($returnValues as $return) {
-	            if (!$return instanceof ResponseInterface) {
+			foreach ($responses as $r) {
+	            if (!$r instanceof Response) {
 	                continue;
 	            }
-                $response->addHeaders($return->getHeaders());
-                $response->appendContent($return->getContent());
-                $response->setStatus($return->getStatus());
+                $response->addHeaders($r->getHeaders());
+                $response->appendContent($r->getContent());
+                $response->setStatus($r->getStatus());
 	        }
 	        
 	        if (!$request->isDispatched() or 404 === $response->getStatus()) {
@@ -91,12 +100,19 @@ class App
 		    if (0 === count($this->errorHandlers)) {
 		        throw $e;
 		    }
-		
+		    
 			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
+			$responses = $this->errorHandlers->filter(array($error));
 			
-			foreach ($this->errorHandlers as $handler) {
-                call_user_func($handler, $error);
-            }
+			// Aggregate returned responses
+			foreach ($responses as $r) {
+	            if (!$r instanceof Response) {
+	                continue;
+	            }
+                $response->addHeaders($r->getHeaders());
+                $response->appendContent($r->getContent());
+                $response->setStatus($r->getStatus());
+	        }
 		}
 	    
 	    $response->appendContent(ob_get_clean());
@@ -107,12 +123,6 @@ class App
 	    $response->send();
 	    return $this;
     }
-    
-    /**
-     * Template Method which can be used to initialize Subclasses
-     */
-    function init()
-    {}
     
     /**
      * Sets an option
@@ -166,6 +176,14 @@ class App
         }
     }
     
+    function render($template = null, $view = null)
+    {
+        $viewRenderer = $this->getViewRenderer();
+        
+        $response = $viewRenderer($template, $view);
+        return $response;
+    }
+    
     /**
      * Attaches a filter to the filters run before dispatching
      *
@@ -194,10 +212,7 @@ class App
      * Registers an error handler
      */
     function error($callback) {
-        if (!is_callable($handler)) {
-	        throw new InvalidArgumentException("You must supply a callback as error handler");
-	    }
-		$this->errorHandlers->push($handler);
+		$this->errorHandlers->append($callback);
 		return $this;
     }
 
@@ -212,7 +227,7 @@ class App
             $e = $error->getException();
             
             if (404 === $e->getCode()) {
-                call_user_func($callback, $request, $response);
+                return call_user_func($callback, $error);
             }
             else return;
         };
@@ -233,12 +248,29 @@ class App
 	    return $this->router;
 	}
     
+    function setViewRenderer(\Spark\View\Renderer $viewRenderer)
+    {
+        $this->viewRenderer = $viewRenderer;
+        return $this;
+    }
+    
+    function getViewRenderer()
+    {
+        if (null === $this->viewRenderer) {
+            $this->viewRenderer = new \Spark\View\StandardRenderer;
+        }
+        return $this->viewRenderer;
+    }
+    
     function setResponse(Response $response)
     {
         $this->response = $response;
         return $this;
     }
     
+    /**
+     * @return Response
+     */
     function getResponse()
     {
         if (null === $this->response) {

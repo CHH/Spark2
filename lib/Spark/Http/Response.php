@@ -24,6 +24,8 @@ class Response
 
     function __construct($content = "", $status = null, Array $headers = array())
     {
+        $this->content = $content;
+        
         if (null !== $status) {
             $this->setStatus($status);
         }
