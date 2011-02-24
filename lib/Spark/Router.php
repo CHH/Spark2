@@ -98,7 +98,7 @@ class Router implements Router\Route
             $callback = $this->getCallback($route);
         }
         
-        $request->setCallback($callback);
+        $request->attributes->set("_callback", $callback);
         
         return $callback;
     }

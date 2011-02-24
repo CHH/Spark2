@@ -80,7 +80,7 @@ class RestRoute implements Route
         $meta = array_merge($this->metadata, $meta);
         
         foreach ($meta as $key => $value) {
-            $request->meta($key, $value);
+            $request->attributes->set($key, $value);
         }
         return true;
     }

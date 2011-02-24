@@ -1,6 +1,6 @@
 <?php
 /**
- * The Standard View Renderer which uses PHP as Templating engine
+ * A very simple View Engine which uses PHP
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
@@ -17,8 +17,9 @@ namespace Spark\View;
 use SplStack,
     Spark\Http\Response;
 
-class StandardRenderer implements Renderer
+class PhpEngine implements Engine
 {
+    /** @var SplStack */
     protected $templatePaths;    
     
     function __construct()
@@ -26,7 +27,14 @@ class StandardRenderer implements Renderer
         $this->templatePaths = new SplStack;
     }
     
-    function __invoke($template, $view = null)
+    /**
+     * Renders the given template with the given view
+     *
+     * @param  string $template Name of the template, Suffix .phtml gets appended
+     * @param  mixed  $view Iteratable variable
+     * @return Response
+     */
+    function render($template, $view = null)
     {
         foreach ($view as $var => $value) {
             $this->{$var} = $value;
@@ -42,20 +50,32 @@ class StandardRenderer implements Renderer
         }
         
         ob_start();
-        
         include($file);
-        
         $content = ob_get_clean();
         
         return new Response($content);
     }
     
+    /**
+     * Adds a template path to the stack
+     *
+     * @param string $path
+     */
     function setTemplatePath($path)
     {
+        if (!is_dir($path)) {
+            throw new \InvalidArgumentException("Path $path is not valid");
+        }
         $this->templatePaths->push($path);
         return $this;
     }
     
+    /**
+     * Searches the template paths and returns the full path to the template file
+     *
+     * @param  string $template
+     * @return string Filename
+     */
     protected function findTemplate($template)
     {
         foreach ($this->templatePaths as $path) {

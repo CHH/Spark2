@@ -62,7 +62,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("bar", $request->meta("foo"));
     }
     
-    function testProvidesMethodsToHandleHttpVerbs()
+    function testMatchesHttpMethods()
     {
         $router   = $this->router;
         $request  = $this->request;
@@ -70,36 +70,24 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         
         $request->setRequestUri("/users/23");
         
-        $getHandler = function($request) use ($self) {
-            $self->assertEquals("GET", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->meta("id"));
+        $handlersCalled = 0;
+        
+        $testHandler = function() use (&$handlersCalled) {
+            $handlersCalled++;
         };
         
-        $postHandler = function($request) use ($self) {
-            $self->assertEquals("POST", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->meta("id"));
-        };
-        
-        $putHandler = function($request) use ($self) {
-            $self->assertEquals("PUT", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->meta("id"));
-        };
-        
-        $deleteHandler = function($request) use ($self) {
-            $self->assertEquals("DELETE", strtoupper($request->getMethod()));
-            $self->assertEquals(23, (int) $request->meta("id"));
-        };
-        
-        $router->get("users/:id",    $getHandler);
-        $router->post("users/:id",   $postHandler);
-        $router->put("users/:id",    $putHandler);
-        $router->delete("users/:id", $deleteHandler);
+        $router->get("users/23",    $testHandler);
+        $router->post("users/23",   $testHandler);
+        $router->put("users/23",    $testHandler);
+        $router->delete("users/23", $testHandler);
         
         foreach (Util\words("GET POST PUT DELETE") as $method) {
             $request->setMethod($method);
             $callback = $router->route($request);
             $callback($request);
         }
+        
+        $this->assertEquals(4, $handlersCalled, "Not all handlers were called");
     }
     
     function testRoutesCanBeNamed()

@@ -6,7 +6,7 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Util
+ * @package    Spark_View
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
@@ -21,12 +21,12 @@ if (!class_exists("\Phly\Mustache\Mustache")) {
 use Phly\Mustache\Mustache,
     Spark\Http\Response;
 
-class PhlyMustache implements Renderer
+class PhlyMustacheEngine implements Engine
 {
     /** @var Mustache */
     protected $mustache;  
     
-    function __invoke($template, $view = null)
+    function render($template, $view = null)
     {
         $mustache = $this->getMustache();
         

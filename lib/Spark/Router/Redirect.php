@@ -29,7 +29,7 @@ class Redirect
     function __invoke() 
     {
         $response = new Response("", $this->code);
-        $response->addHeader("location", $this->location, true);
+        $response->headers->set("location", $this->location, true);
         $response->send();
         die;
     }

@@ -9,7 +9,7 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
 {
     function setUp()
     {
-        $this->classLoader = Util\ClassLoader();
+        $this->classLoader = new Util\ClassLoader;
     }
     
     function testActsAsSingleton()
@@ -22,6 +22,7 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
     function testCanBeRegisteredOnSplAutoloadStack()
     {
         $classLoader = $this->classLoader;
+        $classLoader->register();
         $this->assertTrue(in_array($classLoader, spl_autoload_functions(), true));
     }
     
@@ -30,8 +31,6 @@ class ClassLoaderTest extends PHPUnit_Framework_TestCase
         $classLoader = $this->classLoader;
         $classLoader->unregister();
         $this->assertFalse(in_array($classLoader, spl_autoload_functions(), true));
-        
-        $classLoader->register();
     }
     
     function testAutoloadFunctionRegistersClassesWithClassLoader()

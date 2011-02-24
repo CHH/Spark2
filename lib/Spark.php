@@ -12,6 +12,7 @@
  * @license    MIT License
  */
 require_once "Spark/Util.php";
+require_once "Symfony.php";
 
 autoload("Spark\Exception",  __DIR__ . "/Spark/Exception.php");
 autoload("Spark\Error",      __DIR__ . "/Spark/Error.php");
@@ -25,26 +26,6 @@ require_once('Spark/App.php');
 
 use Spark\App,
     Spark\Http\Request;
-
-/**
- * Implements a Singleton for Spark\App
- *
- * @param  Spark\App $app Inject your own App instance
- * @return Spark\App
- */
-function Spark(App $app = null)
-{
-    static $instance;
-
-    if (null === $instance) {
-        if (null !== $app) {
-            $instance = $app;
-        } else {
-            $instance = new App;
-        }
-    }
-    return $instance;
-}
 
 class Spark
 {
@@ -90,7 +71,7 @@ class Spark
     static function getRequest()
     {
         if (null === static::$request) {
-            static::$request = new Request;
+            static::$request = Request::createFromGlobals();
         }
         return static::$request;
     }

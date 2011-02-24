@@ -16,6 +16,7 @@
 namespace Spark;
 
 use Spark\Http\Request,
+    Spark\Http\Response,
     Spark\Util\FilterChain;
 
 class Dispatcher
@@ -40,13 +41,15 @@ class Dispatcher
      */
     function __invoke(Request $request)
     {
-        $callback = $this->validateCallback($request->getCallback());
+        $callback = $this->validateCallback($request->attributes->get("_callback"));
         
-        $this->before->filter(array($request));
-        $response = $callback($request);
-        $this->after->filter(array($request));
+        $response = new Response;
         
-        $request->setDispatched();
+        $response
+            ->merge($this->before->filter(array($request)))
+            ->merge($callback($request))
+            ->merge($this->after->filter(array($request)));
+        
         return $response;
     }
     
@@ -58,9 +61,6 @@ class Dispatcher
      */
     function before($callback = null)
     {
-        if (null === $callback) {
-            return $this->before;
-        }
         $this->before->append($callback);
         return $this;
     }
@@ -73,9 +73,6 @@ class Dispatcher
      */
     function after($callback = null)
     {
-        if (null === $callback) {
-            return $this->after;
-        }
         $this->after->append($callback);
         return $this;
     }

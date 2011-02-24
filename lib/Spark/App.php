@@ -31,8 +31,11 @@ class App
     /** @var Dispatcher */
     protected $dispatcher;
     
-    /** @var SplStack */
+    /** @var FilterChain */
     protected $errorHandlers;
+    
+    /** @var FilterChain */
+    protected $shutdown;
     
 	/** @var array */
 	protected $options = array();
@@ -40,8 +43,8 @@ class App
     /** @var FilterChain holds all middleware */
     protected $stack;
     
-    /** @var Spark\View\Renderer */
-    protected $viewRenderer;
+    /** @var Spark\View\Engine */
+    protected $view;
     
     /** @var Response */
     protected $response;
@@ -50,6 +53,7 @@ class App
 	{
         $this->stack = new FilterChain;
         $this->errorHandlers = new FilterChain;
+        $this->shutdown = new FilterChain;
         
         // Add default middleware
         $this->stack
@@ -77,45 +81,22 @@ class App
 		
 		ob_start();
 		try {
-			$responses = $this->stack->filterUntil(
-			    array($request), array($request, "isDispatched")
-			);
-			
-			// Aggregate returned responses
-			foreach ($responses as $r) {
-	            if (!$r instanceof Response) {
-	                continue;
-	            }
-                $response->addHeaders($r->getHeaders());
-                $response->appendContent($r->getContent());
-                $response->setStatus($r->getStatus());
-	        }
+			$response->merge($this->stack->filter(array($request)));
 	        
-	        if (!$request->isDispatched() or 404 === $response->getStatus()) {
+	        if (404 === $response->getStatusCode()) {
 	            throw new NotFoundException("The requested URL was not found");
 	        }
-	    
 		} catch (\Exception $e) {
 		    // Let the Exception bubble up if no error handlers are registered
 		    if (0 === count($this->errorHandlers)) {
 		        throw $e;
 		    }
-		    
 			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
-			$responses = $this->errorHandlers->filter(array($error));
-			
-			// Aggregate returned responses
-			foreach ($responses as $r) {
-	            if (!$r instanceof Response) {
-	                continue;
-	            }
-                $response->addHeaders($r->getHeaders());
-                $response->appendContent($r->getContent());
-                $response->setStatus($r->getStatus());
-	        }
+			$response->merge($this->errorHandlers->filter(array($error)));
 		}
 	    
-	    $response->appendContent(ob_get_clean());
+	    $response->write(ob_get_clean());
+	    $response->merge($this->shutdown->filter(array($request, $response)));
 	    
 	    if ($this->get("return_response")) {
 	        return $response;
@@ -176,11 +157,11 @@ class App
         }
     }
     
-    function render($template = null, $view = null)
+    function render($template, $view = null)
     {
-        $viewRenderer = $this->getViewRenderer();
+        $viewRenderer = $this->getView();
         
-        $response = $viewRenderer($template, $view);
+        $response = $viewRenderer->render($template, $view);
         return $response;
     }
     
@@ -215,7 +196,13 @@ class App
 		$this->errorHandlers->append($callback);
 		return $this;
     }
-
+    
+    function shutdown($callback)
+    {
+        $this->shutdown->append($callback);
+        return $this;
+    }
+    
     /**
      * Registers an handler on the error code 404
      *
@@ -248,18 +235,18 @@ class App
 	    return $this->router;
 	}
     
-    function setViewRenderer(\Spark\View\Renderer $viewRenderer)
+    function setView(\Spark\View\Engine $view)
     {
-        $this->viewRenderer = $viewRenderer;
+        $this->view = $view;
         return $this;
     }
     
-    function getViewRenderer()
+    function getView()
     {
-        if (null === $this->viewRenderer) {
-            $this->viewRenderer = new \Spark\View\StandardRenderer;
+        if (null === $this->view) {
+            $this->view = new \Spark\View\PhpEngine;
         }
-        return $this->viewRenderer;
+        return $this->view;
     }
     
     function setResponse(Response $response)
