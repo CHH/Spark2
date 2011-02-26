@@ -17,15 +17,16 @@ namespace Spark;
 
 require_once "Util.php";
 
-use Spark\Router\RestRoute,
+use Spark\Router\StandardRoute,
 	Spark\Router\Exception,
     Spark\Http\Request,
     Spark\Util,
+    Symfony\Component\EventDispatcher\Event,
     SplStack,
     SplObjectStorage,
     InvalidArgumentException;
 
-class Router implements Router\Route
+class Router
 {
     /** @var SplStack */
     protected $routes;
@@ -209,8 +210,8 @@ class Router implements Router\Route
      */
     protected function createRoute($route)
     {
-        $route = new RestRoute(rtrim($this->root, "/") . "/" . ltrim($route, "/"));
-        $route->meta("scope", trim($this->root, "/"));
+        $route = new StandardRoute(rtrim($this->root, "/") . "/" . ltrim($route, "/"));
+        $route->defaults(array("scope" => trim($this->root, "/")));
         return $route;
     }
     

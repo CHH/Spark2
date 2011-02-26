@@ -19,7 +19,7 @@ use InvalidArgumentException,
     Spark\Http\Request,
     Spark\Router\StringExpression;
 
-class RestRoute implements Route
+class StandardRoute implements Route
 {
     /** @var string HTTP Method which this route should be bound to */
     protected $method;
@@ -30,7 +30,7 @@ class RestRoute implements Route
     protected $constraints = array();
     
     /** @var array Additional metadata associated with this route */
-    protected $metadata = array();
+    protected $defaults = array();
 
     /** @var string */
     protected $urlDelimiter = "/";
@@ -65,35 +65,30 @@ class RestRoute implements Route
         if (!$result) {
             return false;
         }
-        $meta = array();
+        $params = array();
         
         foreach ($matches as $param => $value) {
             $value = current($value);
             if (null == $value) {
                 continue;
             }
-            if (is_string($param)) {
-                $meta[$param] = $value;
-            }
+            $params[$param] = $value;
         }
         
-        $meta = array_merge($this->metadata, $meta);
+        $params = array_merge($this->defaults, $params);
         
-        foreach ($meta as $key => $value) {
+        foreach ($params as $key => $value) {
             $request->attributes->set($key, $value);
         }
         return true;
     }
-    
-    function meta($spec, $value = null)
+
+    /** 
+     * Assign default values for route parameters
+     */
+    function defaults(array $defaults)
     {
-        if (is_array($spec)) {
-            foreach ($spec as $key => $value) {
-                $this->metadata[$key] = $value;
-            }
-        } else {
-            $this->metadata[$spec] = $value;
-        }
+        $this->defaults = array_merge($this->defaults, $defaults);
         return $this;
     }
     
@@ -110,15 +105,9 @@ class RestRoute implements Route
      * @param  string       $constraint Regular Expression
      * @return RestRoute
      */
-    function constrain($spec, $constraint = null)
+    function constraints(array $constraints)
     {
-        if (is_array($spec)) {
-            foreach ($spec as $param => $constraint) {
-                $this->constrain($param, $constraint);
-            }
-            return $this;
-        }
-        $this->constraints[$spec] = $constraint;
+        $this->constraints = array_merge($this->constraints, $constraints);
         return $this;
     }
 }

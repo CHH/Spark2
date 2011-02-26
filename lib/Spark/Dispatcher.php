@@ -21,6 +21,15 @@ use Spark\Http\Request,
 
 class Dispatcher
 {
+    protected $before;
+    protected $after;
+    
+    function __construct()
+    {
+        $this->before = new FilterChain;
+        $this->after  = new FilterChain;
+    }
+
     /**
      * Dispatches the request to the request's callback
      *
@@ -30,10 +39,32 @@ class Dispatcher
     function __invoke(Request $request)
     {
         $callback = $this->validateCallback($request->attributes->get("_callback"));
+
+        $this->before->filter(array($request));
+
+        ob_start();
+        $response = $callback($request);
         
-        $response = new Response;
-        $response = $callback($request);        
+        if (!$response instanceof Response) {
+            $response = new Response;
+        }
+    
+        $response->write(ob_get_clean());
+        $this->after->filter(array($request, $response));
+
         return $response;
+    }
+
+    function before($filter)
+    {
+        $this->before->add($filter);
+        return $this;
+    }
+
+    function after($filter)
+    {
+        $this->after($filter);
+        return $this;
     }
     
     /**

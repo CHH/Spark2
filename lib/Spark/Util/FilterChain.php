@@ -16,7 +16,6 @@ namespace Spark\Util;
 
 use InvalidArgumentException,
     SplDoublyLinkedList,
-    Spark\Http\Request,
     Spark\Util\ReturnValues;
 
 class FilterChain implements \IteratorAggregate, \Countable
@@ -24,9 +23,13 @@ class FilterChain implements \IteratorAggregate, \Countable
     /** @var SplQueue */
     protected $filters;
     
-    function __construct()
+    function __construct(array $filters = array())
     {
         $this->filters = new SplDoublyLinkedList;
+
+        if (!empty($filters)) {
+            array_walk($filters, array($this, "add"));
+        }
     }
     
     /**
@@ -37,7 +40,7 @@ class FilterChain implements \IteratorAggregate, \Countable
      * @param  callback $filter
      * @return HttpFilterChain
      */
-    function append($filter)
+    function add($filter)
     {
         if (!is_callable($filter)) {
             throw new InvalidArgumentException("You must supply a valid Callback as Filter");
@@ -47,20 +50,11 @@ class FilterChain implements \IteratorAggregate, \Countable
     }
     
     /**
-     * Prepends a filter
+     * Notifies all filters
      *
-     * @param  callback $filter
-     * @return HttpFilterChain
+     * @param  array $argv Value which should be passed to the filters
+     * @return ReturnValues
      */
-    function prepend($filter)
-    {   
-        if (!is_callable($filter)) {
-            throw new InvalidArgumentException("You must supply a valid Callback as Filter");
-        }
-        $this->filters->unshift($filter);
-        return $this;
-    }
-    
     function filter(array $argv)
     {
         return $this->filterUntil($argv, function() {
@@ -79,10 +73,10 @@ class FilterChain implements \IteratorAggregate, \Countable
     }
     
     /**
-     * Executes the filters
+     * Notifies all filters until the supplied callback returns true
      *
-     * @param  array        $argv  Array of filter arguments
-     * @param  callback     $until Loop breaks if TRUE is returned by the callback
+     * @param  array    $argv  Array of filter arguments
+     * @param  callback $until Loop breaks if TRUE is returned by the callback
      * @return SparkCore\Util\ReturnValues Collection of filter return values
      */
     function filterUntil(array $argv, $until)
@@ -103,6 +97,11 @@ class FilterChain implements \IteratorAggregate, \Countable
         return $return;
     }
 
+    function isEmpty()
+    {
+        return 0 === $this->count();
+    }
+    
     function count()
     {
         return $this->filters->count();

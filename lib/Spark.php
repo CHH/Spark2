@@ -11,7 +11,7 @@
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
-require_once "Spark/Util.php";
+require_once __DIR__ . "/Spark/Util.php";
 require_once "Symfony/Component/ClassLoader/UniversalClassLoader.php";
 
 /*

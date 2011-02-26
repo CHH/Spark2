@@ -38,4 +38,14 @@ class ReturnValues extends \SplStack
         }
         return false;
     }
+
+    function containsInstanceOf($class)
+    {
+        foreach ($this as $item) {
+            if ($item instanceof $class) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -12,9 +12,9 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
     {
-        $this->router   = new Router;
-        $this->request  = new Request;
-    }    
+        $this->router  = new Router;
+        $this->request = $this->getMock("Spark\Http\Request");
+    }
     
     function testRoutesCanBeAssembledToUrl()
     {
@@ -32,19 +32,21 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         $router  = $this->router;
         $request = $this->request;
-        
-        $request->setRequestUri("/users");
 
-        $router->match("/users(/:id)?", "index#index")->meta("id", "foo");
+        $request->expects($this->any())
+                ->method("getRequestUri")
+                ->will($this->returnValue("/users/23"));
+
+        $router->match("/users(/:id)?", "index#index")->defaults(array("id" => "foo"));
 
         $router->route($request);
-        $this->assertEquals("foo", $request->meta("id"));
+        $this->assertEquals("foo", $request->attributes->get("id"));
 
         // Check overriding
         $request->setRequestUri("/users/23");
         
         $router->route($request);
-        $this->assertEquals(23, (int) $request->meta("id"));
+        $this->assertEquals(23, (int) $request->attributes->get("id"));
     }
 
     function testProvidesOptionsViaAFluentInterface()
