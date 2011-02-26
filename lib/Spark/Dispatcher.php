@@ -46,7 +46,7 @@ class Dispatcher
         $response = $callback($request);
         
         if (!$response instanceof Response) {
-            $response = new Response;
+            $response = new Response($response);
         }
     
         $response->write(ob_get_clean());

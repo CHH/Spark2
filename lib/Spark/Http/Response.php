@@ -18,23 +18,6 @@ use Symfony\Component\HttpFoundation;
 
 class Response extends HttpFoundation\Response
 {
-    function merge($response)
-    {
-        if (is_array($response) or $response instanceof \Traversable) {
-            foreach ($response as $r) {
-                $this->merge($r);
-            }
-            return $this;
-        }
-        
-        if (!$response instanceof Response) {
-            return $this;
-        }
-        $this->setStatusCode($response->getStatusCode());
-        $this->write($response->getContent());
-        $this->headers->add($response->headers->all());
-    }
-    
     function write($content)
     {
         $this->content .= $content;

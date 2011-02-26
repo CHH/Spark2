@@ -18,21 +18,19 @@ use Spark\Http\Request,
     Spark\Http\Response,
     Spark\Http\NotFoundException,
     Spark\Dispatcher,
-    Spark\Util,
     Spark\Util\FilterChain,
-    Spark\View,
-    SplStack;
+    Spark\View;
 
 class App
 {
+    /** @var \Spark\Util\ExtensionManager */
+    protected $extensions;
+
     /** @var Router */
     protected $router;
     
     /** @var Dispatcher */
     protected $dispatcher;
-    
-	/** @var array */
-	protected $options = array();
 
     protected $requestHandlers;
 
@@ -49,6 +47,11 @@ class App
         $this->errorHandlers    = new FilterChain;
         $this->startupHandlers  = new FilterChain;
         $this->shutdownHandlers = new FilterChain;
+
+        $this->extensions = new \Spark\Util\ExtensionManager;
+
+        $this->register("\Spark\Extension\Configuration");
+        $this->register("\Spark\Extension\ViewRenderer");
         
         // Add default middleware
         $this->requestHandlers
@@ -80,11 +83,15 @@ class App
     function __invoke(Request $request)
     {
 	    $response = $this->getResponse();
+
+        $returnValues = array();
 		
 		try {
-            $this->startupHandlers->filter(array($request));
+            $this->startupHandlers->filter(array($request, $response));
 		
-		    $response->merge($this->requestHandlers->filter(array($request)));
+		    foreach ($this->requestHandlers->filter(array($request)) as $return) {
+                $returnValues[] = $return;
+		    }
 	        
 	        if ($response->isNotFound()) {
 	            throw new NotFoundException("The requested URL was not found");
@@ -97,69 +104,81 @@ class App
 			$error = new \StdClass;
 			$error->exception = $e;
 			$error->request = $request;
+			$error->response = $response;
 
 			ob_start();
-			$response->merge($this->errorHandlers->filter(array($error)));
+			foreach ($this->errorHandlers->filter(array($error)) as $return) {
+                $returnValues[] = $return;
+			}
+			
 			$response->write(ob_get_clean());
 		}
 
 	    ob_start();
         $this->shutdownHandlers->filter(array($request, $response));
         $response->write(ob_get_clean());
+
+        foreach ($returnValues as $return) {
+            if (is_string($return)) {
+                $response->write($return);
+            }
+            if ($return instanceof Response) {
+                $response->headers->add($return->headers->all());
+                $response->write($return->getContent());
+                $response->setStatusCode($return->getStatusCode());
+            }
+        }
 	    
 	    return $response;
     }
     
     /**
-     * Sets an option
-     * 
-     * @param  string|array $spec Either list of key-values or name of the key
-     * @param  mixed $value
-     * @return App
+     * Call extensions
      */
-	function set($spec, $value = null)
-	{
-	    if (is_array($spec)) {
-	        foreach ($spec as $option => $value) {
-	            $this->options[$option] = $value;
-	        }
-	        return $this;
-	    }
-	    $this->options[$spec] = $value;
-	    return $this;
-	}
-    
-    /**
-     * Get an option
-     *
-     * @param  mixed $spec Returns the value of the option or all options if NULL
-     * @return mixed
-     */
-    function get($spec = null)
+    function __call($method, array $args)
     {
-        if (null === $spec) {
-            return $this->options;
-        }
-        return !empty($this->options[$spec]) ? $this->options[$spec] : null;
+        return $this->extensions->call($method, $args);
+    }
+
+    function route($block = null)
+    {
+        return $this->getRouter()->route($block);
+    }
+    
+    function match($route, $callback)
+    {
+        return $this->getRouter()->match($route, $callback);
+    }
+    
+    function get($route, $callback)
+    {
+        return $this->getRouter()->get($route, $callback);
+    }
+
+    function post($route, $callback)
+    {
+        return $this->getRouter()->post($route, $callback);
+    }
+    
+    function put($route, $callback)
+    {
+        return $this->getRouter()->put($route, $callback);
+    }
+    
+    function delete($route, $callback)
+    {
+        return $this->getRouter()->delete($route, $callback);
     }
     
     /**
-     * Provides access to routes
-     * 
-     * @param  callback $block Either a callback or NULL, if NULL returns a router instance
-     * @return App|Router If $block is a callback, then it returns the App, if the block
-     *                    is NULL, then it returns a Router instance
+     * Registers an extension for the DSL
+     *
+     * @see ExtensionManager
+     * @param object $extension
      */
-    function route($block = null)
+    protected function register($extension)
     {
-        $router = $this->getRouter();
-        if (null === $block) {
-            return $router;
-        }
-        if (is_callable($block)) {
-            call_user_func($block, $router);
-            return $this;
-        }
+        $this->extensions->register($extension);
     }
     
     /**
@@ -224,18 +243,13 @@ class App
         $this->error($callback);
         return $this;
     }
-
-    function render($template, $view = null)
-    {
-        return View::render($template, $view);
-    }
     
     /**
      * Returns a Router instance
      *
      * @return Router
      */
-	function getRouter()
+	protected function getRouter()
 	{
 	    if (null === $this->router) {
 	        $this->router = new Router;
@@ -243,16 +257,10 @@ class App
 	    return $this->router;
 	}
     
-    function setResponse(Response $response)
-    {
-        $this->response = $response;
-        return $this;
-    }
-    
     /**
      * @return Response
      */
-    function getResponse()
+    protected function getResponse()
     {
         if (null === $this->response) {
             $this->response = new Response;

@@ -1,30 +1,24 @@
 <?php
 /**
- * Simple Router
+ * Extension which provides simple routing
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Router
+ * @package    Core
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
- 
-/** @namespace */
+
 namespace Spark;
 
-require_once "Util.php";
-
 use Spark\Router\StandardRoute,
-	Spark\Router\Exception,
+    Spark\Router\Route,
+    Spark\Router\Exception,
     Spark\Http\Request,
-    Spark\Util,
-    Symfony\Component\EventDispatcher\Event,
-    SplStack,
-    SplObjectStorage,
-    InvalidArgumentException;
+    Spark\Util;
 
 class Router
 {
@@ -46,18 +40,10 @@ class Router
             $root = "/" . $root;
         }
         $this->root   = $root;
-        $this->routes = new SplStack;
-        $this->callbacks = new SplObjectStorage;
+        $this->routes = new \SplStack;
+        $this->callbacks = new \SplObjectStorage;
     }
 
-    /**
-     * @alias route()
-     */
-    function __invoke(Request $request)
-    {
-        return $this->route($request);
-    }
-    
     /**
      * Routes the given request and returns the attached callback.
      *
@@ -65,7 +51,7 @@ class Router
      * @param  Spark\HttpRequest $request
      * @return mixed Callback
      */
-    function route(Request $request)
+    function __invoke(Request $request)
     {
         $matched = false;
         
@@ -98,12 +84,27 @@ class Router
     }
     
     /**
+     * Provides access to routes
+     * 
+     * @param  callback $block Either a callback or NULL, if NULL returns a router instance
+     * @return App|Router If $block is a callback, then it returns the App, if the block
+     *                    is NULL, then it returns a Router instance
+     */
+    function route($block = null)
+    {
+        if (is_callable($block)) {
+            call_user_func($block, $this);
+        }
+        return $this;
+    }
+    
+    /**
      * Registers a custom route instance with the router.
      *
      * @param  Spark\Router\Route $route
      * @return Router
      */
-    function addRoute(Router\Route $route)
+    function addRoute(Route $route)
     {
         $this->routes->push($route);
         return $this;
@@ -196,7 +197,7 @@ class Router
         $httpMethod = strtoupper($httpMethod);
 
         if (!in_array($httpMethod, Util\words("GET POST PUT DELETE HEAD OPTIONS"))) {
-            throw new InvalidArgumentException("Undefined HTTP Method $httpMethod");
+            throw new \InvalidArgumentException("Undefined HTTP Method $httpMethod");
         }
         
         return $this->match($routeSpec, $callback)->method($httpMethod);
@@ -215,13 +216,13 @@ class Router
         return $route;
     }
     
-    protected function addCallback(Router\Route $route, $callback)
+    protected function addCallback(Route $route, $callback)
     {
         $this->callbacks->attach($route, $callback);
         return $this;
     }
     
-    protected function getCallback(Router\Route $route)
+    protected function getCallback(Route $route)
     {
         return $this->callbacks[$route];
     }
