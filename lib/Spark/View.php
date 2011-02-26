@@ -1,6 +1,6 @@
 <?php
 /**
- * The View Renderer Facade
+ * The static View Renderer
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
@@ -14,32 +14,41 @@
 
 namespace Spark;
 
-autoload("Spark\View\Engine", __DIR__ . "/View/Engine.php");
-autoload("Spark\View\PhpEngine", __DIR__ . "/View/PhpEngine.php");
-autoload("Spark\View\PhlyMustacheEngine", __DIR__ . "/View/PhlyMustacheEngine.php");
-
 use Spark\View\Engine,
     Spark\View\PhpEngine;
 
 class View
 {
+    /** @var Engine */
     static $instance;    
     
+    /**
+     * Renders the given template
+     */
     static function render($template, $view = null)
     {
         return static::getEngine()->render($template, $view);
     }
     
+    /**
+     * Adds a template path
+     */
     static function setTemplatePath($path)
     {
         static::getEngine()->setTemplatePath($path);
     }
     
+    /**
+     * Replaces the engine
+     */
     static function setEngine(Engine $engine)
     {
         static::$instance = $engine; 
     }
     
+    /**
+     * Returns the current engine
+     */
     static function getEngine()
     {
         if (null === static::$instance) {

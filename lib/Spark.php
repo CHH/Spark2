@@ -12,67 +12,18 @@
  * @license    MIT License
  */
 require_once "Spark/Util.php";
-require_once "Symfony.php";
+require_once "Symfony/Component/ClassLoader/UniversalClassLoader.php";
 
-autoload("Spark\Exception",  __DIR__ . "/Spark/Exception.php");
-autoload("Spark\Error",      __DIR__ . "/Spark/Error.php");
-autoload("Spark\Dispatcher", __DIR__ . "/Spark/Dispatcher.php");
-
-require_once "Spark/Http.php";
-require_once('Spark/Controller.php');
-require_once('Spark/Router.php');
-require_once('Spark/View.php');
-require_once('Spark/App.php');
+/*
+ * Simple fallback autoloader
+ */
 
 use Spark\App,
-    Spark\Http\Request;
+    Spark\Http\Request,
+    Symfony\Component\ClassLoader\UniversalClassLoader;
 
-class Spark
-{
-    /** @var Request */
-    static protected $request;
+$classLoader = new UniversalClassLoader;
 
-    /**
-     * Instantiates the given app and calls it with an HTTP Request 
-     *
-     * @param  string|App $app Class name or App instance
-     * @return App
-     */
-    static function run($app)
-    {
-        $app = static::factory($app);
-        
-        $request = static::getRequest();
-        return $app($request);
-    }
-    
-    /**
-     * Instantiates the given App class
-     *
-     * @param  string $app Class name of a App subclass
-     * @return App
-     */
-    static function factory($app)
-    {
-        if (is_string($app) and class_exists($app)) {
-            $app = new $app;
-        }
-        if (!$app instanceof App) {
-            throw new \InvalidArgumentException("App must be an instance of Spark\App");
-        }
-        return $app;       
-    }
-    
-    static function setRequest(Request $request)
-    {
-        static::$request = $request;
-    }
-    
-    static function getRequest()
-    {
-        if (null === static::$request) {
-            static::$request = Request::createFromGlobals();
-        }
-        return static::$request;
-    }
-}
+$classLoader->registerNamespaceFallback(__DIR__);
+
+$classLoader->register();

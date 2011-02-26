@@ -21,18 +21,6 @@ use Spark\Http\Request,
 
 class Dispatcher
 {
-    /** @var FilterChain */
-    protected $before;
-    
-    /** @var FilterChain */
-    protected $after;    
-    
-    function __construct()
-    {
-        $this->before = new FilterChain;
-        $this->after  = new FilterChain; 
-    }
-    
     /**
      * Dispatches the request to the request's callback
      *
@@ -44,37 +32,8 @@ class Dispatcher
         $callback = $this->validateCallback($request->attributes->get("_callback"));
         
         $response = new Response;
-        
-        $response
-            ->merge($this->before->filter(array($request)))
-            ->merge($callback($request))
-            ->merge($this->after->filter(array($request)));
-        
+        $response = $callback($request);        
         return $response;
-    }
-    
-    /**
-     * Registers a pre-dispatch callback
-     *
-     * @param  callback $callback Callback to append, Returns the filter chain if NULL
-     * @return FilterChain|Dispatcher
-     */
-    function before($callback = null)
-    {
-        $this->before->append($callback);
-        return $this;
-    }
-    
-    /**
-     * Registers a post-dispatch callback
-     *
-     * @param  callback $callback Callback to append, Returns the filter chain if NULL
-     * @return FilterChain|Dispatcher
-     */
-    function after($callback = null)
-    {
-        $this->after->append($callback);
-        return $this;
     }
     
     /**

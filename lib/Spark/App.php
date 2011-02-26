@@ -21,6 +21,8 @@ use Spark\Http\Request,
     Spark\Dispatcher,
     Spark\Util,
     Spark\Util\FilterChain,
+    Symfony\Component\EventDispatcher\Event,
+    Symfony\Component\EventDispatcher\EventDispatcher,
     SplStack;
 
 class App
@@ -31,34 +33,21 @@ class App
     /** @var Dispatcher */
     protected $dispatcher;
     
-    /** @var FilterChain */
-    protected $errorHandlers;
-    
-    /** @var FilterChain */
-    protected $shutdown;
+    protected $eventDispatcher;
     
 	/** @var array */
 	protected $options = array();
-    
-    /** @var FilterChain holds all middleware */
-    protected $stack;
-    
-    /** @var Spark\View\Engine */
-    protected $view;
     
     /** @var Response */
     protected $response;
     
 	final function __construct()
 	{
-        $this->stack = new FilterChain;
-        $this->errorHandlers = new FilterChain;
-        $this->shutdown = new FilterChain;
+        $this->eventDispatcher = new EventDispatcher;
         
         // Add default middleware
-        $this->stack
-             ->append($this->getRouter())
-             ->append($this->getDispatcher());
+        $this->eventDispatcher->connect("spark.request", $this->getRouter());
+        $this->eventDispatcher->connect("spark.request", $this->getDispatcher());
         
         $this->init();
     }
@@ -78,31 +67,38 @@ class App
     function __invoke(Request $request)
     {
 	    $response = $this->getResponse();
+		$eventDispatcher = $this->eventDispatcher;
 		
 		ob_start();
 		try {
-			$response->merge($this->stack->filter(array($request)));
+		    $onRequest = new Event($this, "spark.request", array("request" => $request));
+		    $response = $eventDispatcher->notifyUntil($onRequest);
 	        
 	        if (404 === $response->getStatusCode()) {
 	            throw new NotFoundException("The requested URL was not found");
 	        }
 		} catch (\Exception $e) {
-		    // Let the Exception bubble up if no error handlers are registered
-		    if (0 === count($this->errorHandlers)) {
-		        throw $e;
-		    }
-			$error = new Error("An Exception occured: {$e->getMessage()}", $request, $e);
-			$response->merge($this->errorHandlers->filter(array($error)));
+			$error = new Event($this, "spark.error", array(
+			    "request" => $request, 
+			    "exception" => $e
+            ));
+			
+			$response = $eventDispatcher->notifyUntil($error);
+			
+			if (!$error->isProcessed()) {
+			    throw $e;
+			}
 		}
 	    
 	    $response->write(ob_get_clean());
-	    $response->merge($this->shutdown->filter(array($request, $response)));
+
+        $shutdown = new Event($this, "spark.shutdown", array(
+            "request" => $request,
+            "response" => $response
+        ));
+        $eventDispatcher->notify($shutdown);
 	    
-	    if ($this->get("return_response")) {
-	        return $response;
-	    }
-	    $response->send();
-	    return $this;
+	    return $response;
     }
     
     /**
@@ -157,23 +153,15 @@ class App
         }
     }
     
-    function render($template, $view = null)
-    {
-        $viewRenderer = $this->getView();
-        
-        $response = $viewRenderer->render($template, $view);
-        return $response;
-    }
-    
     /**
      * Attaches a filter to the filters run before dispatching
      *
      * @param  object $filter Callable object (Closure or Object implementing __invoke)
      * @return App
      */
-    function before($filter)
+    function before($handler)
     {
-        $this->getDispatcher()->before($filter);
+        $this->eventDispatcher->connect("spark.before_dispatch", $handler);
         return $this;
     }
 
@@ -183,23 +171,23 @@ class App
      * @param  object $filter Callable object (Closure or Object implementing __invoke)
      * @return App
      */
-	function after($filter)
+	function after($handler)
 	{
-	    $this->getDispatcher()->after($filter);
+	    $this->eventDispatcher->connect("spark.after_dispatch", $handler);
 	    return $this;
 	}
 
     /**
      * Registers an error handler
      */
-    function error($callback) {
-		$this->errorHandlers->append($callback);
+    function error($handler) {
+		$this->eventDispatcher->connect("spark.error", $handler);
 		return $this;
     }
     
-    function shutdown($callback)
+    function shutdown($handler)
     {
-        $this->shutdown->append($callback);
+        $this->eventDispatcher->connect("spark.shutdown", $handler);
         return $this;
     }
     
@@ -210,8 +198,8 @@ class App
      * @return App
      */
     function notFound($callback) {
-        $callback = function($error) use ($callback) {
-            $e = $error->getException();
+        $callback = function($event) use ($callback) {
+            $e = $event->get("exception");
             
             if (404 === $e->getCode()) {
                 return call_user_func($callback, $error);
@@ -234,20 +222,6 @@ class App
 	    }
 	    return $this->router;
 	}
-    
-    function setView(\Spark\View\Engine $view)
-    {
-        $this->view = $view;
-        return $this;
-    }
-    
-    function getView()
-    {
-        if (null === $this->view) {
-            $this->view = new \Spark\View\PhpEngine;
-        }
-        return $this->view;
-    }
     
     function setResponse(Response $response)
     {

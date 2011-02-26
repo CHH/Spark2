@@ -15,14 +15,7 @@
 /** @namespace */
 namespace Spark;
 
-require_once('Util.php');
-
-autoload('Spark\Router\Exception',  __DIR__ . '/Router/Exception.php');
-autoload('Spark\Router\Redirect',   __DIR__ . '/Router/Redirect.php');
-autoload('Spark\Router\StringExpression', __DIR__ . '/Router/StringExpression.php');
-
-require_once('Router/Route.php');
-require_once('Router/RestRoute.php');
+require_once "Util.php";
 
 use Spark\Router\RestRoute,
 	Spark\Router\Exception,

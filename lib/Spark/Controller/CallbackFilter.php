@@ -34,7 +34,7 @@ class CallbackFilter
     function __invoke(Request $request)
     {
         $resolver = $this->getResolver();
-        $callback = $request->getCallback();
+        $callback = $request->attributes->get("_callback");
 
         if (is_string($callback) and false !== strpos($callback, "#")) {
             list($controller, $action) = explode("#", $callback);
@@ -46,18 +46,18 @@ class CallbackFilter
             return false;
         }
         
-        $controller = $request->meta("controller") ?: $controller;
-        $action     = $request->meta("action")     ?: $action;
-        $module     = $request->meta("module")     ?: $request->meta("scope");
+        $controller = $request->attributes->get("controller") ?: $controller;
+        $action     = $request->attributes->get("action")     ?: $action;
+        $module     = $request->attributes->get("module")     ?: $request->attributes->get("scope");
         
         $callback = $resolver->getControllerByName($controller, $module);
         
         if (false === $callback) {
             return false;
         }
-        $request->meta("action",     $action);
-        $request->meta("controller", $controller);
-        $request->setCallback($callback);
+        $request->attributes->set("action",     $action);
+        $request->attributes->set("controller", $controller);
+        $request->attributes->set("_callback", $callback);
     }
 
     function setResolver(Resolver $resolver)

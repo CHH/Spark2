@@ -16,17 +16,6 @@
 
 namespace Spark;
 
-require_once('App.php');
-require_once('Util.php');
-
-autoload('Spark\Controller\Exception',      __DIR__ . '/Controller/Exception.php');
-autoload('Spark\Controller\CallbackFilter', __DIR__ . '/Controller/CallbackFilter.php');
-
-require_once('Controller/Controller.php');
-require_once('Controller/ActionController.php');
-require_once('Controller/Resolver.php');
-require_once('Controller/StandardResolver.php');
-
 /**
  * Facade for enabling the controller workflow
  *

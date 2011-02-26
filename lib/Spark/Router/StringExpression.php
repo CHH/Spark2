@@ -77,7 +77,7 @@ class StringExpression
                     ? "[a-zA-z0-9\-\_]+" 
                     : $requirements[$var];
                 
-                return "(?P<$var>$subpattern)";
+                return "(?<$var>$subpattern)";
             }, 
             $exp
         );

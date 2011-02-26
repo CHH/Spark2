@@ -71,11 +71,11 @@ class FilterChain implements \IteratorAggregate, \Countable
     /**
      * Allows a filter chain to be used as filter inside another filter chain
      *
-     * @param array $argv Array of filter arguments
+     * @param mixed $arg,... Array of filter arguments
      */
-    function __invoke(array $argv)
+    function __invoke($arg)
     {   
-        return $this->filter($request);
+        return $this->filter(func_get_args());
     }
     
     /**
