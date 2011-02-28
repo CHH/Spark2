@@ -1,18 +1,18 @@
 <?php
 /**
- * Simple class for compiling route expressions
+ * Simple class for compiling string expressions
  * 
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Router
+ * @package    Spark_Util
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
  */
 
-namespace Spark\Router;
+namespace Spark\Util;
 
 class StringExpression
 {
@@ -22,9 +22,6 @@ class StringExpression
     protected $expression;
     
     protected $requirements = array();
-    
-    /** @var string */
-    protected $compiled;
     
     /**
      * Constructor
@@ -49,9 +46,9 @@ class StringExpression
     /**
      * @return string
      */
-    function toRegExp()
+    function toRegExp($delimiters = true)
     {
-        return $this->compile();
+        return $this->compile($delimiters);
     }
     
     /**
@@ -59,12 +56,8 @@ class StringExpression
      *
      * @return string
      */
-    protected function compile()
+    protected function compile($delimiters = true)
     {
-        if (!empty($this->compiled)) {
-            return $this->compiled;
-        }
-        
         $exp = $this->expression;
         $requirements = $this->requirements;
         
@@ -82,7 +75,9 @@ class StringExpression
             $exp
         );
         
-        $this->compiled = "#^" . $regex . "$#";
-        return $this->compiled;
+        if ($delimiters) {
+            $regex = "#^" . $regex . "$#";
+        }
+        return $regex;
     }
 }

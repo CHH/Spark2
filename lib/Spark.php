@@ -15,7 +15,6 @@
 require_once __DIR__ . "/Spark/Util.php";
 require_once "Symfony/Component/ClassLoader/UniversalClassLoader.php";
 
-
 use Spark\App,
     Spark\Http\Request,
     Spark\Util\ExtensionManager,
@@ -33,22 +32,13 @@ $classLoader->register();
  */
 class Spark
 {
-    /** @var ExtensionManager */
-    static protected $extensions;
-
     /** @var App */
     static protected $app;
-
-    /**
-     * Registers an extension for the DSL
-     *
-     * @see ExtensionManager
-     * @param object $extension
-     */
-    static function register($extension)
-    {
-        static::extensionManager()->register($extension);
-    }
+    
+    static protected $delegate = array(
+        "get", "post", "put", "delete", "head", "options", "before", "after", 
+        "error", "notFound", "register", "run", "set", "settings"
+    );
 
     /**
      * Call an extension
@@ -58,30 +48,16 @@ class Spark
      */
     static function __callStatic($method, array $args)
     {
-        if (is_callable(array(static::app(), $method))) {
-            return call_user_func_array(array(static::app(), $method), $args);
+        if (!in_array($method, static::$delegate)) {
+            $extensions = static::app()->extensions();
+            
+            if ($extensions->has($method)) {
+                return $extensions->call($method, $args);
+            }
+            
+            throw new \BadMethodCallException("Undefined Method $method");
         }
-        return static::extensionManager()->call($method, $args);
-    }
-    
-    static function run()
-    {   
-        $routes = static::route();
-        
-        static::app()->run();
-    }
-    
-    /**
-     * Returns an instance of the Extension Manager
-     *
-     * @return ExtensionManager
-     */
-    static protected function extensionManager()
-    {   
-        if (null === static::$extensions) {
-            static::$extensions = new \Spark\Util\ExtensionManager;
-        }
-        return static::$extensions;
+        return call_user_func_array(array(static::app(), $method), $args);
     }
 
     /**

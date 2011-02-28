@@ -12,54 +12,44 @@
  * @license    MIT License
  */
 
-namespace Spark\Extension
+namespace Spark\Extension;
+
+class ViewRenderer extends Base
 {
-    class ViewRenderer
+    /**
+     * View Engine instances
+     */
+    protected $engines = array();
+
+    /*
+     * Methods which get exported to the DSL
+     */
+
+    /**
+     * Renders a template using PHP as template engine
+     */
+    function phtml($template, $view = null)
     {
-        /**
-         * View Engine instances
-         */
-        protected $engines = array();
-
-        protected $manager;
-        
-        /*
-         * Methods which get exported to the DSL
-         */
-
-        /**
-         * Renders a template using PHP as template engine
-         */
-        function phtml($template, $view = null)
-        {
-            return $this->getEngine("\Spark\View\PhpEngine")->render($template, $view);
-        }
-
-        /**
-         * Renders a template with the Phly_Mustache Template engine
-         */
-        function mustache($template, $view = null)
-        {
-            return $this->getEngine("\Spark\View\PhlyMustacheEngine")->render($template, $view);
-        }
-
-        function setExtensionManager(\Spark\Util\ExtensionManager $manager)
-        {
-            $this->manager = $manager;
-        }
-        
-        protected function getEngine($engine)
-        {
-            if (empty($this->engines[$engine])) {
-                $this->engines[$engine] = new $engine;
-                
-                $views = $this->manager->getOption("views");
-                $this->engines[$engine]->setTemplatePath($views);
-            }
-            return $this->engines[$engine];
-        }
+        return $this->getEngine("\Spark\View\PhpEngine")->render($template, $view);
     }
 
-    // Register in the DSL
-    \Spark::register(__NAMESPACE__ . "\ViewRenderer");
+    /**
+     * Renders a template with the Phly_Mustache Template engine
+     */
+    function mustache($template, $view = null)
+    {
+        return $this->getEngine("\Spark\View\PhlyMustacheEngine")->render($template, $view);
+    }
+    
+    protected function getEngine($engine)
+    {
+        if (empty($this->engines[$engine])) {
+            $this->engines[$engine] = new $engine;
+            
+            $views = $this->context->settings()->get("views");
+            
+            $this->engines[$engine]->setTemplatePath($views);
+        }
+        return $this->engines[$engine];
+    }
 }

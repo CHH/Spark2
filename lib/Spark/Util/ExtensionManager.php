@@ -16,6 +16,13 @@ namespace Spark\Util;
 
 class ExtensionManager extends ArrayObject
 {
+    protected $context;    
+    
+    function __construct($context)
+    {
+        $this->context = $context;
+    }    
+    
     /**
      * Exports the public methods of class as extension methods
      *
@@ -39,9 +46,9 @@ class ExtensionManager extends ArrayObject
         } else {
             $methods = get_class_methods($extension);
         }
-
-        if (is_callable(array($extension, "setExtensionManager"))) {
-            $extension->setExtensionManager($this);
+        
+        if ($extension instanceof \Spark\Extension\Base) {
+            $extension->context = $this->context;
         }
         
         foreach ($methods as $method) {

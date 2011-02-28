@@ -17,48 +17,51 @@ namespace Spark;
 use Spark\Http\Request, 
     Spark\Http\Response,
     Spark\Http\NotFoundException,
+    Symfony\Component\HttpFoundation\RequestMatcher,
     Spark\Dispatcher,
     Spark\Util\FilterChain,
-    Spark\View;
+    Spark\Util;
 
 class App
 {
     /** @var \Spark\Util\ExtensionManager */
-    protected $extensions;
+    protected $extensions; 
 
-    /** @var Router */
-    protected $router;
+    protected $routes = array();
     
     /** @var Dispatcher */
     protected $dispatcher;
-
-    protected $requestHandlers;
-
-    protected $shutdownHandlers;
-
-    protected $errorHandlers;
+    
+    /** @var array */
+    protected $filters = array();
     
     /** @var Response */
     protected $response;
     
+    /** @var Spark\Settings */
+    protected $settings;
+    
 	final function __construct()
 	{
-        $this->requestHandlers  = new FilterChain;
-        $this->errorHandlers    = new FilterChain;
-        $this->startupHandlers  = new FilterChain;
-        $this->shutdownHandlers = new FilterChain;
-
-        $this->extensions = new \Spark\Util\ExtensionManager;
-
-        $this->register("\Spark\Extension\Configuration");
+        $this->extensions = new \Spark\Util\ExtensionManager($this);
+        $this->settings = new \Spark\Settings;
+    
         $this->register("\Spark\Extension\ViewRenderer");
+        $this->register("\Spark\Extension\Redirecting");
         
-        // Add default middleware
-        $this->requestHandlers
-             ->add($this->getRouter())
-             ->add($this->getDispatcher());
+        foreach (Util\words("before after error notFound shutdown") as $w) {
+            $this->filters[$w] = new FilterChain;
+        }
+        
+        $this->router = new Router;
+        $this->dispatcher = new Dispatcher;
         
         $this->init();
+    }
+    
+    function addFilter($event, $handler)
+    {
+        $this->filters[$event]->add($handler);
     }
     
     /**
@@ -87,17 +90,37 @@ class App
         $returnValues = array();
 		
 		try {
-            $this->startupHandlers->filter(array($request, $response));
-		
-		    foreach ($this->requestHandlers->filter(array($request)) as $return) {
-                $returnValues[] = $return;
+		    $this->filters["before"]->filter(array($request, $response));
+		    
+		    $method = $request->getMethod();
+		    
+		    if (empty($this->routes[$method])) {
+		        $response->setStatusCode(404);
+		        $response->setContent('');
+		        break;
 		    }
-	        
-	        if ($response->isNotFound()) {
-	            throw new NotFoundException("The requested URL was not found");
-	        }
+		    
+		    $requestMatcher = new RequestMatcher;
+		    
+		    foreach ($this->routes[$method] as $route) {
+		        list($pattern, $callback) = $route;
+		        
+		        $requestMatcher->matchPath($pattern);
+		        
+		        if ($requestMatcher->matches($request)) {
+		            break;
+		        }
+		    }
+		    
+		    $return = call_user_func($callback, $request);
+		    
+		    if (!$return instanceof Response) {
+		        $return = new Response($return);
+		    }
+		    
+		    $returnValues[] = $return;
 		} catch (\Exception $e) {
-            if ($this->errorHandlers->isEmpty()) {
+            if ($this->filters["error"]->isEmpty()) {
                 throw $e;
             }
 		
@@ -107,7 +130,7 @@ class App
 			$error->response = $response;
 
 			ob_start();
-			foreach ($this->errorHandlers->filter(array($error)) as $return) {
+			foreach ($this->filters["error"]->filter(array($error)) as $return) {
                 $returnValues[] = $return;
 			}
 			
@@ -115,7 +138,7 @@ class App
 		}
 
 	    ob_start();
-        $this->shutdownHandlers->filter(array($request, $response));
+        $this->filters["after"]->filter(array($request, $response));
         $response->write(ob_get_clean());
 
         foreach ($returnValues as $return) {
@@ -129,6 +152,10 @@ class App
             }
         }
 	    
+	    if ($response->isNotFound()) {
+	        $this->filter["notFound"]->filter(array($request, $response));
+	    }
+	    
 	    return $response;
     }
     
@@ -140,34 +167,51 @@ class App
         return $this->extensions->call($method, $args);
     }
 
-    function route($block = null)
+    /**
+     * Sets an option
+     * 
+     * @param  string|array $spec Either list of key-values or name of the key
+     * @param  mixed $value
+     * @return App
+     */
+    function set($spec, $value = null)
     {
-        return $this->getRouter()->route($block);
+        $this->settings->set($spec, $value);
+        return $this;
     }
     
-    function match($route, $callback)
+    function settings()
     {
-        return $this->getRouter()->match($route, $callback);
+        return $this->settings;
     }
     
-    function get($route, $callback)
+    protected function route($verb, $path, array $options = array(),  $callback)
     {
-        return $this->getRouter()->get($route, $callback);
-    }
-
-    function post($route, $callback)
-    {
-        return $this->getRouter()->post($route, $callback);
-    }
-    
-    function put($route, $callback)
-    {
-        return $this->getRouter()->put($route, $callback);
+        if (empty($this->routes[$verb])) {
+            $this->routes[$verb] = new \SplStack;
+        }
+        $pattern = $this->compile($path, $options);
+        
+        $this->routes[$verb]->push(array($path, $callback));
+        return $this;
     }
     
-    function delete($route, $callback)
+    protected function compile($path, array $options = array())
     {
-        return $this->getRouter()->delete($route, $callback);
+        $exp = new \Spark\Util\StringExpression($path, $options);
+        return $exp->toRegExp(false);
+    }
+    
+    function get($route, $callback)     { return $this->route("GET", $route, array(), $callback); }   
+    function post($route, $callback)    { return $this->route("POST", $route, array(), $callback); }
+    function put($route, $callback)     { return $this->route("PUT", $route, array(), $callback); }
+    function delete($route, $callback)  { return $this->route("DELETE", $route, array(), $callback); }
+    function head($route, $callback)    { return $this->route("HEAD", $route, array(), $callback); }
+    function options($route, $callback) { return $this->route("OPTIONS", $route, array(), $callback); }
+    
+    function extensions()
+    {
+        return $this->extensions;
     }
     
     /**
@@ -176,7 +220,7 @@ class App
      * @see ExtensionManager
      * @param object $extension
      */
-    protected function register($extension)
+    function register($extension)
     {
         $this->extensions->register($extension);
     }
@@ -189,7 +233,7 @@ class App
      */
     function before($handler)
     {
-        $this->getDispatcher()->before($handler);
+        $this->filters["before"]->add($handler);
         return $this;
     }
 
@@ -201,7 +245,7 @@ class App
      */
 	function after($handler)
 	{
-	    $this->getDispatcher()->after($handler);
+	    $this->filters["after"]->add($handler);
 	    return $this;
 	}
 
@@ -209,20 +253,8 @@ class App
      * Registers an error handler
      */
     function error($handler) {
-		$this->errorHandlers->add($handler);
+		$this->filters["error"]->add($handler);
 		return $this;
-    }
-
-    function startup($handler)
-    {
-        $this->startupHandlers->add($handler);
-        return $this;
-    }
-    
-    function shutdown($handler)
-    {
-        $this->shutdownHandlers->add($handler);
-        return $this;
     }
     
     /**
@@ -232,30 +264,8 @@ class App
      * @return App
      */
     function notFound($callback) {
-        $callback = function($error) use ($callback) {
-            $e = $error->exception;
-            
-            if (404 === $e->getCode()) {
-                return call_user_func($callback, $error);
-            }
-            else return;
-        };
-        $this->error($callback);
-        return $this;
+        
     }
-    
-    /**
-     * Returns a Router instance
-     *
-     * @return Router
-     */
-	protected function getRouter()
-	{
-	    if (null === $this->router) {
-	        $this->router = new Router;
-	    }
-	    return $this->router;
-	}
     
     /**
      * @return Response
@@ -267,17 +277,4 @@ class App
         }
         return $this->response;
     }
-    
-    /**
-     * Returns a Dispatcher instance
-     *
-     * @return Dispatcher
-     */
-	protected function getDispatcher()
-	{
-	    if (null === $this->dispatcher) {
-	        $this->dispatcher = new Dispatcher;
-	    }
-	    return $this->dispatcher;
-	}
 }
