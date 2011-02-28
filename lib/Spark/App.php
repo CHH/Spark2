@@ -29,9 +29,6 @@ class App
 
     protected $routes = array();
     
-    /** @var Dispatcher */
-    protected $dispatcher;
-    
     /** @var array */
     protected $filters = array();
     
@@ -52,9 +49,6 @@ class App
         foreach (Util\words("before after error notFound shutdown") as $w) {
             $this->filters[$w] = new FilterChain;
         }
-        
-        $this->router = new Router;
-        $this->dispatcher = new Dispatcher;
         
         $this->init();
     }
