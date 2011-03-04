@@ -14,6 +14,8 @@
 
 namespace Spark\Util;
 
+use Spark\Extension\Base;
+
 class ExtensionManager extends ArrayObject
 {
     protected $context;    
@@ -32,30 +34,17 @@ class ExtensionManager extends ArrayObject
      */
     function register($extension)
     {
-        if (is_string($extension) and !empty($extension)) {
+        if (is_string($extension) and class_exists($extension)) {
             $extension = new $extension;
         }
-        if (!is_object($extension)) {
-            throw new \InvalidArgumentException("An Extension must be an object or a class name");
+        if (!$extension instanceof Base) {
+            throw new \InvalidArgumentException("An Extension must be an instance of Extension\Base");
         }
 
-        // Look if the extension defines which methods should be exported,
-        // else take all public methods
-        if (!empty($extension->__export)) {
-            $methods = $extension->__export;
-        } else {
-            $methods = get_class_methods($extension);
-        }
-        
-        if ($extension instanceof \Spark\Extension\Base) {
-            $extension->context = $this->context;
-        }
+        $extension->context($this->context);
+        $methods = $extension->exports();
         
         foreach ($methods as $method) {
-            // Don't register magic methods
-            if ("__" == substr($method, 0, 2)) {
-                continue;
-            }
             $this[$method] = array($extension, $method);
         }
         return $this;

@@ -32,21 +32,27 @@ class App
     /** @var array */
     protected $filters = array();
     
+    protected $request;
+    
     /** @var Response */
     protected $response;
     
     /** @var Spark\Settings */
     protected $settings;
     
+    protected $error = array();
+    
 	final function __construct()
 	{
         $this->extensions = new \Spark\Util\ExtensionManager($this);
         $this->settings = new \Spark\Settings;
-    
-        $this->register("\Spark\Extension\ViewRenderer");
+        
+        $this->request = Request::createFromGlobals();
+        
+        $this->register("\Spark\Extension\Templates");
         $this->register("\Spark\Extension\Redirecting");
         
-        foreach (Util\words("before after error notFound shutdown") as $w) {
+        foreach (Util\words("before after shutdown") as $w) {
             $this->filters[$w] = new FilterChain;
         }
         
@@ -64,11 +70,90 @@ class App
     function init()
     {}
     
-    function run()
+    /**
+     * Invokes the given callback and captures the response
+     *
+     * @param callback $callback
+     * @param array $args
+     */
+    protected function getResponseCapturer($callback)
     {
-        $request  = Request::createFromGlobals();
-        $response = $this($request);
-        $response->send();
+        $response = $this->response();
+        $self = $this;
+        
+        return function() use ($callback, $response, $self) {
+            $args = func_get_args();
+        
+            ob_start();
+            
+            try {
+                $return = call_user_func_array($callback, $args);
+                $self->halt($return);
+                
+            } catch (\Spark\HaltException $e) {
+                $return = $e->getResponse();
+                $response->write(ob_get_clean());
+                
+                $response->write($return->getContent());
+                $response->setStatusCode($return->getStatusCode());
+                $response->headers->add($return->headers->all());
+            }
+        };
+    }
+    
+    protected function evalConditions(array $conditions, Request $request)
+    {
+        $result = false;
+        
+        foreach ($conditions as $condition) {
+            $result = $condition($request);
+        }
+        
+        if (!$result) {
+            $this->pass();
+        }
+        return true;
+    }
+    
+    protected function dispatch(Request $request)
+    {
+        $method = $request->getMethod();
+		
+	    if (empty($this->routes[$method])) {
+	        $this->response()->setStatusCode(404);
+	    }
+	    
+	    $match = false;
+	    
+	    foreach ($this->routes[$method] as $route) {
+            try {
+	            list($pattern, $callback, $conditions) = $route;
+	            
+	            if (!preg_match($pattern, $request->getRequestUri(), $matches)) {
+	                continue;
+	            }
+	            
+                if (!empty($conditions)) {
+                    $this->evalConditions($conditions, $request);
+                }
+                
+                $callback = $this->getResponseCapturer($callback);
+                $callback($request);
+                
+                unset($matches[0]);
+                $match = true;
+                break;
+            } catch (\Spark\PassException $e) {
+                continue;
+            }
+	    }
+	    
+	    if (!$match) {
+	        $this->response()->setStatusCode(404);
+	    }
+	    
+        $request->attributes->add($matches);
+        return $callback;
     }
     
     /**
@@ -77,80 +162,32 @@ class App
      * @param  Request $request 
      * @return App|Response Returns the response if "return_response" is TRUE
      */
-    function __invoke(Request $request)
+    function run(Request $request = null)
     {
-	    $response = $this->getResponse();
-
-        $returnValues = array();
+        $request  = $request ?: $this->request;
+		$response = $this->response();
 		
-		try {
-		    $this->filters["before"]->filter(array($request, $response));
-		    
-		    $method = $request->getMethod();
-		    
-		    if (empty($this->routes[$method])) {
-		        $response->setStatusCode(404);
-		        $response->setContent('');
-		        break;
-		    }
-		    
-		    $requestMatcher = new RequestMatcher;
-		    
-		    foreach ($this->routes[$method] as $route) {
-		        list($pattern, $callback) = $route;
-		        
-		        $requestMatcher->matchPath($pattern);
-		        
-		        if ($requestMatcher->matches($request)) {
-		            break;
-		        }
-		    }
-		    
-		    $return = call_user_func($callback, $request);
-		    
-		    if (!$return instanceof Response) {
-		        $return = new Response($return);
-		    }
-		    
-		    $returnValues[] = $return;
-		} catch (\Exception $e) {
-            if ($this->filters["error"]->isEmpty()) {
-                throw $e;
+		dispatch:
+	        try {
+	            $this->filters["before"]->filter(array($request, $response));  
+                $this->dispatch($request);
+                
+                if (!$response->isSuccessful()) {
+                    throw new \Exception("Request not successful.", $response->getStatusCode());
+                }
+            } catch (\Exception $e) {
+                $code = $e->getCode() ?: get_class($e);
+                
+                if (!$this->handleError($code, $request, $response, $e)) {
+                    goto finish;
+                }
             }
 		
-			$error = new \StdClass;
-			$error->exception = $e;
-			$error->request = $request;
-			$error->response = $response;
-
-			ob_start();
-			foreach ($this->filters["error"]->filter(array($error)) as $return) {
-                $returnValues[] = $return;
-			}
-			
-			$response->write(ob_get_clean());
-		}
-
-	    ob_start();
-        $this->filters["after"]->filter(array($request, $response));
-        $response->write(ob_get_clean());
-
-        foreach ($returnValues as $return) {
-            if (is_string($return)) {
-                $response->write($return);
-            }
-            if ($return instanceof Response) {
-                $response->headers->add($return->headers->all());
-                $response->write($return->getContent());
-                $response->setStatusCode($return->getStatusCode());
-            }
-        }
-	    
-	    if ($response->isNotFound()) {
-	        $this->filter["notFound"]->filter(array($request, $response));
-	    }
-	    
-	    return $response;
+		after:
+	        $this->filters["after"]->filter(array($request, $response));
+        
+        finish:
+	        $response->send();
     }
     
     /**
@@ -158,9 +195,39 @@ class App
      */
     function __call($method, array $args)
     {
+        if (in_array($method, array("get", "post", "put", "delete", "head", "options"))) {
+            $route = array_shift($args);
+            $callback = array_pop($args);
+            return $this->route(strtoupper($method), $route, $args, $callback);
+        }
         return $this->extensions->call($method, $args);
     }
-
+    
+    function halt($response)
+    {   
+        if (is_int($response)) {
+            $response = new Response('', $response);
+            
+        } else if (is_string($response) and !empty($response)) {
+            $response = new Response($response);
+            
+        } else if (empty($response)) {
+            $response = new Response;
+        }
+    
+        if (!$response instanceof Response) {
+            throw new \InvalidArgumentException("You must either supply a code, " 
+                . "content or a Response object");
+        }
+        
+        throw new HaltException($response);
+    }
+    
+    function pass()
+    {
+        throw new \Spark\PassException;
+    }
+    
     /**
      * Sets an option
      * 
@@ -179,29 +246,35 @@ class App
         return $this->settings;
     }
     
-    protected function route($verb, $path, array $options = array(),  $callback)
+    protected function route($verb, $path, array $conditions = array(),  $callback)
     {
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException("Callback is not valid");
+        }
         if (empty($this->routes[$verb])) {
             $this->routes[$verb] = new \SplStack;
         }
-        $pattern = $this->compile($path, $options);
         
-        $this->routes[$verb]->push(array($path, $callback));
-        return $this;
+        $exp = new \Spark\Util\StringExpression($path);
+        $pattern = $exp->toRegExp();
+        
+        $this->routes[$verb]->push(array($pattern, $callback, $conditions));
     }
     
-    protected function compile($path, array $options = array())
+    protected function parseConditions(array $conditions)
     {
-        $exp = new \Spark\Util\StringExpression($path, $options);
-        return $exp->toRegExp(false);
+        $compiled = array();
+        
+        foreach ($conditions as $condition => $args) {
+            if (is_callable(array($this, $condition))) {
+                $compiled[] = $this->{$condition}($args);
+            } else if ($this->settings->get($condition)) {
+                // Handle user defined conditions
+            }
+        }
+        
+        return $compiled;
     }
-    
-    function get($route, $callback)     { return $this->route("GET", $route, array(), $callback); }   
-    function post($route, $callback)    { return $this->route("POST", $route, array(), $callback); }
-    function put($route, $callback)     { return $this->route("PUT", $route, array(), $callback); }
-    function delete($route, $callback)  { return $this->route("DELETE", $route, array(), $callback); }
-    function head($route, $callback)    { return $this->route("HEAD", $route, array(), $callback); }
-    function options($route, $callback) { return $this->route("OPTIONS", $route, array(), $callback); }
     
     function extensions()
     {
@@ -216,7 +289,7 @@ class App
      */
     function register($extension)
     {
-        $this->extensions->register($extension);
+        $this->extensions()->register($extension);
     }
     
     /**
@@ -242,12 +315,39 @@ class App
 	    $this->filters["after"]->add($handler);
 	    return $this;
 	}
-
+    
+    protected function handleError($code = "\Exception", $request, $response, $exception = null)
+    {   
+        $error = new \StdClass;
+        $error->request = $request;
+        $error->response = $response;
+        $error->exception = $exception;
+        
+        $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
+        
+        if (!$handler) {
+            return false;
+        }
+        
+        $handler = $this->getResponseCapturer($handler);
+        $handler($error);
+    }
+    
     /**
      * Registers an error handler
      */
-    function error($handler) {
-		$this->filters["error"]->add($handler);
+    function error($code = "\Exception", $handler = null) 
+    {
+        if (is_callable($code)) {
+            $handler = $code;
+            $code = "\Exception";
+        }
+		if (!is_array($code)) {
+		    $code = array($code);
+		}
+	    foreach ($code as $c) {
+	        $this->errors[$c] = $handler;
+	    }
 		return $this;
     }
     
@@ -258,13 +358,46 @@ class App
      * @return App
      */
     function notFound($callback) {
+        return $this->error(404, $callback);
+    }
+    
+    /*
+     * Bundled Route Conditions
+     */
+    
+    function hostName($pattern)
+    {
+        return function(Request $request) use ($pattern) {
+            $hostname = $request->getHost();
+            
+            return preg_match($pattern, $hostname, $matches) > 0;
+        };
+    }
+    
+    function userAgent($pattern)
+    {
+        return function(Request $request) use ($pattern) {
+            $userAgent = $request->headers->get("user-agent");
+            
+            return preg_match($pattern, $userAgent, $matches) > 0;
+        };
+    }
+    
+    function provides($mimetypes)
+    {
+        $mimetypes = func_get_args();
         
+        return function(Request $request) use ($mimetypes) {
+            $accepts = $request->getAcceptableContentTypes();
+            
+            // Check if the given mimetypes match the request header's
+        };
     }
     
     /**
      * @return Response
      */
-    protected function getResponse()
+    protected function response()
     {
         if (null === $this->response) {
             $this->response = new Response;

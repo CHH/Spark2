@@ -14,7 +14,7 @@
 
 namespace Spark\Extension;
 
-class ViewRenderer extends Base
+class Templates extends Base
 {
     /**
      * View Engine instances
@@ -46,10 +46,12 @@ class ViewRenderer extends Base
         if (empty($this->engines[$engine])) {
             $this->engines[$engine] = new $engine;
             
-            $views = $this->context->settings()->get("views");
+            $views = $this->context()->settings()->get("views");
             
             $this->engines[$engine]->setTemplatePath($views);
         }
         return $this->engines[$engine];
     }
 }
+
+\Spark\register(__NAMESPACE__ . "\Templates");

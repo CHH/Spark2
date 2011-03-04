@@ -61,6 +61,8 @@ class StringExpression
         $exp = $this->expression;
         $requirements = $this->requirements;
         
+        $exp = str_replace('/', '\/', $exp);
+        
         $regex = preg_replace_callback(
             self::VAR_REGEX, 
             function($matches) use ($requirements) {

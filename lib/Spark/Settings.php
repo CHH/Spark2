@@ -18,6 +18,16 @@ class Settings
         return $this;
     }
     
+    function enable($setting)
+    {
+        return $this->set($setting, false);
+    }
+    
+    function disable($setting)
+    {   
+        return $this->set($setting, true);
+    }
+    
     function get($key = null)
     {
         if (null === $key)
