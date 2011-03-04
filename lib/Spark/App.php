@@ -31,7 +31,8 @@ class App
     
     /** @var array */
     protected $filters = array();
-    
+
+    /** @var Request */
     protected $request;
     
     /** @var Response */
@@ -39,7 +40,8 @@ class App
     
     /** @var Spark\Settings */
     protected $settings;
-    
+
+    /** Error Handlers */
     protected $error = array();
     
 	final function __construct()
@@ -120,8 +122,8 @@ class App
         $method = $request->getMethod();
 		
 	    if (empty($this->routes[$method])) {
-	        $this->response()->setStatusCode(404);
-	    }
+            return $this->response()->setStatusCode(404);
+        }
 	    
 	    $match = false;
 	    
@@ -136,11 +138,13 @@ class App
                 if (!empty($conditions)) {
                     $this->evalConditions($conditions, $request);
                 }
+
+                unset($matches[0]);
+                $request->attributes->add($matches);
                 
                 $callback = $this->getResponseCapturer($callback);
                 $callback($request);
                 
-                unset($matches[0]);
                 $match = true;
                 break;
             } catch (\Spark\PassException $e) {
@@ -151,9 +155,6 @@ class App
 	    if (!$match) {
 	        $this->response()->setStatusCode(404);
 	    }
-	    
-        $request->attributes->add($matches);
-        return $callback;
     }
     
     /**
@@ -177,8 +178,12 @@ class App
                 }
             } catch (\Exception $e) {
                 $code = $e->getCode() ?: get_class($e);
-                
+
                 if (!$this->handleError($code, $request, $response, $e)) {
+                    // We are processing a thrown Exception, not an HTTP Error here
+                    if (is_string($code)) {
+                        throw $e;
+                    }
                     goto finish;
                 }
             }
