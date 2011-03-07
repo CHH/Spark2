@@ -25,7 +25,10 @@ use Spark\Http\Request,
 class App
 {
     /** @var \Spark\Util\ExtensionManager */
-    protected $extensions; 
+    public $extensions; 
+    
+    /** @var Spark\Settings */
+    public $settings;
 
     protected $routes = array();
     
@@ -36,9 +39,6 @@ class App
     
     /** @var Response */
     protected $response;
-    
-    /** @var Spark\Settings */
-    protected $settings;
     
     protected $error = array();
     
@@ -52,16 +52,27 @@ class App
         $this->register("\Spark\Extension\Templates");
         $this->register("\Spark\Extension\Redirecting");
         
-        foreach (Util\words("before after shutdown") as $w) {
-            $this->filters[$w] = new FilterChain;
-        }
-        
         $this->init();
     }
     
-    function addFilter($event, $handler)
+    protected function addFilter($event, $handler)
     {
-        $this->filters[$event]->add($handler);
+        if (empty($this->filters[$event])) {
+            $this->filters[$event] = new \SplQueue;
+        }
+        $this->filters[$event]->enqueue($handler);
+    }
+    
+    protected function runFilters($event, array $args = array())
+    {
+        if (empty($this->filters[$event])) {
+            return false;
+        }
+        
+        foreach ($this->filters[$event] as $filter) {
+            $filter = $this->getResponseCapturer($filter);
+            call_user_func_array($filter, $args);
+        }
     }
     
     /**
@@ -169,7 +180,7 @@ class App
 		
 		dispatch:
 	        try {
-	            $this->filters["before"]->filter(array($request, $response));  
+	            $this->runFilters("before", array($request, $response));  
                 $this->dispatch($request);
                 
                 if (!$response->isSuccessful()) {
@@ -184,10 +195,44 @@ class App
             }
 		
 		after:
-	        $this->filters["after"]->filter(array($request, $response));
+	        $this->runFilters("after", array($request, $response));
         
         finish:
 	        $response->send();
+    }
+    
+    /*
+     * Methods for defining handlers for HTTP Methods
+     */
+    
+    function GET()
+    {
+        return $this->route("GET", func_get_args());
+    }
+    
+    function POST()
+    {
+        return $this->route("POST", func_get_args());
+    }
+    
+    function PUT()
+    {
+        return $this->route("PUT", func_get_args());
+    }
+    
+    function DELETE()
+    {
+        return $this->route("DELETE", func_get_args());
+    }
+    
+    function HEAD()
+    {
+        return $this->route("HEAD", func_get_args());
+    }
+    
+    function OPTIONS()
+    {
+        return $this->route("OPTIONS", func_get_args());
     }
     
     /**
@@ -195,11 +240,6 @@ class App
      */
     function __call($method, array $args)
     {
-        if (in_array($method, array("get", "post", "put", "delete", "head", "options"))) {
-            $route = array_shift($args);
-            $callback = array_pop($args);
-            return $this->route(strtoupper($method), $route, $args, $callback);
-        }
         return $this->extensions->call($method, $args);
     }
     
@@ -241,13 +281,16 @@ class App
         return $this;
     }
     
-    function settings()
+    protected function route($verb, array $args)
     {
-        return $this->settings;
-    }
-    
-    protected function route($verb, $path, array $conditions = array(),  $callback)
-    {
+        if (sizeof($args) == 3) {
+            list($path, $conditions, $callback) = $args;
+            
+        } else if (sizeof($args == 2)) {
+            list($path, $callback) = $args;
+            $conditions = array();
+        }
+        
         if (!is_callable($callback)) {
             throw new \InvalidArgumentException("Callback is not valid");
         }
@@ -258,9 +301,14 @@ class App
         $exp = new \Spark\Util\StringExpression($path);
         $pattern = $exp->toRegExp();
         
+        $conditions = $this->parseConditions($conditions);
+        
         $this->routes[$verb]->push(array($pattern, $callback, $conditions));
     }
     
+    /**
+     * TODO: Handle user-defined conditions
+     */
     protected function parseConditions(array $conditions)
     {
         $compiled = array();
@@ -276,11 +324,6 @@ class App
         return $compiled;
     }
     
-    function extensions()
-    {
-        return $this->extensions;
-    }
-    
     /**
      * Registers an extension for the DSL
      *
@@ -289,7 +332,7 @@ class App
      */
     function register($extension)
     {
-        $this->extensions()->register($extension);
+        $this->extensions->register($extension);
     }
     
     /**
@@ -300,7 +343,7 @@ class App
      */
     function before($handler)
     {
-        $this->filters["before"]->add($handler);
+        $this->addFilter("before", $handler);
         return $this;
     }
 
@@ -312,7 +355,7 @@ class App
      */
 	function after($handler)
 	{
-	    $this->filters["after"]->add($handler);
+	    $this->addFilter("after", $handler);
 	    return $this;
 	}
     

@@ -4,6 +4,3 @@
 [submodule "lib/Symfony/Component/ClassLoader"]
 	path = lib/Symfony/Component/ClassLoader
 	url = git://github.com/symfony/ClassLoader.git
-[submodule "lib/Symfony/Component/EventDispatcher"]
-	path = lib/Symfony/Component/EventDispatcher
-	url = git://github.com/symfony/EventDispatcher.git
