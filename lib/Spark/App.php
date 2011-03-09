@@ -30,7 +30,7 @@ class App
     
     /** @var array */
     protected $filters = array();
-    
+
     /** @var Request */
     protected $request;
     
@@ -131,14 +131,14 @@ class App
     protected function dispatch(Request $request)
     {
         $method = $request->getMethod();
-
-        if (empty($this->routes[$method])) {
-            $this->response()->setStatusCode(404);
+		
+	    if (empty($this->routes[$method])) {
+            return $this->response()->setStatusCode(404);
         }
-
-        $match = false;
-
-        foreach ($this->routes[$method] as $route) {
+	    
+	    $match = false;
+	    
+	    foreach ($this->routes[$method] as $route) {
             try {
                 list($pattern, $callback, $conditions) = $route;
                 
@@ -149,23 +149,22 @@ class App
                 if (!empty($conditions)) {
                     $this->evalConditions($conditions, $request);
                 }
+
+                unset($matches[0]);
+                $request->attributes->add($matches);
                 
                 $this->captureResponse($callback, array($request));
                 
-                unset($matches[0]);
                 $match = true;
                 break;
             } catch (\Spark\PassException $e) {
                 continue;
             }
-        }
-        
-        if (!$match) {
-            $this->response()->setStatusCode(404);
-        }
-        
-        $request->attributes->add($matches);
-        return $callback;
+	    }
+	    
+	    if (!$match) {
+	        $this->response()->setStatusCode(404);
+	    }
     }
     
     protected function evalConditions(array $conditions, Request $request)
