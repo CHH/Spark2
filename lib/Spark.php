@@ -15,11 +15,11 @@
 /** @namespace */
 namespace Spark
 {
-    require_once __DIR__ . "/Spark/Util.php";
     require_once "Symfony/Component/ClassLoader/UniversalClassLoader.php";
-
+    require_once "Underscore.php/underscore.php";
+    
     use Symfony\Component\ClassLoader\UniversalClassLoader;
-
+    
     /*
      * Register the Autoloader
      */
