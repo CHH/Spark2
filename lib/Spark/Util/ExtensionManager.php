@@ -18,11 +18,14 @@ use Spark\Extension\Base;
 
 class ExtensionManager extends ArrayObject
 {
-    protected $context;    
+    /**
+     * @var \Spark\App
+     */
+    protected $app;    
     
-    function __construct($context)
+    function __construct(\Spark\App $app)
     {
-        $this->context = $context;
+        $this->app = $app;
     }    
     
     /**
@@ -41,7 +44,7 @@ class ExtensionManager extends ArrayObject
             throw new \InvalidArgumentException("An Extension must be an instance of Extension\Base");
         }
 
-        $extension->context($this->context);
+        $extension->application($this->app);
         $methods = $extension->exports();
         
         foreach ($methods as $method) {

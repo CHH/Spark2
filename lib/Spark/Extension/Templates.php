@@ -46,7 +46,7 @@ class Templates extends Base
         if (empty($this->engines[$engine])) {
             $this->engines[$engine] = new $engine;
             
-            $views = $this->context()->settings->get("views");
+            $views = $this->application()->settings->get("views");
             
             $this->engines[$engine]->setTemplatePath($views);
         }

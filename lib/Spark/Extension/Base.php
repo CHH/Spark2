@@ -1,23 +1,40 @@
 <?php
+/**
+ * Extension Base Class
+ * 
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.txt.
+ *
+ * @category   Spark
+ * @package    Spark_Util
+ * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
+ * @copyright  Copyright (c) Christoph Hochstrasser
+ * @license    MIT License
+ */
 
 namespace Spark\Extension;
 
 class Base
 {
-    protected $context;
+    /**
+     * Application this Extension runs in
+     */
+    protected $app;
     
     function exports()
     {
-        return array_filter(get_class_methods($this), function($method) {
-            return substr($method, 0, 2) != "__" and !in_array($method, array("exports", "context"));
+        $self = __CLASS__;
+        
+        return array_filter(get_class_methods($this), function($method) use ($self) {
+            return substr($method, 0, 2) != "__" and !in_array($method, get_class_methods($self));
         });
     }
     
-    function context($context = null)
+    function application(\Spark\App $app = null)
     {
-        if (null === $context) {
-            return $this->context;
+        if (null === $app) {
+            return $this->app;
         }
-        $this->context = $context;
+        $this->app = $app;
     }
 }

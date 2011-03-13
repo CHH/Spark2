@@ -16,7 +16,8 @@ namespace Spark;
 
 use Spark\Http\Request, 
     Spark\Http\Response,
-    Spark\Util;
+    Spark\Util,
+    Underscore as _;
 
 class App
 {
@@ -83,7 +84,7 @@ class App
         }
         
         foreach ($this->filters[$queue] as $filter) {
-            $this->captureResponse($filter, $args);
+            $this->invokeInRequestScope($filter, $args);
         }
         return true;
     }
@@ -153,7 +154,7 @@ class App
                 unset($matches[0]);
                 $request->attributes->add($matches);
                 
-                $this->captureResponse($callback, array($request));
+                $this->invokeInRequestScope($callback, array($request));
                 
                 $match = true;
                 break;
@@ -193,7 +194,7 @@ class App
         if (!$handler) {
             return false;
         }
-        $handler = $this->captureResponse($handler, array($error));
+        $handler = $this->invokeInRequestScope($handler, array($error));
     }
     
     /**
@@ -202,11 +203,11 @@ class App
      * @param callback $callback
      * @param array $args
      */
-    protected function captureResponse($callback, array $args)
+    protected function invokeInRequestScope($callback, array $args)
     {
         $response = $this->response();
         ob_start();
-        
+
         try {
             $return = call_user_func_array($callback, $args);
             $this->halt($return);
@@ -334,11 +335,13 @@ class App
         $compiled = array();
         
         foreach ($conditions as $condition => $args) {
-            if (is_callable(array($this, $condition))) {
-                $compiled[] = $this->{$condition}($args);
+            if (is_callable(array($this, _\camelize($condition, false)))) {
+                $condition = array($this, _\camelize($condition, false));
+                
             } else if ($this->settings->get($condition)) {
-                // Handle user defined conditions
+                $condition = $this->settings->get($condition);
             }
+            $compiled[] = call_user_func($condition, $args);
         }
         
         return $compiled;
@@ -348,11 +351,24 @@ class App
      * Registers an extension for the DSL
      *
      * @see ExtensionManager
-     * @param object $extension
+     * @param object $extension,...
      */
     function register($extension)
     {
-        $this->extensions->register($extension);
+        $args = func_get_args();
+
+        switch (count($args)) {
+            case 1:
+                $this->extensions->register($extension);
+                break;
+            default:
+                foreach ($args as $arg) {
+                    $this->extensions->register($arg);
+                }
+                break;
+        }
+        
+        return $this;
     }
     
     /**
@@ -412,7 +428,7 @@ class App
      * Bundled Route Conditions
      */
     
-    function host_name($pattern)
+    function hostName($pattern)
     {
         return function(Request $request) use ($pattern) {
             $hostname = $request->getHost();
@@ -421,7 +437,7 @@ class App
         };
     }
     
-    function user_agent($pattern)
+    function userAgent($pattern)
     {
         return function(Request $request) use ($pattern) {
             $userAgent = $request->headers->get("user-agent");
@@ -429,15 +445,24 @@ class App
             return preg_match($pattern, $userAgent, $matches) > 0;
         };
     }
-    
-    function provides($mimetypes)
+
+    /**
+     * Returns a matcher which returns true if the client accepts the format
+     *
+     * @param  string $format,... One or more formats, which the client should accept
+     * @return bool
+     */
+    function provides($format)
     {
-        $mimetypes = func_get_args();
+        $formats = func_get_args();
         
-        return function(Request $request) use ($mimetypes) {
-            $accepts = $request->getAcceptableContentTypes();
-            
-            // Check if the given mimetypes match the request header's
+        return function(Request $request) use ($formats) {
+            return _\chain($request->getAcceptableContentTypes())
+                ->map(array($request, "getFormat"))
+                ->select(function($value) use ($formats) {
+                    return in_array($value, $formats);
+                })
+                ->value() ? true : false;
         };
     }
     
