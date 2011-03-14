@@ -154,6 +154,10 @@ class App
                 unset($matches[0]);
                 $request->attributes->add($matches);
                 
+                // If Callback is a class name then instantiate it
+                if (is_string($callback) and class_exists($callback)) {
+                    $callback = new $callback;
+                }
                 $this->invokeInRequestScope($callback, array($request));
                 
                 $match = true;
