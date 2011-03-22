@@ -1,7 +1,7 @@
 <?php
 /**
  * Spark Framework
- * 
+ *
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
  *
@@ -17,9 +17,9 @@ namespace Spark
 {
     require_once "Symfony/Component/ClassLoader/UniversalClassLoader.php";
     require_once "Underscore.php/underscore.php";
-    
+
     use Symfony\Component\ClassLoader\UniversalClassLoader;
-    
+
     /*
      * Register the Autoloader
      */
@@ -30,8 +30,8 @@ namespace Spark
     function Application()
     {
         static $instance;
-        
-        if (null === $instance) { 
+
+        if (null === $instance) {
             $instance = new \Spark\App;
         }
         return $instance;
@@ -47,7 +47,7 @@ namespace Spark
         if (!is_array($method)) {
             $method = array($method);
         }
-        
+
         $template = <<<'PHP'
             namespace Spark {
                 function %1$s() {
@@ -55,7 +55,7 @@ namespace Spark
                 }
             }
 PHP;
-        
+
         foreach ($method as $m) {
             eval(sprintf($template, $m));
         }
@@ -63,9 +63,9 @@ PHP;
 
     // Delegate core methods
     delegate(array(
-        "get", "post", "put", "delete", "head", "options", "before", "after", 
+        "get", "post", "put", "delete", "head", "options", "before", "after",
         "error", "notFound", "run", "set", "settings", "extensions", "halt", "pass",
-        "provides", "userAgent"
+        "provides", "userAgent", "helpers"
     ));
 
     function register($extension)
@@ -74,7 +74,8 @@ PHP;
             $extension = new $extension;
         }
         Application()->register($extension);
-        
+
         delegate($extension->exports());
     }
 }
+

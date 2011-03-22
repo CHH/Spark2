@@ -1,7 +1,7 @@
 <?php
 /**
  * View renderer Extension
- * 
+ *
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
  *
@@ -12,7 +12,7 @@
  * @license    MIT License
  */
 
-namespace Spark\Extension;
+namespace Spark\Helper;
 
 class Templates extends Base
 {
@@ -40,18 +40,19 @@ class Templates extends Base
     {
         return $this->getEngine("\Spark\View\PhlyMustacheEngine")->render($template, $view);
     }
-    
+
     protected function getEngine($engine)
     {
         if (empty($this->engines[$engine])) {
             $this->engines[$engine] = new $engine;
-            
+
             $views = $this->application()->settings->get("views");
-            
+
             $this->engines[$engine]->setTemplatePath($views);
         }
         return $this->engines[$engine];
     }
 }
 
-\Spark\register(__NAMESPACE__ . "\Templates");
+\Spark\helpers(__NAMESPACE__ . "\Templates");
+
