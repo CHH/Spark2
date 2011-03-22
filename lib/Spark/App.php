@@ -170,14 +170,10 @@ class App
     
     protected function evalConditions(array $conditions, Request $request)
     {
-        $result = false;
-        
         foreach ($conditions as $condition) {
-            $result = $condition($request);
-        }
-        
-        if (!$result) {
-            $this->pass();
+            if (!$condition($request)) {
+                $this->pass();
+            }
         }
         return true;
     }
@@ -194,7 +190,9 @@ class App
         if (!$handler) {
             return false;
         }
-        $handler = $this->invokeInRequestScope($handler, array($error));
+        $this->invokeInRequestScope($handler, array($error));
+        
+        return true;
     }
     
     /**
