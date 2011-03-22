@@ -33,12 +33,6 @@ class PhlyMustacheEngine implements Engine
         return new Response($mustache->render($template, $view));
     }
     
-    function setTemplatePath($path)
-    {
-        $this->getMustache()->setTemplatePath($path);
-        return $this;
-    }
-    
     function setMustache(Mustache $mustache)
     {
         $this->mustache = $mustache;

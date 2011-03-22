@@ -150,6 +150,7 @@ class App
                     continue;
                 }
 
+                // Eval all conditions for this route
                 if (!empty($conditions)) {
                     $this->evalConditions($conditions, $request);
                 }
@@ -270,25 +271,28 @@ class App
     }
 
     function halt($response)
-    {
+    {   
+        $status = 200;
+        $body = '';
+        $headers = array();
+
         if (is_int($response)) {
-            $response = new Response('', $response);
-
+            $status = $response;
         } else if (is_string($response) and !empty($response)) {
-            $response = new Response($response);
-
-        } else if (empty($response)) {
-            $response = new Response;
+            $body = $response;
+        } else if (is_array($response)) {
+            $status = isset($response[0]) ? $response[0] : 200;
+            $headers = isset($response[1]) ? $response[1] : array();
+            $body = isset($response[2]) ? $response[2] : '';
         }
 
-        if (!$response instanceof Response) {
-            throw new \InvalidArgumentException("You must either supply a code, "
-                . "content or a Response object");
-        }
-
+        $response = new Response($body, $status, $headers);
         throw new HaltException($response);
     }
 
+    /**
+     * Skip to the next callback for the route
+     */
     function pass()
     {
         throw new PassException;
@@ -307,6 +311,29 @@ class App
         return $this;
     }
 
+    /**
+     * Set the given Setting to TRUE
+     *
+     * @param string $setting
+     * @return App
+     */
+    function enable($setting)
+    {
+        $this->settings->enable($setting);
+        return $this;
+    }
+
+    /**
+     * Set the given Setting to FALSE
+     * 
+     * @param string $setting
+     */
+    function disable($setting)
+    {
+        $this->settings->disable($setting);
+        return $this;
+    }
+    
     protected function route($verb, array $args)
     {
         if (sizeof($args) == 3) {
@@ -332,9 +359,6 @@ class App
         $this->routes[$verb]->push(array($pattern, $callback, $conditions));
     }
 
-    /**
-     * TODO: Handle user-defined conditions
-     */
     protected function parseConditions(array $conditions)
     {
         $compiled = array();

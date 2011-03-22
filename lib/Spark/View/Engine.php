@@ -17,5 +17,4 @@ namespace Spark\View;
 interface Engine
 {
     function render($template, $view = null);
-    function setTemplatePath($path);
 }
