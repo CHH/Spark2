@@ -19,8 +19,14 @@ class Base
     /**
      * Application this Extension runs in
      */
-    protected $app;
+    public $app;
 
+    /**
+     * Hook which gets called after the extension was registered
+     */
+    function registered(\Spark\App $app)
+    {}
+    
     function exports()
     {
         $self = __CLASS__;
@@ -30,12 +36,6 @@ class Base
         });
     }
     
-    function setApplication(\Spark\App $app)
-    {
-        $this->app = $app;
-        return $this;
-    }
-
     function __get($var)
     {
         if (isset($this->app->{$var})) {

@@ -44,12 +44,14 @@ class ExtensionManager extends ArrayObject
             throw new \InvalidArgumentException("An Extension must be an instance of Extension\Base");
         }
 
-        $extension->setApplication($this->app);
+        $extension->app = $this->app;
         $methods = $extension->exports();
 
         foreach ($methods as $method) {
             $this[$method] = array($extension, $method);
         }
+
+        call_user_func(array($extension, "registered"), $this->app);
         return $this;
     }
 
