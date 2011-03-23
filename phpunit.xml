@@ -1,7 +1,8 @@
-<phpunit bootstrap="./bootstrap.php">
+<phpunit bootstrap="./tests/bootstrap.php">
     <testsuites>
         <testsuite name="Spark Framework">
-            <directory>./</directory>
+            <directory>./tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>
+
