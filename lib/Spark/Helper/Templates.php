@@ -47,7 +47,7 @@ class Templates extends Base
 
     function findTemplate($name)
     {
-        $views = $this->application()->settings->get("views");
+        $views = $this->app->settings->get("views");
 
         if (!is_array($views)) {
             $views = array($views);

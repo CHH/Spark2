@@ -29,16 +29,26 @@ class Base
             return substr($method, 0, 2) != "__" and !in_array($method, get_class_methods($self));
         });
     }
-
-    function application()
-    {
-        return $this->app;
-    }
-
+    
     function setApplication(\Spark\App $app)
     {
         $this->app = $app;
         return $this;
+    }
+
+    function __get($var)
+    {
+        if (isset($this->app->{$var})) {
+            return $this->app->{$var};
+        }
+    }
+    
+    function __call($method, array $args = array())
+    {
+        if (!is_callable(array($this->app, $method))) {
+            throw new \BadMethodCallException("Call to an undefined Method $method");
+        }
+        return call_user_func_array(array($this->app, $method), $args);
     }
 }
 

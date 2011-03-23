@@ -65,7 +65,7 @@ PHP;
     delegate(array(
         "get", "post", "put", "delete", "head", "options", "before", "after",
         "error", "notFound", "run", "set", "settings", "extensions", "halt", "pass",
-        "provides", "userAgent", "helpers"
+        "provides", "userAgent"
     ));
 
     function register($extension)
@@ -76,6 +76,20 @@ PHP;
         Application()->register($extension);
 
         delegate($extension->exports());
+    }
+
+    /**
+     * Add or return helpers
+     */
+    function helpers($helper = null)
+    {
+        $helpers = Application()->helpers;
+        if (null === $helper) {
+            return $helpers;
+        }
+        foreach (func_get_args() as $helper) {
+            $helpers->register($helper);
+        }
     }
 }
 

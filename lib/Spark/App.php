@@ -27,6 +27,9 @@ class App
     /** @var Spark\Settings */
     public $settings;
 
+    /** @var Spark\Util\Helpers */
+    public $helpers;
+    
     protected $routes = array();
 
     /** @var array */
@@ -382,33 +385,17 @@ class App
      * @see ExtensionManager
      * @param object $extension,...
      */
-    function register($extension)
+    function register(/* $extension,... */)
     {
-        $args = func_get_args();
-
-        switch (count($args)) {
-            case 1:
-                $this->extensions->register($extension);
-                break;
-            default:
-                foreach ($args as $arg) {
-                    $this->extensions->register($arg);
-                }
-                break;
+        foreach (func_get_args() as $extension) {
+            $this->extensions->register($extension);
         }
-
         return $this;
     }
 
     function helpers(/* $helper,... */)
     {
-        $helpers = func_get_args();
-
-        if (0 === func_num_args()) {
-            return $this->helpers;
-        }
-
-        foreach ($helpers as $helper) {
+        foreach (func_get_args() as $helper) {
             $this->helpers->register($helper);
         }
         return $this;
