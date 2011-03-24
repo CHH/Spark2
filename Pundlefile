@@ -1,7 +1,7 @@
 description: 'Spark2 Web Framework Dependencies'
 
 dependencies:
-    - 
+    -
         name: PHP
         type: php
         version: '~5.3.0'
@@ -9,14 +9,15 @@ dependencies:
         name: 'Underscore.php'
         type: git
         repository: 'git://github.com/CHH/Underscore.php'
-        target: 'lib/Underscore.php'
-    - 
+        target: 'lib/vendor/Underscore.php'
+    -
         name: 'Symfony Class Loader'
         type: git
         repository: 'git://github.com/symfony/ClassLoader.git'
-        target: 'lib/Symfony/Component/ClassLoader'
+        target: 'lib/vendor/Symfony/Component/ClassLoader'
     -
         name: 'Symfony Http Foundation'
         type: git
         repository: 'git://github.com/symfony/HttpFoundation.git'
-        target: 'lib/Symfony/Component/HttpFoundation'
+        target: 'lib/vendor/Symfony/Component/HttpFoundation'
+
