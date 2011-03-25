@@ -9,15 +9,15 @@ dependencies:
         name: 'Underscore.php'
         type: git
         repository: 'git://github.com/CHH/Underscore.php'
-        target: 'lib/vendor/Underscore.php'
+        target: 'vendor/Underscore.php'
     -
         name: 'Symfony Class Loader'
         type: git
         repository: 'git://github.com/symfony/ClassLoader.git'
-        target: 'lib/vendor/Symfony/Component/ClassLoader'
+        target: 'vendor/Symfony/Component/ClassLoader'
     -
         name: 'Symfony Http Foundation'
         type: git
         repository: 'git://github.com/symfony/HttpFoundation.git'
-        target: 'lib/vendor/Symfony/Component/HttpFoundation'
+        target: 'vendor/Symfony/Component/HttpFoundation'
 

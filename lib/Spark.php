@@ -15,10 +15,12 @@
 /** @namespace */
 namespace Spark
 {
-    require_once "vendor/Symfony/Component/ClassLoader/UniversalClassLoader.php";
-    require_once "vendor/Underscore.php/underscore.php";
-
     use Symfony\Component\ClassLoader\UniversalClassLoader;
+
+    $vendor = realpath(__DIR__ . "/../vendor");
+
+    require_once $vendor . "/Symfony/Component/ClassLoader/UniversalClassLoader.php";
+    require_once $vendor . "/Underscore.php/underscore.php";
 
     /*
      * Register the Autoloader
@@ -26,7 +28,7 @@ namespace Spark
     $classLoader = new UniversalClassLoader;
     $classLoader->registerNamespaces(array(
         "Spark"   => __DIR__,
-        "Symfony" => __DIR__ . "/vendor"
+        "Symfony" => $vendor
     ));
     $classLoader->register();
 
