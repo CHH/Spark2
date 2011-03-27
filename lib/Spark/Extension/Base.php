@@ -18,9 +18,15 @@ class Base
 {
     /**
      * Application this Extension runs in
+     * @var \Spark\App
      */
     public $app;
-
+    
+    /**
+     * @var \Spark\Util\ExtensionManager
+     */
+    public $manager;
+    
     /**
      * Hook which gets called after the extension was registered
      */
@@ -45,10 +51,15 @@ class Base
     
     function __call($method, array $args = array())
     {
-        if (!is_callable(array($this->app, $method))) {
-            throw new \BadMethodCallException("Call to an undefined Method $method");
+        $callable = array($this->app, $method);
+        
+        if (!is_callable($callable)) {
+            $callable = array($this->manager, $method);
+            if (!is_callable($callable)) {
+                throw new \BadMethodCallException("Call to an undefined Method $method");
+            }
         }
-        return call_user_func_array(array($this->app, $method), $args);
+        return call_user_func_array($callable, $args);
     }
 }
 

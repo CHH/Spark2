@@ -45,6 +45,8 @@ class ExtensionManager extends ArrayObject
         }
 
         $extension->app = $this->app;
+        $extension->manager = $this;
+        
         $methods = $extension->exports();
 
         foreach ($methods as $method) {

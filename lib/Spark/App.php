@@ -235,34 +235,58 @@ class App
      * Methods for defining handlers for HTTP Methods
      */
 
-    function GET()
+    function GET($route, $conditions, $callback = null)
     {
-        return $this->route("GET", func_get_args());
+        $this->head($route, $conditions, $callback);
+        return $this->route("GET", $route, $conditions, $callback);
     }
 
-    function POST()
+    function POST($route, $conditions, $callback = null)
     {
-        return $this->route("POST", func_get_args());
+        return $this->route("POST", $route, $conditions, $callback);
     }
 
-    function PUT()
+    function PUT($route, $conditions, $callback = null)
     {
-        return $this->route("PUT", func_get_args());
+        return $this->route("PUT", $route, $conditions, $callback);
     }
 
-    function DELETE()
+    function DELETE($route, $conditions, $callback = null)
     {
-        return $this->route("DELETE", func_get_args());
+        return $this->route("DELETE", $route, $conditions, $callback);
     }
 
-    function HEAD()
+    function HEAD($route, $conditions, $callback = null)
     {
-        return $this->route("HEAD", func_get_args());
+        return $this->route("HEAD", $route, $conditions, $callback);
     }
 
-    function OPTIONS()
+    function OPTIONS($route, $conditions, $callback = null)
     {
-        return $this->route("OPTIONS", func_get_args());
+        return $this->route("OPTIONS", $route, $conditions, $callback);
+    }
+
+    protected function route($verb, $route, $conditions, $callback)
+    {
+        // Conditions were omitted and only the callback supplied
+        if (is_callable($conditions)) {
+            $callback = $conditions;
+            $conditions = array();
+        }
+
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException("Callback is not valid");
+        }
+        if (empty($this->routes[$verb])) {
+            $this->routes[$verb] = new \SplStack;
+        }
+
+        $exp = new Util\StringExpression($path);
+        $pattern = $exp->toRegExp();
+
+        $conditions = $this->parseConditions($conditions);
+
+        $this->routes[$verb]->push(array($pattern, $callback, $conditions));
     }
 
     /**
@@ -335,31 +359,6 @@ class App
     {
         $this->settings->disable($setting);
         return $this;
-    }
-    
-    protected function route($verb, array $args)
-    {
-        if (sizeof($args) == 3) {
-            list($path, $conditions, $callback) = $args;
-
-        } else if (sizeof($args == 2)) {
-            list($path, $callback) = $args;
-            $conditions = array();
-        }
-
-        if (!is_callable($callback)) {
-            throw new \InvalidArgumentException("Callback is not valid");
-        }
-        if (empty($this->routes[$verb])) {
-            $this->routes[$verb] = new \SplStack;
-        }
-
-        $exp = new Util\StringExpression($path);
-        $pattern = $exp->toRegExp();
-
-        $conditions = $this->parseConditions($conditions);
-
-        $this->routes[$verb]->push(array($pattern, $callback, $conditions));
     }
 
     protected function parseConditions(array $conditions)
