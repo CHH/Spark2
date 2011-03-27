@@ -15,8 +15,9 @@
 /** @namespace */
 namespace Spark
 {
-    require_once "_autoload.php";
-
+    require_once __DIR__ . "/../vendor/Underscore.php/underscore.php";
+    require_once __DIR__ . "/../_autoload.php";
+    
     function Application()
     {
         static $instance;

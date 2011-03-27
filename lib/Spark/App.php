@@ -281,7 +281,7 @@ class App
             $this->routes[$verb] = new \SplStack;
         }
 
-        $exp = new Util\StringExpression($path);
+        $exp = new Util\StringExpression($route);
         $pattern = $exp->toRegExp();
 
         $conditions = $this->parseConditions($conditions);

@@ -6,7 +6,6 @@ define("LIB_PATH", __DIR__ . "/lib");
 define("VENDOR_PATH", __DIR__ . "/vendor");
 
 require_once VENDOR_PATH . "/Symfony/Component/ClassLoader/UniversalClassLoader.php";
-require_once VENDOR_PATH . "/Underscore.php/underscore.php";
 
 /*
  * Register the Autoloader
