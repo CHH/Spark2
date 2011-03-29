@@ -17,13 +17,13 @@ namespace Spark
 {
     require_once __DIR__ . "/../vendor/Underscore.php/underscore.php";
     require_once __DIR__ . "/../_autoload.php";
-    
+
     function Application()
     {
         static $instance;
 
         if (null === $instance) {
-            $instance = new \Spark\App;
+            $instance = new \Spark\Application;
         }
         return $instance;
     }

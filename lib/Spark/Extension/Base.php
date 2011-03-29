@@ -21,18 +21,18 @@ class Base
      * @var \Spark\App
      */
     public $app;
-    
+
     /**
      * @var \Spark\Util\ExtensionManager
      */
     public $manager;
-    
+
     /**
      * Hook which gets called after the extension was registered
      */
-    function registered(\Spark\App $app)
+    function registered(\Spark\Base $app)
     {}
-    
+
     function exports()
     {
         $self = __CLASS__;
@@ -41,18 +41,18 @@ class Base
             return substr($method, 0, 2) != "__" and !in_array($method, get_class_methods($self));
         });
     }
-    
+
     function __get($var)
     {
         if (isset($this->app->{$var})) {
             return $this->app->{$var};
         }
     }
-    
+
     function __call($method, array $args = array())
     {
         $callable = array($this->app, $method);
-        
+
         if (!is_callable($callable)) {
             $callable = array($this->manager, $method);
             if (!is_callable($callable)) {

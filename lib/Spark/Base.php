@@ -1,6 +1,6 @@
 <?php
 /**
- * Application base class, facade for controller and router
+ * Base of the modular style DSL
  *
  * This source file is subject to the MIT license that is bundled
  * with this package in the file LICENSE.txt.
@@ -19,7 +19,7 @@ use Spark\Http\Request,
     Spark\Util,
     Underscore as _;
 
-class App
+class Base
 {
     /** @var \Spark\Util\ExtensionManager */
     public $extensions;
@@ -29,7 +29,7 @@ class App
 
     /** @var Spark\Util\Helpers */
     public $helpers;
-    
+
     protected $routes = array();
 
     /** @var array */
@@ -44,7 +44,10 @@ class App
     /** Error Handlers */
     protected $error = array();
 
-    final function __construct()
+    /**
+     * Constructor
+     */
+    function __construct()
     {
         $this->settings   = new Settings;
         $this->extensions = new Util\ExtensionManager($this);
@@ -114,7 +117,7 @@ class App
 
         dispatch:
             try {
-                $this->runFilters("before", array($request, $response));
+                $this->runFilters("before", array($this));
                 $this->dispatch($request);
 
                 if (!$response->isSuccessful()) {
@@ -129,7 +132,7 @@ class App
             }
 
         after:
-            $this->runFilters("after", array($request, $response));
+            $this->runFilters("after", array($this));
 
         finish:
             $response->send();
@@ -165,7 +168,7 @@ class App
                 if (is_string($callback) and class_exists($callback)) {
                     $callback = new $callback;
                 }
-                $this->invokeInRequestScope($callback, array($request));
+                $this->invokeInRequestScope($callback, array($this));
 
                 $match = true;
                 break;
@@ -202,7 +205,7 @@ class App
             return false;
         }
         $this->invokeInRequestScope($handler, array($error));
-        
+
         return true;
     }
 
@@ -298,7 +301,7 @@ class App
     }
 
     function halt($response)
-    {   
+    {
         $status = 200;
         $body = '';
         $headers = array();
@@ -352,7 +355,7 @@ class App
 
     /**
      * Set the given Setting to FALSE
-     * 
+     *
      * @param string $setting
      */
     function disable($setting)
