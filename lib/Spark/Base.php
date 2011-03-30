@@ -53,7 +53,7 @@ class Base
         $this->extensions = new Util\ExtensionManager($this);
         $this->helpers    = new Util\ExtensionManager($this);
 
-        $this->helpers("\Spark\Helper\Templates");
+        $this->register("\Spark\Extension\Templates");
         $this->register("\Spark\Extension\Redirecting");
 
         $this->init();

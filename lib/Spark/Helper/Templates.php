@@ -39,7 +39,7 @@ class Templates extends Base
      * Renders a template with the Phly_Mustache Template engine
      */
     function mustache($template, $view = null)
-    {   
+    {
         $template .= ".mustache";
         $template = $this->findTemplate($template);
         return $this->getEngine("\Spark\View\PhlyMustacheEngine")->render($template, $view);
@@ -52,18 +52,18 @@ class Templates extends Base
         if (!is_array($views)) {
             $views = array($views);
         }
-        
+
         foreach ($views as $path) {
             if (file_exists($path . '/' . $name)) {
                 return $path . '/' . $name;
             }
         }
-        
+
         throw new \UnexpectedValueException(
             "Template $name not found in Paths " . join($views, ", ")
         );
     }
-    
+
     protected function getEngine($engine)
     {
         if (empty($this->engines[$engine])) {

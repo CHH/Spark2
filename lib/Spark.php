@@ -33,10 +33,10 @@ namespace Spark
      *
      * @param string|array $method
      */
-    function delegate($method)
+    function delegate($methods)
     {
-        if (!is_array($method)) {
-            $method = array($method);
+        if (!is_array($methods)) {
+            $methods = array($methods);
         }
 
         $template = <<<'PHP'
@@ -47,8 +47,8 @@ namespace Spark
             }
 PHP;
 
-        foreach ($method as $m) {
-            eval(sprintf($template, $m));
+        foreach ($methods as $function) {
+            eval(sprintf($template, $function));
         }
     }
 
@@ -65,7 +65,6 @@ PHP;
             $extension = new $extension;
         }
         Application()->register($extension);
-
         delegate($extension->exports());
     }
 
