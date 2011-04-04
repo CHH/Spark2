@@ -27,19 +27,16 @@ class Base
     /** @var Spark\Settings */
     public $settings;
 
-    /** @var Spark\Util\Helpers */
-    public $helpers;
-
     protected $routes = array();
 
     /** @var array */
     protected $filters = array();
 
     /** @var Request */
-    protected $request;
+    public $request;
 
     /** @var Response */
-    protected $response;
+    public $response;
 
     /** Error Handlers */
     protected $error = array();
@@ -51,8 +48,8 @@ class Base
     {
         $this->settings   = new Settings;
         $this->extensions = new Util\ExtensionManager($this);
-        $this->helpers    = new Util\ExtensionManager($this);
-
+        $this->response   = new Response;
+        
         $this->register("\Spark\Extension\Templates");
         $this->register("\Spark\Extension\Redirecting");
 
@@ -89,7 +86,9 @@ class Base
         }
 
         foreach ($this->filters[$queue] as $filter) {
-            $this->invokeInRequestScope($filter, $args);
+            $response = call_user_func_array($filter, $args);
+            
+            (!$response instanceof Response) ?: $this->response = $response;
         }
         return true;
     }
@@ -103,83 +102,75 @@ class Base
     /**
      * Dispatches the request and sends the Response
      *
-     * @param  Request $request
-     * @return App|Response Returns the response if "return_response" is TRUE
+     * @param  Request  $request
+     * @return Response Returns the response if "return_response" is TRUE
      */
     function run(Request $request = null)
     {
-        if (null !== $request) {
-            $this->request = $request;
-        }
+        $this->request = ($request === null ? Request::createFromGlobals() : $request);
 
-        $request  = $request ?: $this->request();
-        $response = $this->response();
-
-        dispatch:
-            try {
-                $this->runFilters("before", array($this));
-                $this->dispatch($request);
-
-                if (!$response->isSuccessful()) {
-                    throw new \Exception("Request not successful.", $response->getStatusCode());
-                }
-            } catch (\Exception $e) {
-                $code = $e->getCode() ?: get_class($e);
-
-                if (!$this->handleError($code, $request, $response, $e)) {
-                    goto finish;
-                }
-            }
-
-        after:
+        try {
+            $this->runFilters("before", array($this));
+            $this->dispatch();
             $this->runFilters("after", array($this));
-
-        finish:
-            $response->send();
+            
+            if (!$this->response->isSuccessful()) throw new \Exception("Not successful");
+        } catch (HaltException $e) {
+            $this->response = $e->getResponse();
+            
+        } catch (\Exception $e) {
+            $this->handleError(get_class($e), $e);
+        }
+        
+        if (!$this->response->isSuccessful()) {
+            $this->handleError($this->response->getStatusCode());
+        }
+        
+        $this->runFilters("shutdown", array($this));
+        
+        $this->response->send();
+        return $this->response;
     }
 
-    protected function dispatch(Request $request)
+    protected function dispatch()
     {
-        $method = $request->getMethod();
+        $request = $this->request;
+        $method  = $request->getMethod();
 
-	    if (empty($this->routes[$method])) {
-            return $this->response()->setStatusCode(404);
-        }
+        if (empty($this->routes[$method])) return $this->response->setStatusCode(404);
 
-	    $match = false;
+        $match = false;
 
-	    foreach ($this->routes[$method] as $route) {
+        foreach ($this->routes[$method] as $route) {
+            list($pattern, $callback, $conditions) = $route;
+            
+            // Match the pattern, when no match found then check the next route
+            if (!preg_match($pattern, $request->getRequestUri(), $matches)) continue;
+
+            // Eval all conditions for this route
+            empty($conditions) ?: $this->evalConditions($conditions, $request);
+
+            unset($matches[0]);
+            $request->attributes->add($matches);
+
+            // If Callback is a class name then instantiate it
+            if (is_string($callback) and class_exists($callback)) {
+                $callback = new $callback;
+            }
+            
             try {
-                list($pattern, $callback, $conditions) = $route;
-
-                if (!preg_match($pattern, $request->getRequestUri(), $matches)) {
-                    continue;
-                }
-
-                // Eval all conditions for this route
-                if (!empty($conditions)) {
-                    $this->evalConditions($conditions, $request);
-                }
-
-                unset($matches[0]);
-                $request->attributes->add($matches);
-
-                // If Callback is a class name then instantiate it
-                if (is_string($callback) and class_exists($callback)) {
-                    $callback = new $callback;
-                }
-                $this->invokeInRequestScope($callback, array($this));
-
+                $response = call_user_func($callback, $this);
+                
+                if ($response instanceof Response) $this->response = $response;
+                
                 $match = true;
                 break;
             } catch (\Spark\PassException $e) {
                 continue;
             }
-	    }
+        }
 
-	    if (!$match) {
-	        $this->response()->setStatusCode(404);
-	    }
+        ($match) ?: $this->response->setStatusCode(404);
     }
 
     protected function evalConditions(array $conditions, Request $request)
@@ -192,46 +183,23 @@ class Base
         return true;
     }
 
-    protected function handleError($code = "\Exception", $request, $response, $exception = null)
+    protected function handleError($code = "\Exception", \Exception $exception = null)
     {
-        $error = new \StdClass;
-        $error->request = $request;
-        $error->response = $response;
-        $error->exception = $exception;
-
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
 
         if (!$handler) {
+            if (null === $exception) {
+                throw $exception;
+            }
             return false;
         }
-        $this->invokeInRequestScope($handler, array($error));
-
-        return true;
-    }
-
-    /**
-     * Invokes the given callback and captures the response
-     *
-     * @param callback $callback
-     * @param array $args
-     */
-    protected function invokeInRequestScope($callback, array $args)
-    {
-        $response = $this->response();
-        ob_start();
-
-        try {
-            $return = call_user_func_array($callback, $args);
-            $this->halt($return);
-
-        } catch (HaltException $e) {
-            $return = $e->getResponse();
-            $response->write(ob_get_clean());
-
-            $response->write($return->getContent());
-            $response->setStatusCode($return->getStatusCode());
-            $response->headers->add($return->headers->all());
+        
+        $response = call_user_func($handler, $this, $exception);
+        
+        if ($response instanceof Response) {
+            $this->response = $response;
         }
+        return true;
     }
 
     /*
@@ -300,22 +268,8 @@ class Base
         return $this->extensions->call($method, $args);
     }
 
-    function halt($response)
+    function halt($status = 200, $body = '', $headers = array())
     {
-        $status = 200;
-        $body = '';
-        $headers = array();
-
-        if (is_int($response)) {
-            $status = $response;
-        } else if (is_string($response) and !empty($response)) {
-            $body = $response;
-        } else if (is_array($response)) {
-            $status = isset($response[0]) ? $response[0] : 200;
-            $headers = isset($response[1]) ? $response[1] : array();
-            $body = isset($response[2]) ? $response[2] : '';
-        }
-
         $response = new Response($body, $status, $headers);
         throw new HaltException($response);
     }
@@ -395,14 +349,6 @@ class Base
         return $this;
     }
 
-    function helpers(/* $helper,... */)
-    {
-        foreach (func_get_args() as $helper) {
-            $this->helpers->register($helper);
-        }
-        return $this;
-    }
-
     /**
      * Attaches a filter to the filters run before dispatching
      *
@@ -411,8 +357,7 @@ class Base
      */
     function before($handler)
     {
-        $this->addFilter("before", $handler);
-        return $this;
+        return $this->addFilter("before", $handler);
     }
 
     /**
@@ -423,10 +368,14 @@ class Base
      */
     function after($handler)
     {
-        $this->addFilter("after", $handler);
-        return $this;
+        return $this->addFilter("after", $handler);
     }
-
+    
+    function shutdown($handler)
+    {
+        return $this->addFilter("shutdown", $handler);
+    }
+    
     /**
      * Registers an error handler
      */
@@ -464,7 +413,6 @@ class Base
     {
         return function(Request $request) use ($pattern) {
             $hostname = $request->getHost();
-
             return preg_match($pattern, $hostname, $matches) > 0;
         };
     }
@@ -473,7 +421,6 @@ class Base
     {
         return function(Request $request) use ($pattern) {
             $userAgent = $request->headers->get("user-agent");
-
             return preg_match($pattern, $userAgent, $matches) > 0;
         };
     }
@@ -497,24 +444,4 @@ class Base
                 ->value() ? true : false;
         };
     }
-
-    function request()
-    {
-        if (null === $this->request) {
-            $this->request = Request::createFromGlobals();
-        }
-        return $this->request;
-    }
-
-    /**
-     * @return Response
-     */
-    function response()
-    {
-        if (null === $this->response) {
-            $this->response = new Response;
-        }
-        return $this->response;
-    }
 }
-

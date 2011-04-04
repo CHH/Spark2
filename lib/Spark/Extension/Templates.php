@@ -12,7 +12,7 @@
  * @license    MIT License
  */
 
-namespace Spark\Helper;
+namespace Spark\Extension;
 
 class Templates extends Base
 {
@@ -72,6 +72,3 @@ class Templates extends Base
         return $this->engines[$engine];
     }
 }
-
-\Spark\helpers(__NAMESPACE__ . "\Templates");
-

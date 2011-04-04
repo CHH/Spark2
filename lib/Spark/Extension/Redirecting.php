@@ -13,5 +13,3 @@ class Redirecting extends Base
         };
     }
 }
-
-\Spark\register(__NAMESPACE__ . "\Redirecting");
