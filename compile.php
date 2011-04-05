@@ -8,7 +8,7 @@ class PharCompiler
 {
     protected $classMap = array();
 
-    function run($distFile = "Spark.phar")
+    function run($distFile = "spark.phar")
     {
         $this->createPhar($distFile);
     }
@@ -18,7 +18,7 @@ class PharCompiler
         print ".";
     }
 
-    protected function createPhar($distFile = "Spark.phar")
+    protected function createPhar($distFile = "spark.phar")
     {
         $distPath = __DIR__ . "/dist/" . $distFile;
 
@@ -193,7 +193,7 @@ EOL;
     }
 }
 
-$dest = isset($argv[1]) ? $argv[1] : "Spark.phar";
+$dest = isset($argv[1]) ? $argv[1] : "spark.phar";
 
 $compiler = new PharCompiler;
 $compiler->run($dest);
