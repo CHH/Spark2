@@ -36,7 +36,8 @@ class Base
     function exports()
     {
         $self = __CLASS__;
-
+        
+        // Export all methods, except the methods from the base class
         return array_filter(get_class_methods($this), function($method) use ($self) {
             return substr($method, 0, 2) != "__" and !in_array($method, get_class_methods($self));
         });

@@ -13,73 +13,7 @@
  */
 
 /** @namespace */
-namespace Spark
-{
-    require_once __DIR__ . "/../vendor/Underscore.php/underscore.php";
-    require_once __DIR__ . "/../_autoload.php";
+namespace Spark;
 
-    function Application()
-    {
-        static $instance;
-
-        if (null === $instance) {
-            $instance = new \Spark\Application;
-        }
-        return $instance;
-    }
-
-    /**
-     * Delegates the given functions to the App instance
-     *
-     * @param string|array $method
-     */
-    function delegate($methods)
-    {
-        if (!is_array($methods)) {
-            $methods = array($methods);
-        }
-
-        $template = <<<'PHP'
-            namespace Spark {
-                function %1$s() {
-                    return call_user_func_array(array(Application(), '%1$s'), func_get_args());
-                }
-            }
-PHP;
-
-        foreach ($methods as $function) {
-            eval(sprintf($template, $function));
-        }
-    }
-
-    // Delegate core methods
-    delegate(array(
-        "get", "post", "put", "delete", "head", "options", "before", "after",
-        "error", "notFound", "run", "set", "settings", "extensions", "halt", "pass",
-        "provides", "userAgent"
-    ));
-
-    function register($extension)
-    {
-        if (is_string($extension) and class_exists($extension)) {
-            $extension = new $extension;
-        }
-        Application()->register($extension);
-        delegate($extension->exports());
-    }
-
-    /**
-     * Add or return helpers
-     */
-    function helpers($helper = null)
-    {
-        $helpers = Application()->helpers;
-        if (null === $helper) {
-            return $helpers;
-        }
-        foreach (func_get_args() as $helper) {
-            $helpers->register($helper);
-        }
-    }
-}
-
+require_once __DIR__ . "/../vendor/Underscore.php/underscore.php";
+require_once __DIR__ . "/../_autoload.php";

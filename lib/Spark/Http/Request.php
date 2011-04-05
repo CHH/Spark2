@@ -15,10 +15,25 @@ namespace Spark\Http;
 
 use Symfony\Component\HttpFoundation;
 
-class Request extends HttpFoundation\Request
+class Request extends HttpFoundation\Request implements \ArrayAccess
 {
-    function param($key)
-    {
-        return $this->get($key);
-    }
+	function offsetGet($offset)
+	{
+		return $this->get($offset);
+	}
+	
+	function offsetSet($offset, $value)
+	{
+		throw new \BadMethodCallException("Params are read-only");
+	}
+	
+	function offsetExists($offset)
+	{
+		return (bool) $this->get($offset);
+	}
+	
+	function offsetUnset($offset)
+	{
+		throw new \BadMethodCallException("Params are read-only");
+	}
 }

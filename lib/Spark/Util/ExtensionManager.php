@@ -16,7 +16,7 @@ namespace Spark\Util;
 
 use Spark\Extension\Base;
 
-class ExtensionManager extends ArrayObject
+class ExtensionManager extends \ArrayObject
 {
     /**
      * @var \Spark\App
