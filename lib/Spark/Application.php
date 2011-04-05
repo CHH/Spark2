@@ -15,4 +15,10 @@ namespace Spark;
 
 class Application extends Base
 {
+    function __construct()
+    {
+        parent::__construct();
+        
+        $this->enable("send_response");
+    }
 }

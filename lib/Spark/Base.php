@@ -6,7 +6,7 @@
  * with this package in the file LICENSE.txt.
  *
  * @category   Spark
- * @package    Spark_Util
+ * @package    Spark_Base
  * @author     Christoph Hochstrasser <christoph.hochstrasser@gmail.com>
  * @copyright  Copyright (c) Christoph Hochstrasser
  * @license    MIT License
@@ -19,24 +19,29 @@ use Spark\Http\Request,
     Spark\Util,
     Underscore as _;
 
-class Base
+abstract class Base
 {
     /** @var \Spark\Util\ExtensionManager */
     public $extensions;
 
-    /** @var Spark\Settings */
+    /** @var \Spark\Settings */
     public $settings;
-
-    protected $routes = array();
-
-    /** @var array */
-    protected $filters = array();
 
     /** @var Request */
     public $request;
 
     /** @var Response */
     public $response;
+    
+    /**
+     * Routes for each HTTP Method
+     *
+     * @var array
+     */
+    protected $routes = array();
+
+    /** @var array */
+    protected $filters = array();
 
     /** Error Handlers */
     protected $error = array();
@@ -52,7 +57,7 @@ class Base
         
         $this->register("\Spark\Extension\Templates");
         $this->register("\Spark\Extension\Redirecting");
-
+    
         $this->init();
     }
 
@@ -128,10 +133,16 @@ class Base
         
         $this->runFilters("shutdown", array($this));
         
-        $this->response->send();
+        if (true === $this->settings->get("send_response")) {
+            $this->response->send();
+        }
+        
         return $this->response;
     }
-
+    
+    /**
+     * Dispatches the request
+     */
     protected function dispatch()
     {
         $request = $this->request;
@@ -172,7 +183,14 @@ class Base
 
         ($match) ?: $this->response->setStatusCode(404);
     }
-
+    
+    /** 
+     * Checks the route's conditions and invokes pass() if one condition returns false
+     *
+     * @param  array   $conditions
+     * @param  Request $request
+     * @return bool
+     */
     protected function evalConditions(array $conditions, Request $request)
     {
         foreach ($conditions as $condition) {
