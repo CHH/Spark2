@@ -20,5 +20,8 @@ class Application extends Base
         parent::__construct();
         
         $this->enable("send_response");
+        
+        $appFile = $this->settings->get("app_file") ?: getcwd();
+        $this->set("views", dirname($appFile) . "/views");
     }
 }

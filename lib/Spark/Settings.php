@@ -43,4 +43,9 @@ class Settings
         }
         return isset($this->options[$key]) ? $this->options[$key] : null;
     }
+    
+    function __get($var)
+    {
+        return $this->get($var);
+    }
 }

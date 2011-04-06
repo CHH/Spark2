@@ -45,7 +45,9 @@ abstract class Base
 
     /** Error Handlers */
     protected $error = array();
-
+    
+    protected $configurators = array();
+    
     /**
      * Constructor
      */
@@ -60,7 +62,39 @@ abstract class Base
     
         $this->init();
     }
-
+    
+    function configure($env, $callback = null)
+    {
+        if (null === $callback) {
+            $callback = $env;
+            $env = "_any";
+        }
+        
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException("No callback given");
+        }
+        $this->configurators[$env] = $callback;
+        return $this;
+    }
+    
+    protected function bootstrap()
+    {   
+        $configurators = $this->configurators;
+        $settings      = $this->settings;
+    
+        $setup = function($env) use ($configurators, $settings) {
+            if (empty($configurators[$env])) {
+                return;
+            }
+            call_user_func($configurators[$env], $settings);
+        };
+    
+        $env = $this->settings->get("environment") ?: "production";
+        
+        $setup("_any");
+        $setup($env);
+    }
+    
     /**
      * Adds a filter to the specified queue
      *
@@ -84,22 +118,21 @@ abstract class Base
      * @param  array $args Arguments to pass to the filter
      * @return bool
      */
-    protected function runFilters($queue, array $args = array())
+    protected function runFilters($queue)
     {
         if (empty($this->filters[$queue])) {
             return false;
         }
 
         foreach ($this->filters[$queue] as $filter) {
-            $response = call_user_func_array($filter, $args);
-            
+            $response = call_user_func($filter, $this);
             (!$response instanceof Response) ?: $this->response = $response;
         }
         return true;
     }
 
     /**
-     * Template Method which can be used to initialize Subclasses
+     * Template Method, use this to set up modular-style Apps
      */
     function init()
     {}
@@ -113,11 +146,14 @@ abstract class Base
     function run(Request $request = null)
     {
         $this->request = ($request === null ? Request::createFromGlobals() : $request);
-
+        
+        // Run the environment's configurators
+        $this->bootstrap();
+    
         try {
-            $this->runFilters("before", array($this));
+            $this->runFilters("before");
             $this->dispatch();
-            $this->runFilters("after", array($this));
+            $this->runFilters("after");
             
             if (!$this->response->isSuccessful()) throw new \Exception("Not successful");
         } catch (HaltException $e) {
@@ -131,7 +167,7 @@ abstract class Base
             $this->handleError($this->response->getStatusCode());
         }
         
-        $this->runFilters("shutdown", array($this));
+        $this->runFilters("shutdown");
         
         if (true === $this->settings->get("send_response")) {
             $this->response->send();
