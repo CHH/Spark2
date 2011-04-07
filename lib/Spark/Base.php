@@ -125,8 +125,11 @@ abstract class Base
         }
 
         foreach ($this->filters[$queue] as $filter) {
+            ob_start();
             $response = call_user_func($filter, $this);
             (!$response instanceof Response) ?: $this->response = $response;
+
+            $this->response->write(ob_get_clean());
         }
         return true;
     }
@@ -192,7 +195,7 @@ abstract class Base
             list($pattern, $callback, $conditions) = $route;
             
             // Match the pattern, when no match found then check the next route
-            if (!preg_match($pattern, $request->getRequestUri(), $matches)) continue;
+            if (!preg_match($pattern, $request->getPathInfo(), $matches)) continue;
 
             // Eval all conditions for this route
             empty($conditions) ?: $this->evalConditions($conditions, $request);
@@ -206,10 +209,12 @@ abstract class Base
             }
             
             try {
+                ob_start();
                 $response = call_user_func($callback, $this);
                 
                 if ($response instanceof Response) $this->response = $response;
                 
+                $this->response->write(ob_get_clean());
                 $match = true;
                 break;
             } catch (\Spark\PassException $e) {
@@ -248,11 +253,14 @@ abstract class Base
             return false;
         }
         
+        ob_start();
         $response = call_user_func($handler, $this, $exception);
         
         if ($response instanceof Response) {
             $this->response = $response;
         }
+        $this->response->write(ob_get_clean());
+        
         return true;
     }
 
