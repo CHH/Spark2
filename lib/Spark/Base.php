@@ -124,10 +124,13 @@ abstract class Base
             return false;
         }
 
+        $request  = $this->request;
+        $response = $this->response;
+        
         foreach ($this->filters[$queue] as $filter) {
             ob_start();
-            $response = call_user_func($filter, $this);
-            (!$response instanceof Response) ?: $this->response = $response;
+            $return = call_user_func($filter, $request, $response);
+            (!$return instanceof Response) ?: $this->response = $return;
 
             $this->response->write(ob_get_clean());
         }
@@ -158,7 +161,6 @@ abstract class Base
             $this->dispatch();
             $this->runFilters("after");
             
-            if (!$this->response->isSuccessful()) throw new \Exception("Not successful");
         } catch (HaltException $e) {
             $this->response = $e->getResponse();
             
@@ -210,7 +212,7 @@ abstract class Base
             
             try {
                 ob_start();
-                $response = call_user_func($callback, $this);
+                $response = call_user_func($callback, $request, $this->response);
                 
                 if ($response instanceof Response) $this->response = $response;
                 
@@ -254,7 +256,7 @@ abstract class Base
         }
         
         ob_start();
-        $response = call_user_func($handler, $this, $exception);
+        $response = call_user_func($handler, $this->request, $this->response, $exception);
         
         if ($response instanceof Response) {
             $this->response = $response;
