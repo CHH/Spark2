@@ -155,12 +155,13 @@ abstract class Base
         
         // Run the environment's configurators
         $this->bootstrap();
-    
+        
         try {
             $this->runFilters("before");
             $this->dispatch();
             $this->runFilters("after");
-            
+        
+        // Send the Halt Exception's Response
         } catch (HaltException $e) {
             $this->response = $e->getResponse();
             
@@ -172,6 +173,7 @@ abstract class Base
             $this->handleError($this->response->getStatusCode());
         }
         
+        // Run the shutdown filters, implement layouts there
         $this->runFilters("shutdown");
         
         if (true === $this->settings->get("send_response")) {
@@ -404,6 +406,7 @@ abstract class Base
      *
      * @see ExtensionManager
      * @param object $extension,...
+     * @return Base
      */
     function register(/* $extension,... */)
     {
@@ -416,8 +419,8 @@ abstract class Base
     /**
      * Attaches a filter to the filters run before dispatching
      *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
+     * @param  callback $handler
+     * @return Base
      */
     function before($handler)
     {
@@ -427,14 +430,20 @@ abstract class Base
     /**
      * Attaches a filter to the filters run after dispatching
      *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
+     * @param  callback $handler
+     * @return Base
      */
     function after($handler)
     {
         return $this->addFilter("after", $handler);
     }
     
+    /**
+     * Attach a handler which gets run just before the response gets sent
+     *
+     * @param callback $handler
+     * @return Base
+     */
     function shutdown($handler)
     {
         return $this->addFilter("shutdown", $handler);
@@ -442,6 +451,8 @@ abstract class Base
     
     /**
      * Registers an error handler
+     *
+     * @param mixed $code
      */
     function error($code = "\Exception", $handler = null)
     {
@@ -505,7 +516,8 @@ abstract class Base
                 ->select(function($value) use ($formats) {
                     return in_array($value, $formats);
                 })
-                ->value() ? true : false;
+                ->value() 
+                ? true : false;
         };
     }
 }

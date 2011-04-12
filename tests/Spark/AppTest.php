@@ -17,8 +17,8 @@ class AppTest extends \PHPUnit_Framework_TestCase
     
     function testGetDefinesHeadHandler()
     {
-        $this->app->get("/", function($app) {
-            $method = $app->request->getMethod();
+        $this->app->get("/", function($request) {
+            $method = $request->getMethod();
             return new Response("", 200, array("x-request-method" => $method));
         });
         
@@ -33,8 +33,8 @@ class AppTest extends \PHPUnit_Framework_TestCase
     {
         $value;
     
-        $this->app->get("/:foo", function($app) use (&$value) {
-            $value = $app->request["foo"];
+        $this->app->get("/:foo", function($request) use (&$value) {
+            $value = $request["foo"];
         });
         
         $this->app->run(Request::create("/bar"));
