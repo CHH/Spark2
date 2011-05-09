@@ -19,9 +19,13 @@ class Application extends Base
     {
         parent::__construct();
         
-        $this->enable("send_response");
+        $settings = $this->settings;
         
-        $appFile = $this->settings->get("app_file") ?: getcwd();
-        $this->set("views", dirname($appFile) . "/views");
+        // Enable response sending after the dispatching is done
+        $settings->enable("send_response");
+        
+        // Determine the default directories based on the app_file
+        $appFile = dirname($settings->get("app_file")) ?: getcwd();
+        $settings->set("views", $appFile . "/views");
     }
 }

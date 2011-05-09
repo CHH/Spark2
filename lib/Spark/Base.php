@@ -160,12 +160,13 @@ abstract class Base implements Dispatchable
         
         // Run the environment's configurators
         $this->bootstrap();
-    
+        
         try {
             $this->runFilters("before");
             $this->dispatch($this->request);
             $this->runFilters("after");
-            
+        
+        // Send the Halt Exception's Response
         } catch (HaltException $e) {
             $this->response = $e->getResponse();
             
@@ -177,7 +178,8 @@ abstract class Base implements Dispatchable
             $this->handleError($this->response->getStatusCode());
         }
         
-        $this->runFilters("shutdown", array($this->request, $this->response));
+        // Run the shutdown filters, implement layouts there
+        $this->runFilters("shutdown");
         
         if (true === $this->settings->get("send_response")) {
             $this->response->send();
@@ -385,8 +387,8 @@ abstract class Base implements Dispatchable
     /**
      * Attaches a filter to the filters run before dispatching
      *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
+     * @param  callback $handler
+     * @return Base
      */
     function before($handler)
     {
@@ -396,14 +398,20 @@ abstract class Base implements Dispatchable
     /**
      * Attaches a filter to the filters run after dispatching
      *
-     * @param  object $filter Callable object (Closure or Object implementing __invoke)
-     * @return App
+     * @param  callback $handler
+     * @return Base
      */
     function after($handler)
     {
         return $this->addFilter("after", $handler);
     }
     
+    /**
+     * Attach a handler which gets run just before the response gets sent
+     *
+     * @param callback $handler
+     * @return Base
+     */
     function shutdown($handler)
     {
         return $this->addFilter("shutdown", $handler);
@@ -411,6 +419,8 @@ abstract class Base implements Dispatchable
     
     /**
      * Registers an error handler
+     *
+     * @param mixed $code
      */
     function error($code = "\Exception", $handler = null)
     {
