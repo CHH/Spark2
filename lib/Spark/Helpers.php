@@ -91,7 +91,7 @@ function withFormat(Request $request, $formats, $callback)
 {
     $formats = (array) $formats;
 
-    $hasFormat = _\chain($request->getAcceptableContentTypes())
+    $hasFormat = _\from($request->getAcceptableContentTypes())
         ->map(array($request, "getFormat"))
         ->select(function($value) use ($formats) {
             return in_array($value, $formats);
