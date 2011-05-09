@@ -1,0 +1,4 @@
+cli_stub="phar_stub.php"
+file_paths[] = "lib"
+file_paths[] = "vendor"
+dist_path = "dist/spark.phar"

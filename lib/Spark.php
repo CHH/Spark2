@@ -16,4 +16,6 @@
 namespace Spark;
 
 require_once __DIR__ . "/../vendor/Underscore.php/underscore.php";
-require_once __DIR__ . "/../_autoload.php";
+require_once __DIR__ . "/Spark/Helpers.php";
+require_once __DIR__ . "/Spark/_autoload.php";
+

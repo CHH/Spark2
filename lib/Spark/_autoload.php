@@ -2,8 +2,8 @@
 
 use Symfony\Component\ClassLoader\UniversalClassLoader;
 
-define("LIB_PATH", __DIR__ . "/lib");
-define("VENDOR_PATH", __DIR__ . "/vendor");
+define("LIB_PATH", __DIR__ . "/../");
+define("VENDOR_PATH", __DIR__ . "/../../vendor");
 
 require_once VENDOR_PATH . "/Symfony/Component/ClassLoader/UniversalClassLoader.php";
 

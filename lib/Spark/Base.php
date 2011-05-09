@@ -19,11 +19,8 @@ use Spark\Http\Request,
     Spark\Util,
     Underscore as _;
 
-abstract class Base
+abstract class Base implements Dispatchable
 {
-    /** @var \Spark\Util\ExtensionManager */
-    public $extensions;
-
     /** @var \Spark\Settings */
     public $settings;
 
@@ -54,12 +51,8 @@ abstract class Base
     function __construct()
     {
         $this->settings   = new Settings;
-        $this->extensions = new Util\ExtensionManager($this);
         $this->response   = new Response;
         
-        $this->register("\Spark\Extension\Templates");
-        $this->register("\Spark\Extension\Redirecting");
-    
         $this->init();
     }
     
@@ -80,13 +73,13 @@ abstract class Base
     protected function bootstrap()
     {   
         $configurators = $this->configurators;
-        $settings      = $this->settings;
+        $self = $this;
     
-        $setup = function($env) use ($configurators, $settings) {
+        $setup = function($env) use ($configurators, $self) {
             if (empty($configurators[$env])) {
                 return;
             }
-            call_user_func($configurators[$env], $settings);
+            call_user_func($configurators[$env], $self);
         };
     
         $env = $this->settings->get("environment") ?: "production";
@@ -118,18 +111,19 @@ abstract class Base
      * @param  array $args Arguments to pass to the filter
      * @return bool
      */
-    protected function runFilters($queue)
+    protected function runFilters($queue, array $args = array())
     {
+        if (empty($args)) {
+            $args = array($this->request, $this->response);
+        }
+    
         if (empty($this->filters[$queue])) {
             return false;
         }
-
-        $request  = $this->request;
-        $response = $this->response;
         
         foreach ($this->filters[$queue] as $filter) {
             ob_start();
-            $return = call_user_func($filter, $request, $response);
+            $return = call_user_func_array($filter, $args);
             (!$return instanceof Response) ?: $this->response = $return;
 
             $this->response->write(ob_get_clean());
@@ -143,6 +137,17 @@ abstract class Base
     function init()
     {}
 
+    /**
+     * {@inheritdoc}
+     */
+    function __invoke(Request $request, Response $previous = null)
+    {
+        if (null !== $previous) {
+            $this->response = $previous;
+        }
+        return $this->run($request);
+    }
+    
     /**
      * Dispatches the request and sends the Response
      *
@@ -158,7 +163,7 @@ abstract class Base
     
         try {
             $this->runFilters("before");
-            $this->dispatch();
+            $this->dispatch($this->request);
             $this->runFilters("after");
             
         } catch (HaltException $e) {
@@ -172,7 +177,7 @@ abstract class Base
             $this->handleError($this->response->getStatusCode());
         }
         
-        $this->runFilters("shutdown");
+        $this->runFilters("shutdown", array($this->request, $this->response));
         
         if (true === $this->settings->get("send_response")) {
             $this->response->send();
@@ -182,11 +187,11 @@ abstract class Base
     }
     
     /**
-     * Dispatches the request
+     * Finds the matching route for the request URI and dispatches the request to
+     * the defined handler
      */
-    protected function dispatch()
+    protected function dispatch(Request $request)
     {
-        $request = $this->request;
         $method  = $request->getMethod();
 
         if (empty($this->routes[$method])) return $this->response->setStatusCode(404);
@@ -194,13 +199,13 @@ abstract class Base
         $match = false;
 
         foreach ($this->routes[$method] as $route) {
-            list($pattern, $callback, $conditions) = $route;
+            list($pattern, $callback, $constraints) = $route;
             
             // Match the pattern, when no match found then check the next route
             if (!preg_match($pattern, $request->getPathInfo(), $matches)) continue;
 
-            // Eval all conditions for this route
-            empty($conditions) ?: $this->evalConditions($conditions, $request);
+            // Eval all constraints for this route
+            empty($constraints) ?: $this->evalConstraints($constraints, $request);
 
             unset($matches[0]);
             $request->attributes->add($matches);
@@ -227,23 +232,23 @@ abstract class Base
         ($match) ?: $this->response->setStatusCode(404);
     }
     
-    /** 
-     * Checks the route's conditions and invokes pass() if one condition returns false
+    /**
+     * Checks the route's constraints and invokes pass() if one constraint returns false
      *
-     * @param  array   $conditions
+     * @param  array   $constraints
      * @param  Request $request
      * @return bool
      */
-    protected function evalConditions(array $conditions, Request $request)
+    protected function evalConstraints(array $constraints, Request $request)
     {
-        foreach ($conditions as $condition) {
-            if (!$condition($request)) {
-                $this->pass();
+        foreach ($constraints as $constraint) {
+            if (!$constraint($request)) {
+                pass();
             }
         }
         return true;
     }
-
+    
     protected function handleError($code = "\Exception", \Exception $exception = null)
     {
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
@@ -270,43 +275,43 @@ abstract class Base
      * Methods for defining handlers for HTTP Methods
      */
 
-    function GET($route, $conditions, $callback = null)
+    function GET($route, $constraints, $callback = null)
     {
-        $this->head($route, $conditions, $callback);
-        return $this->route("GET", $route, $conditions, $callback);
+        $this->head($route, $constraints, $callback);
+        return $this->route("GET", $route, $constraints, $callback);
     }
 
-    function POST($route, $conditions, $callback = null)
+    function POST($route, $constraints, $callback = null)
     {
-        return $this->route("POST", $route, $conditions, $callback);
+        return $this->route("POST", $route, $constraints, $callback);
     }
 
-    function PUT($route, $conditions, $callback = null)
+    function PUT($route, $constraints, $callback = null)
     {
-        return $this->route("PUT", $route, $conditions, $callback);
+        return $this->route("PUT", $route, $constraints, $callback);
     }
 
-    function DELETE($route, $conditions, $callback = null)
+    function DELETE($route, $constraints, $callback = null)
     {
-        return $this->route("DELETE", $route, $conditions, $callback);
+        return $this->route("DELETE", $route, $constraints, $callback);
     }
 
-    function HEAD($route, $conditions, $callback = null)
+    function HEAD($route, $constraints, $callback = null)
     {
-        return $this->route("HEAD", $route, $conditions, $callback);
+        return $this->route("HEAD", $route, $constraints, $callback);
     }
 
-    function OPTIONS($route, $conditions, $callback = null)
+    function OPTIONS($route, $constraints, $callback = null)
     {
-        return $this->route("OPTIONS", $route, $conditions, $callback);
+        return $this->route("OPTIONS", $route, $constraints, $callback);
     }
 
-    protected function route($verb, $route, $conditions, $callback)
+    protected function route($verb, $route, $constraints, $callback)
     {
-        // Conditions were omitted and only the callback supplied
-        if (is_callable($conditions)) {
-            $callback = $conditions;
-            $conditions = array();
+        // constraints were omitted and only the callback supplied
+        if (is_callable($constraints)) {
+            $callback = $constraints;
+            $constraints = array();
         }
 
         if (!is_callable($callback)) {
@@ -319,31 +324,26 @@ abstract class Base
         $exp = new Util\StringExpression($route);
         $pattern = $exp->toRegExp();
 
-        $conditions = $this->parseConditions($conditions);
+        $constraints = $this->parseConstraints($constraints);
 
-        $this->routes[$verb]->push(array($pattern, $callback, $conditions));
+        $this->routes[$verb]->push(array($pattern, $callback, $constraints));
     }
 
-    /**
-     * Call extensions
-     */
-    function __call($method, array $args)
+    protected function parseConstraints(array $constraints)
     {
-        return $this->extensions->call($method, $args);
-    }
+        $compiled = array();
 
-    function halt($status = 200, $body = '', $headers = array())
-    {
-        $response = new Response($body, $status, $headers);
-        throw new HaltException($response);
-    }
+        foreach ($constraints as $constraint => $args) {
+            if (is_callable(array($this, _\camelize($constraint, false)))) {
+                $constraint = array($this, _\camelize($constraint, false));
 
-    /**
-     * Skip to the next callback for the route
-     */
-    function pass()
-    {
-        throw new PassException;
+            } else if ($this->settings->get($constraint)) {
+                $constraint = $this->settings->get($constraint);
+            }
+            $compiled[] = call_user_func($constraint, $args);
+        }
+
+        return $compiled;
     }
 
     /**
@@ -379,37 +379,6 @@ abstract class Base
     function disable($setting)
     {
         $this->settings->disable($setting);
-        return $this;
-    }
-
-    protected function parseConditions(array $conditions)
-    {
-        $compiled = array();
-
-        foreach ($conditions as $condition => $args) {
-            if (is_callable(array($this, _\camelize($condition, false)))) {
-                $condition = array($this, _\camelize($condition, false));
-
-            } else if ($this->settings->get($condition)) {
-                $condition = $this->settings->get($condition);
-            }
-            $compiled[] = call_user_func($condition, $args);
-        }
-
-        return $compiled;
-    }
-
-    /**
-     * Registers an extension for the DSL
-     *
-     * @see ExtensionManager
-     * @param object $extension,...
-     */
-    function register(/* $extension,... */)
-    {
-        foreach (func_get_args() as $extension) {
-            $this->extensions->register($extension);
-        }
         return $this;
     }
 
@@ -467,45 +436,5 @@ abstract class Base
     function notFound($callback)
     {
         return $this->error(404, $callback);
-    }
-
-    /*
-     * Bundled Route Conditions
-     */
-
-    function hostName($pattern)
-    {
-        return function(Request $request) use ($pattern) {
-            $hostname = $request->getHost();
-            return preg_match($pattern, $hostname, $matches) > 0;
-        };
-    }
-
-    function userAgent($pattern)
-    {
-        return function(Request $request) use ($pattern) {
-            $userAgent = $request->headers->get("user-agent");
-            return preg_match($pattern, $userAgent, $matches) > 0;
-        };
-    }
-
-    /**
-     * Returns a matcher which returns true if the client accepts the format
-     *
-     * @param  string $format,... One or more formats, which the client should accept
-     * @return bool
-     */
-    function provides($format)
-    {
-        $formats = func_get_args();
-
-        return function(Request $request) use ($formats) {
-            return _\chain($request->getAcceptableContentTypes())
-                ->map(array($request, "getFormat"))
-                ->select(function($value) use ($formats) {
-                    return in_array($value, $formats);
-                })
-                ->value() ? true : false;
-        };
     }
 }
