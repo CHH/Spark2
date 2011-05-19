@@ -26,7 +26,9 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("GET", $this->app->run($request)->headers->get("X-Request-Method"));
         
         $headRequest = Request::create("/", "HEAD");
-        $this->assertEquals("HEAD", $this->app->run($headRequest)->headers->get("X-Request-Method"));
+        $this->assertEquals(
+            "HEAD", $this->app->run($headRequest)->headers->get("X-Request-Method")
+        );
     }
     
     function testRoutesCanTakeParams()
@@ -54,4 +56,22 @@ class AppTest extends \PHPUnit_Framework_TestCase
         
         $this->assertEquals($response, $this->app->run(Request::create("/index.html")));
     }
+
+    function testRunsBeforeFilters()
+    {
+        $request = Request::create("/bar");
+
+        $this->app->before(function($req) {
+            return new Response("Hello World");
+        });
+
+        $this->app->get("/bar", function($req) {
+            return false;
+        });
+
+        $response = $this->app->run($request);
+
+        $this->assertEquals("Hello World", $response->getContent());
+    }
+
 }

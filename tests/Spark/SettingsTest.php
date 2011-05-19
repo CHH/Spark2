@@ -46,4 +46,15 @@ class SettingsTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($values["foo"], $this->settings->get("foo"));
         $this->assertEquals($values["bar"], $this->settings->get("bar"));
     }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    function testSetWithANonScalarValueAsOptionNameThrowsAnException()
+    {
+        $key = (object) array(
+            "foo" => "bar"
+        );
+        $this->settings->set($key, "Hello World");
+    }
 }
