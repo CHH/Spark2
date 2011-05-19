@@ -7,6 +7,14 @@ use Spark\Application,
     Spark\Http\Response,
     Underscore\Fn;
 
+class TestController
+{
+    function __invoke($request)
+    {
+        return new Response("Hello World");
+    }
+}
+
 class AppTest extends \PHPUnit_Framework_TestCase
 {
     function setUp()
@@ -74,4 +82,60 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Hello World", $response->getContent());
     }
 
+    function testCanHaveConfiguratorsForAnyEnvironment()
+    {
+        $called = 0;
+        $inc = function() use (&$called) { $called++; };
+        $this->app->configure($inc);
+        $this->app->configure("production", $inc);
+        $this->app->configure("development", $inc);
+        
+        $this->app->set("environment", "production");
+
+        $this->app->run();
+
+        $this->assertEquals(2, $called);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    function testConfigureThrowsExceptionIfInvalidCallbackGiven()
+    {
+        $this->app->configure("foo");
+    }
+
+    function testCanEnableAndDisableSettings()
+    {
+        $this->app->enable("foo");
+        $this->assertTrue($this->app->settings->get("foo"));
+
+        $this->app->disable("foo");
+        $this->assertFalse($this->app->settings->get("foo"));
+    }
+
+    function testInstantiatesCallbackClasses()
+    {
+        $request = Request::create("/foo");
+        $this->app->get("/foo", "\\Spark\\Test\\TestController");
+
+        $response = $this->app->run($request);
+        $this->assertEquals("Hello World", $response->getContent());
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    function testThrowsExceptionIfRouteCallbackIsInvalidClass()
+    {
+        $this->app->get("/foo", "\\Foo\\Bar\\Baz");
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    function testThrowsExceptionIfRouteCallbackIsNotACallback()
+    {
+        $this->app->get("/foo", "foobarbazbu");
+    }
 }

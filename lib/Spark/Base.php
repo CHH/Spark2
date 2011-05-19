@@ -236,7 +236,7 @@ abstract class Base implements Dispatchable
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
 
         if (!$handler) {
-            if (null === $exception) {
+            if (null !== $exception) {
                 throw $exception;
             }
             return false;
@@ -290,7 +290,7 @@ abstract class Base implements Dispatchable
 
     protected function route($verb, $route, $callback)
     {
-        if (!is_callable($callback)) {
+        if (!is_callable($callback) and !class_exists($callback)) {
             throw new \InvalidArgumentException("Callback is not valid");
         }
         if (empty($this->routes[$verb])) {
