@@ -87,20 +87,27 @@ function withHostName(Request $request, $pattern, $callback)
  * @param  callback     $callback
  * @return mixed
  */
-function withFormat(Request $request, $formats, $callback)
+function withFormat(Request $request, $formats, $callback = null)
 {
     $formats = (array) $formats;
 
-    $hasFormat = _\from($request->getAcceptableContentTypes())
-        ->map(array($request, "getFormat"))
-        ->select(function($value) use ($formats) {
-            return in_array($value, $formats);
-        })
-        ->value();
-
-    if ($hasFormat) {
-        return call_user_func($callback, $request);
+    $accepts = array();
+    foreach ($request->getAcceptableContentTypes() as $type) {
+        $accepts[] = $request->getFormat($type);
     }
+
+    if (null === $callback) {
+        foreach ($formats as $format => $handler) {
+            if (in_array($format, $accepts)) {
+                return call_user_func($handler, $request);
+            }
+        }
+    } else { 
+        if (_\intersect($formats, $accepts)) {
+            return call_user_func($callback, $request);
+        }
+    }
+
     return false;
 }
 

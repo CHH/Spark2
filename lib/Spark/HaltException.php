@@ -15,9 +15,4 @@ class HaltException extends \RuntimeException implements Exception
     {
         return $this->response;
     }
-    
-    function send()
-    {   
-        $this->response->send();
-    }
 }

@@ -69,7 +69,7 @@ class StringExpression
                 $var = $matches[1];
                 
                 $subpattern = empty($requirements[$var]) 
-                    ? "[a-zA-z0-9\-\_]+" 
+                    ? "[a-zA-Z0-9\-\_]+" 
                     : $requirements[$var];
                 
                 return "(?<$var>$subpattern)";
