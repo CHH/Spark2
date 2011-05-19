@@ -201,13 +201,10 @@ abstract class Base implements Dispatchable
         $match = false;
 
         foreach ($this->routes[$method] as $route) {
-            list($pattern, $callback, $constraints) = $route;
+            list($pattern, $callback) = $route;
             
             // Match the pattern, when no match found then check the next route
             if (!preg_match($pattern, $request->getPathInfo(), $matches)) continue;
-
-            // Eval all constraints for this route
-            empty($constraints) ?: $this->evalConstraints($constraints, $request);
 
             unset($matches[0]);
             $request->attributes->add($matches);
@@ -233,24 +230,7 @@ abstract class Base implements Dispatchable
 
         ($match) ?: $this->response->setStatusCode(404);
     }
-    
-    /**
-     * Checks the route's constraints and invokes pass() if one constraint returns false
-     *
-     * @param  array   $constraints
-     * @param  Request $request
-     * @return bool
-     */
-    protected function evalConstraints(array $constraints, Request $request)
-    {
-        foreach ($constraints as $constraint) {
-            if (!$constraint($request)) {
-                pass();
-            }
-        }
-        return true;
-    }
-    
+
     protected function handleError($code = "\Exception", \Exception $exception = null)
     {
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
@@ -277,45 +257,39 @@ abstract class Base implements Dispatchable
      * Methods for defining handlers for HTTP Methods
      */
 
-    function GET($route, $constraints, $callback = null)
+    function GET($route, $callback = null)
     {
-        $this->head($route, $constraints, $callback);
-        return $this->route("GET", $route, $constraints, $callback);
+        $this->head($route, $callback);
+        return $this->route("GET", $route, $callback);
     }
 
-    function POST($route, $constraints, $callback = null)
+    function POST($route, $callback = null)
     {
-        return $this->route("POST", $route, $constraints, $callback);
+        return $this->route("POST", $route, $callback);
     }
 
-    function PUT($route, $constraints, $callback = null)
+    function PUT($route, $callback = null)
     {
-        return $this->route("PUT", $route, $constraints, $callback);
+        return $this->route("PUT", $route, $callback);
     }
 
-    function DELETE($route, $constraints, $callback = null)
+    function DELETE($route, $callback = null)
     {
-        return $this->route("DELETE", $route, $constraints, $callback);
+        return $this->route("DELETE", $route, $callback);
     }
 
-    function HEAD($route, $constraints, $callback = null)
+    function HEAD($route, $callback = null)
     {
-        return $this->route("HEAD", $route, $constraints, $callback);
+        return $this->route("HEAD", $route, $callback);
     }
 
-    function OPTIONS($route, $constraints, $callback = null)
+    function OPTIONS($route, $callback = null)
     {
-        return $this->route("OPTIONS", $route, $constraints, $callback);
+        return $this->route("OPTIONS", $route, $callback);
     }
 
-    protected function route($verb, $route, $constraints, $callback)
+    protected function route($verb, $route, $callback)
     {
-        // constraints were omitted and only the callback supplied
-        if (is_callable($constraints)) {
-            $callback = $constraints;
-            $constraints = array();
-        }
-
         if (!is_callable($callback)) {
             throw new \InvalidArgumentException("Callback is not valid");
         }
@@ -326,26 +300,7 @@ abstract class Base implements Dispatchable
         $exp = new Util\StringExpression($route);
         $pattern = $exp->toRegExp();
 
-        $constraints = $this->parseConstraints($constraints);
-
-        $this->routes[$verb]->push(array($pattern, $callback, $constraints));
-    }
-
-    protected function parseConstraints(array $constraints)
-    {
-        $compiled = array();
-
-        foreach ($constraints as $constraint => $args) {
-            if (is_callable(array($this, _\camelize($constraint, false)))) {
-                $constraint = array($this, _\camelize($constraint, false));
-
-            } else if ($this->settings->get($constraint)) {
-                $constraint = $this->settings->get($constraint);
-            }
-            $compiled[] = call_user_func($constraint, $args);
-        }
-
-        return $compiled;
+        $this->routes[$verb]->push(array($pattern, $callback));
     }
 
     /**
