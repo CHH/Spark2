@@ -26,8 +26,12 @@ use Spark\Http\Request,
  * @param array $headers
  * @return Response;
  */
-function halt($status = 200, $body = '', $headers = array())
+function halt($body = '', $status = 200, $headers = array())
 {
+    if ($body instanceof Response) {
+        throw new HaltException($body);
+    }
+    
     $response = new Response($body, $status, $headers);
     throw new HaltException($response);
 }
