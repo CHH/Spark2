@@ -16,6 +16,6 @@
 namespace Spark;
 
 require_once __DIR__ . "/../vendor/Support/lib/Support.php";
-require_once __DIR__ . "/Spark/Helpers.php";
 require_once __DIR__ . "/Spark/_autoload.php";
+require_once __DIR__ . "/Spark/Helpers.php";
 
