@@ -16,8 +16,7 @@ namespace Spark;
 
 use Spark\Http\Request,
     Spark\Http\Response,
-    Spark\Util,
-    Underscore as _;
+    Spark\Util;
 
 abstract class Base implements Dispatchable
 {

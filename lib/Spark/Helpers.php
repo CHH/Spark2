@@ -15,8 +15,7 @@
 namespace Spark;
 
 use Spark\Http\Request,
-    Spark\Http\Response,
-    Underscore as _;
+    Spark\Http\Response;
 
 /**
  * Immediately halt the request execution and return the supplied response
@@ -103,7 +102,7 @@ function withFormat(Request $request, $formats, $callback = null)
             }
         }
     } else { 
-        if (_\intersect($formats, $accepts)) {
+        if (array_intersect($formats, $accepts)) {
             return call_user_func($callback, $request);
         }
     }
