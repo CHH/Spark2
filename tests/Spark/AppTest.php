@@ -2,7 +2,8 @@
 
 namespace Spark\Test;
 
-use Spark\Application,
+use Spark as s,
+    Spark\Application,
     Spark\Http\Request,
     Spark\Http\Response,
     Underscore\Fn;
@@ -22,7 +23,25 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->app = new Application;
         $this->app->disable("send_response");
     }
-    
+
+    /**
+     * @testdox Implements __invoke() and is an alias of run()
+     */
+    function testImplementsInvoke()
+    {
+        $app = $this->app;
+        $app->get("/", function($req, $previous) {
+            return new Response("Hello World " . $previous->getContent());
+        });
+
+        $previousResponse = new Response("Bar");
+
+        $request = Request::create("/");
+        $resp = $app($request, $previousResponse);
+
+        $this->assertEquals("Hello World Bar", $resp->getContent());
+    }
+
     function testGetDefinesHeadHandler()
     {
         $this->app->get("/", function($request) {
@@ -82,6 +101,15 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Hello World", $response->getContent());
     }
 
+    function testCallbacksCanReturnStringsAsResponse()
+    {
+        $this->app->get("/", function() {
+            return "Hello World";
+        });
+        $resp = $this->app->run(Request::create("/"));
+        $this->assertEquals("Hello World", $resp->getContent());
+    }
+
     function testCanHaveConfiguratorsForAnyEnvironment()
     {
         $called = 0;
@@ -123,6 +151,35 @@ class AppTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Hello World", $response->getContent());
     }
 
+    function testImmediatelyReturnsResponseOnHalt()
+    {
+        $request = Request::create("/");
+
+        $this->app->before(function() {
+            s\halt("Bar");
+        });
+
+        $this->app->get("/", function() {
+            return new Response("Foo");
+        });
+
+        $resp = $this->app->run($request);
+        $this->assertEquals("Bar", $resp->getContent());
+    }
+
+    function testTakesNextRouteOnPass()
+    {
+        $this->app->get("/", function() {
+            s\pass();
+        });
+
+        $this->app->get("/", function() {
+            return "Hello World"; 
+        });
+        $resp = $this->app->run(Request::create("/"));
+        $this->assertEquals("Hello World", $resp->getContent());
+    }
+
     /**
      * @expectedException \InvalidArgumentException
      */
@@ -137,5 +194,58 @@ class AppTest extends \PHPUnit_Framework_TestCase
     function testThrowsExceptionIfRouteCallbackIsNotACallback()
     {
         $this->app->get("/foo", "foobarbazbu");
+    }
+
+    function testCanRegisterErrorHandlerOnStatusCode()
+    {
+        $this->app->get("/", function() {
+            return new Response("", 500);
+        });
+
+        $called = 0;
+
+        $this->app->error(500, function() use (&$called) {
+            $called++;
+        });
+
+        $this->app->run(Request::create("/"));
+        $this->assertEquals(1, $called);
+    }
+
+    function testIfNoCodeGivenRegistersErrorHandlerOnException()
+    {
+        $this->app->get("/", function() {
+            throw new \Exception("Foo");
+        });
+
+        $called = 0;
+
+        $this->app->error(function($request, $response, $exception) use (&$called) {
+            $called++;
+        });
+
+        $this->app->run(Request::create("/"));
+        $this->assertEquals(1, $called);
+    }
+
+    function testCanRegisterErrorHandlerOnMultipleStatusCodes()
+    {
+        $this->app->get("/", function() {
+            return new Response("", 500);
+        });
+
+        $this->app->get("/foo", function() {
+            return new Response("", 502);
+        });
+
+        $called = 0;
+        $this->app->error(array(500, 502), function() use (&$called) {
+            $called++;
+        });
+
+        $this->app->run(Request::create("/"));
+        $this->app->run(Request::create("/foo"));
+
+        $this->assertEquals(2, $called);
     }
 }

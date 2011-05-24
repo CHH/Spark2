@@ -13,13 +13,23 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
      */
     function testHaltThrowsHaltException()
     {
-        s\halt(200, "Hello World", array("foo" => "bar"));
+        s\halt("Hello World", 200, array("foo" => "bar"));
+    }
+
+    function testHaltAlsoTakesResponseObjectAsFirstArgument()
+    {
+        try {
+            s\halt(new Response("Hello World"));
+            
+        } catch (\Spark\HaltException $e) {
+            $this->assertEquals("Hello World", $e->getResponse()->getContent());
+        }
     }
 
     function testHaltExceptionContainsResponseObject()
     {
         try {
-            s\halt(200, "Hello World", array("foo" => "bar"));
+            s\halt("Hello World", 200, array("foo" => "bar"));
 
         } catch (\Spark\HaltException $e) {
             $response = $e->getResponse();

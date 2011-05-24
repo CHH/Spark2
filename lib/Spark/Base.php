@@ -158,7 +158,7 @@ abstract class Base implements Dispatchable
      */
     function run(Request $request = null)
     {
-        $this->request = ($request === null ? Request::createFromGlobals() : $request);
+        $this->request = $request ?: Request::createFromGlobals();
         
         // Run the environment's configurators
         $this->bootstrap();
@@ -196,33 +196,19 @@ abstract class Base implements Dispatchable
      */
     protected function dispatch(Request $request)
     {
-        $method  = $request->getMethod();
+        $method = $request->getMethod();
 
         if (empty($this->routes[$method])) return $this->response->setStatusCode(404);
 
         $match = false;
 
         foreach ($this->routes[$method] as $route) {
-            list($pattern, $callback) = $route;
-            
-            // Match the pattern, when no match found then check the next route
-            if (!preg_match($pattern, $request->getPathInfo(), $matches)) continue;
-
-            unset($matches[0]);
-            $request->attributes->add($matches);
-
-            // If Callback is a class name then instantiate it
-            if (is_string($callback) and class_exists($callback)) {
-                $callback = new $callback;
-            }
-            
             try {
-                ob_start();
-                $response = call_user_func($callback, $request, $this->response);
+                $response = $route($request, $this->response);
                 
+                if (false === $response) continue;
+
                 if ($response instanceof Response) $this->response = $response;
-                
-                $this->response->write(ob_get_clean());
                 $match = true;
                 break;
             } catch (\Spark\PassException $e) {
@@ -233,7 +219,7 @@ abstract class Base implements Dispatchable
         ($match) ?: $this->response->setStatusCode(404);
     }
 
-    protected function handleError($code = "\Exception", \Exception $exception = null)
+    protected function handleError($code = "Exception", \Exception $exception = null)
     {
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
 
@@ -259,33 +245,33 @@ abstract class Base implements Dispatchable
      * Methods for defining handlers for HTTP Methods
      */
 
-    function GET($route, $callback = null)
+    function get($route, $callback = null)
     {
         $this->head($route, $callback);
         return $this->route("GET", $route, $callback);
     }
 
-    function POST($route, $callback = null)
+    function post($route, $callback = null)
     {
         return $this->route("POST", $route, $callback);
     }
 
-    function PUT($route, $callback = null)
+    function put($route, $callback = null)
     {
         return $this->route("PUT", $route, $callback);
     }
 
-    function DELETE($route, $callback = null)
+    function delete($route, $callback = null)
     {
         return $this->route("DELETE", $route, $callback);
     }
 
-    function HEAD($route, $callback = null)
+    function head($route, $callback = null)
     {
         return $this->route("HEAD", $route, $callback);
     }
 
-    function OPTIONS($route, $callback = null)
+    function options($route, $callback = null)
     {
         return $this->route("OPTIONS", $route, $callback);
     }
@@ -298,11 +284,38 @@ abstract class Base implements Dispatchable
         if (empty($this->routes[$verb])) {
             $this->routes[$verb] = new \SplStack;
         }
-
+        
         $exp = new Util\StringExpression($route);
         $pattern = $exp->toRegExp();
 
-        $this->routes[$verb]->push(array($pattern, $callback));
+        $route = 
+        function(Request $request, Response $previous = null) use ($pattern, $callback)
+        {
+            if (!preg_match($pattern, $request->getPathInfo(), $matches)) {
+                return false;
+            }
+            $request->attributes->add(_\rest($matches));
+            
+            if (is_string($callback) and class_exists($callback)) {
+                $callback = new $callback;
+            }
+
+            ob_start();
+            $response = call_user_func($callback, $request, $previous);
+
+            if (is_string($response)) {
+                $response = new Response($response);
+            }
+
+            if ($response instanceof Response) {
+                $response->write(ob_get_clean());
+            } else {
+                ob_end_clean();
+            }
+            return $response;
+        };
+
+        $this->routes[$verb]->push($route);
     }
 
     /**
@@ -379,16 +392,17 @@ abstract class Base implements Dispatchable
      *
      * @param mixed $code
      */
-    function error($code = "\Exception", $handler = null)
+    function error($code = "Exception", $handler = null)
     {
         if (is_callable($code)) {
             $handler = $code;
-            $code = "\Exception";
+            $code = "Exception";
         }
-        if (!is_array($code)) {
-            $code = array($code);
-        }
+        $code = (array) $code;
         foreach ($code as $c) {
+            if (is_string($c) and class_exists($c)) {
+                $c = ltrim($c, "\\");
+            }
             $this->errors[$c] = $handler;
         }
         return $this;
