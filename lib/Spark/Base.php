@@ -42,6 +42,9 @@ abstract class Base implements Dispatchable
     /** Error Handlers */
     protected $error = array();
     
+    /**
+     * Holds configurators per environment
+     */
     protected $configurators = array();
     
     /**
