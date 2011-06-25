@@ -52,7 +52,7 @@ function pass()
  * @param  callback $callback
  * @return mixed
  */
-function withUserAgent(Request $request, $pattern, $callback)
+function with_user_agent(Request $request, $pattern, $callback)
 {
     $userAgent = $request->headers->get("User-Agent");
 
@@ -71,7 +71,7 @@ function withUserAgent(Request $request, $pattern, $callback)
  * @param  callback $callback
  * @return mixed
  */
-function withHostName(Request $request, $pattern, $callback)
+function with_hostname(Request $request, $pattern, $callback)
 {
     $host = $request->getHost();
 
@@ -90,7 +90,7 @@ function withHostName(Request $request, $pattern, $callback)
  * @param  callback     $callback
  * @return mixed
  */
-function withFormat(Request $request, $formats, $callback = null)
+function with_format(Request $request, $formats, $callback = null)
 {
     $formats = (array) $formats;
 
@@ -113,8 +113,4 @@ function withFormat(Request $request, $formats, $callback = null)
 
     return false;
 }
-
-
-
-
 

@@ -57,12 +57,12 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
         $request = new Request;
         $request->headers->set("User-Agent", "foo");
 
-        $resp = s\withUserAgent($request, "/foo/", function() {
+        $resp = s\with_user_agent($request, "/foo/", function() {
             return "Foo";
         });
         $this->assertEquals("Foo", $resp);
 
-        $resp = s\withUserAgent($request, "/bar/", function() {});
+        $resp = s\with_user_agent($request, "/bar/", function() {});
         $this->assertFalse($resp);
     }
 
@@ -71,12 +71,12 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
         $request = new Request;
         $request->headers->set("Host", "www.example.com");
 
-        $resp = s\withHostName($request, "/example.com/", function() {
+        $resp = s\with_hostname($request, "/example.com/", function() {
             return "Foo";
         });
         $this->assertEquals("Foo", $resp);
 
-        $resp = s\withHostName($request, "/foobar.com/", function() {});
+        $resp = s\with_hostname($request, "/foobar.com/", function() {});
         $this->assertFalse($resp, "Returns false if there is no match");
     }
 
@@ -86,7 +86,7 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
         $request->headers->set("Accept", "application/json");
         $called = 0;
 
-        s\withFormat($request, "json", function() use (&$called) {
+        s\with_format($request, "json", function() use (&$called) {
             $called++;
         });
         $this->assertEquals(1, $called);
@@ -101,7 +101,7 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
             return "Foo";
         };
 
-        $resp = s\withFormat($request, array(
+        $resp = s\with_format($request, array(
             "html" => $h,
             "json" => $h
         ));
@@ -117,7 +117,7 @@ class HelpersTest extends \PHPUnit_Framework_TestCase
             return "Foo";
         };
 
-        $resp = s\withFormat($request, array(
+        $resp = s\with_format($request, array(
             "html" => $h,
             "json" => $h
         ));

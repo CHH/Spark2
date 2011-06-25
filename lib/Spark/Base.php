@@ -16,18 +16,19 @@ namespace Spark;
 
 use Spark\Http\Request,
     Spark\Http\Response,
+    Spark\Settings,
     Spark\Util;
 
 abstract class Base implements Dispatchable
 {
-    /** @var \Spark\Settings */
+    /** @var Settings */
     public $settings;
 
     /** @var Request */
-    public $request;
+    protected $request;
 
     /** @var Response */
-    public $response;
+    protected $response;
     
     /**
      * Routes for each HTTP Method
@@ -52,12 +53,28 @@ abstract class Base implements Dispatchable
      */
     function __construct()
     {
-        $this->settings   = new Settings;
-        $this->response   = new Response;
+        $this->settings = new Settings;
+        $this->response = new Response;
         
         $this->init();
     }
     
+    /**
+     * Template Method, use this to set up modular-style Apps
+     */
+    function init()
+    {}
+
+    /**
+     * Defines a callback which should get run on dispatch loop startup
+     *
+     * @param  string|callback $env If this is a string, then it's treated
+     * as Environment Name (e.g. Production), if a callback is given, then this
+     * callback is run under every environment
+     *
+     * @param  callback $callback
+     * @return Base
+     */
     function configure($env, $callback = null)
     {
         if (null === $callback) {
@@ -72,6 +89,9 @@ abstract class Base implements Dispatchable
         return $this;
     }
     
+    /**
+     * Calls all callbacks defined by {@see configure()} at startup
+     */
     protected function bootstrap()
     {   
         $configurators = $this->configurators;
@@ -134,12 +154,6 @@ abstract class Base implements Dispatchable
     }
 
     /**
-     * Template Method, use this to set up modular-style Apps
-     */
-    function init()
-    {}
-
-    /**
      * {@inheritdoc}
      */
     function __invoke(Request $request, Response $previous = null)
@@ -198,19 +212,46 @@ abstract class Base implements Dispatchable
     {
         $method = $request->getMethod();
 
-        if (empty($this->routes[$method])) return $this->response->setStatusCode(404);
+        if (empty($this->routes[$method])) {
+            return $this->response->setStatusCode(404);
+        }
 
         $match = false;
 
         foreach ($this->routes[$method] as $route) {
+            list($pattern, $callback) = $route;
+
             try {
-                $response = $route($request, $this->response);
+                if (!preg_match($pattern, $request->getPathInfo(), $matches)) {
+                    continue;
+                }
+                $request->attributes->add(array_tail($matches));
+                
+                if (is_string($callback) and class_exists($callback)) {
+                    $callback = new $callback;
+                }
+
+                ob_start();
+                $response = call_user_func($callback, $request, $this->response);
+
+                if (is_string($response)) {
+                    $response = new Response($response);
+                }
+
+                if ($response instanceof Response) {
+                    $response->write(ob_get_clean());
+                } else {
+                    ob_end_clean();
+                }
                 
                 if (false === $response) continue;
 
-                if ($response instanceof Response) $this->response = $response;
+                if ($response instanceof Response) {
+                    $this->response = $response;
+                }
                 $match = true;
                 break;
+
             } catch (\Spark\PassException $e) {
                 continue;
             }
@@ -219,6 +260,16 @@ abstract class Base implements Dispatchable
         ($match) ?: $this->response->setStatusCode(404);
     }
 
+    /**
+     * Called to handle an Error
+     *
+     * @param string $code HTTP Error Code or Class Name of Exception
+     *                     which should get handled
+     * @param \Exception $exception The Exception Instance, if 
+     *                              an Exception was caught
+     *
+     * @return bool TRUE if the Error was handled, FALSE if not
+     */
     protected function handleError($code = "Exception", \Exception $exception = null)
     {
         $handler = empty($this->errors[$code]) ? null : $this->errors[$code];
@@ -276,6 +327,15 @@ abstract class Base implements Dispatchable
         return $this->route("OPTIONS", $route, $callback);
     }
 
+    /**
+     * Connects the callback with the HTTP Method and Route Pattern
+     *
+     * @param string $verb  HTTP Method (GET, POST, PUT,...)
+     * @param string $route Path with Variables, e.g. /users/:id
+     * @param callback $callback
+     * 
+     * @return void
+     */
     protected function route($verb, $route, $callback)
     {
         if (!is_callable($callback) and !class_exists($callback)) {
@@ -288,34 +348,7 @@ abstract class Base implements Dispatchable
         $exp = new Util\StringExpression($route);
         $pattern = $exp->toRegExp();
 
-        $route = 
-        function(Request $request, Response $previous = null) use ($pattern, $callback)
-        {
-            if (!preg_match($pattern, $request->getPathInfo(), $matches)) {
-                return false;
-            }
-            $request->attributes->add(_\rest($matches));
-            
-            if (is_string($callback) and class_exists($callback)) {
-                $callback = new $callback;
-            }
-
-            ob_start();
-            $response = call_user_func($callback, $request, $previous);
-
-            if (is_string($response)) {
-                $response = new Response($response);
-            }
-
-            if ($response instanceof Response) {
-                $response->write(ob_get_clean());
-            } else {
-                ob_end_clean();
-            }
-            return $response;
-        };
-
-        $this->routes[$verb]->push($route);
+        $this->routes[$verb]->push(array($pattern, $callback));
     }
 
     /**
@@ -388,7 +421,8 @@ abstract class Base implements Dispatchable
     }
     
     /**
-     * Registers an error handler
+     * Registers an error handler on the given code or
+     * Exception Class
      *
      * @param mixed $code
      */

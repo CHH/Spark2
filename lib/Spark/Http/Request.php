@@ -13,27 +13,52 @@
  */
 namespace Spark\Http;
 
-use Symfony\Component\HttpFoundation;
+use Spark\Helpers as helper,
+    Symfony\Component\HttpFoundation;
 
 class Request extends HttpFoundation\Request implements \ArrayAccess
 {
-	function offsetGet($offset)
-	{
-		return $this->get($offset);
-	}
-	
-	function offsetSet($offset, $value)
-	{
-		throw new \BadMethodCallException("Params are read-only");
-	}
-	
-	function offsetExists($offset)
-	{
-		return (bool) $this->get($offset);
-	}
-	
-	function offsetUnset($offset)
-	{
-		throw new \BadMethodCallException("Params are read-only");
-	}
+    /**
+     * @see Spark\Helpers\with_user_agent()
+     */
+    function withUserAgent($pattern, $callback)
+    {
+        return helper\with_user_agent($this, $pattern, $callback);
+    }
+
+    /**
+     * @see Spark\Helpers\with_hostname()
+     */
+    function withHostName($pattern, $callback)
+    {
+        return helper\with_hostname($this, $pattern, $callback);
+    }
+
+    /**
+     * @see Spark\Helpers\with_format()
+     */
+    function withFormat($formats, $callback)
+    {
+        return helper\with_format($this, $formats, $callback);
+    }
+
+    function offsetGet($offset)
+    {
+            return $this->get($offset);
+    }
+    
+    function offsetSet($offset, $value)
+    {
+            throw new \BadMethodCallException("Params are read-only");
+    }
+    
+    function offsetExists($offset)
+    {
+            return (bool) $this->get($offset);
+    }
+    
+    function offsetUnset($offset)
+    {
+            throw new \BadMethodCallException("Params are read-only");
+    }
 }
