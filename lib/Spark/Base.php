@@ -47,7 +47,12 @@ abstract class Base implements Dispatchable
      * Holds configurators per environment
      */
     protected $configurators = array();
-    
+
+    /**
+     * Map of extension methods
+     */
+    protected $extensions = array();
+
     /**
      * Constructor
      */
@@ -83,7 +88,9 @@ abstract class Base implements Dispatchable
         }
         
         if (!is_callable($callback)) {
-            throw new \InvalidArgumentException("No callback given");
+            throw new \InvalidArgumentException(
+                "configure() expects a valid callback, none given."
+            );
         }
         $this->configurators[$env] = $callback;
         return $this;
@@ -95,19 +102,14 @@ abstract class Base implements Dispatchable
     protected function bootstrap()
     {   
         $configurators = $this->configurators;
-        $self = $this;
-    
-        $setup = function($env) use ($configurators, $self) {
-            if (empty($configurators[$env])) {
-                return;
-            }
-            call_user_func($configurators[$env], $self);
-        };
-    
         $env = $this->settings->get("environment") ?: "production";
-        
-        $setup("_any");
-        $setup($env);
+
+        foreach (array('_any', $env) as $e) {
+            if (empty($configurators[$e])) {
+                continue;
+            }
+            call_user_func($configurators[$e], $this);
+        }
     }
     
     /**
@@ -451,5 +453,39 @@ abstract class Base implements Dispatchable
     function notFound($callback)
     {
         return $this->error(404, $callback);
+    }
+
+    function register($extension)
+    {
+        if (is_string($extension) and class_exists($extension)) {
+            $extension = new $extension;
+        }
+
+        if (!is_object($extension)) {
+            throw new \InvalidArgumentException(sprintf(
+                "Extension must be an object, %s given", gettype($extension)
+            ));
+        }
+
+        foreach (get_class_methods($extension) as $method) {
+            if (!str_starts_with('__', $method) and 'registered' != $method) {
+                $this->extensions[$method] = array($extension, $method);
+            }
+        }
+
+        if (method_exists($extension, 'registered')) {
+            $extension->registered($this);
+        }
+        return $this;
+    }
+
+    function __call($extension, array $args)
+    {
+        if (!isset($this->extensions[$extension])) {
+            throw new \BadMethodCallException(sprintf(
+                "Undefined Method %s", $extension
+            ));
+        }
+        return call_user_func_array($this->extensions[$extension], $args);
     }
 }
